@@ -1,0 +1,5 @@
+rootProject.name = 'kyumall'
+include 'kyumall-admin'
+include 'kyumall-client'
+include 'kyumall-common'
+
