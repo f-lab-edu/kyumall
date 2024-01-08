@@ -13,7 +13,6 @@ version '1.0-SNAPSHOT'
 subprojects {
 	group 'org.example'
 	version '1.0-SNAPSHOT'
-	sourceCompatibility = '17'
 
 	apply plugin: 'java'
 	apply plugin: 'java-library'
