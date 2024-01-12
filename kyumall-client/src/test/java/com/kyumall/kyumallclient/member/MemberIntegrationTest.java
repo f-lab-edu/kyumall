@@ -103,7 +103,7 @@ class MemberIntegrationTest extends IntegrationTest {
     given(clock.instant()).willReturn(sendTimeClock.instant());
     given(clock.getZone()).willReturn(sendTimeClock.getZone());
     // 랜덤 로직 모킹
-    given(randomCodeGenerator.generateCode()).willReturn(code);
+    given(randomCodeGenerator.generateCode(anyInt())).willReturn(code);
 
     return RestAssured.given().log().all()
         .queryParam("email", email)

@@ -22,6 +22,7 @@ import lombok.NoArgsConstructor;
 @Entity
 public class Verification extends BaseTimeEntity {
   private static final Integer SEND_RESTRICTED_PERIOD = 3;  // 메일 전송 쿨타임
+  private static final int VERIFICATION_CODE_SIZE = 6;  // 인증 코드 길이
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -44,7 +45,7 @@ public class Verification extends BaseTimeEntity {
   }
 
   public static String generateCode(RandomCodeGenerator randomCodeGenerator) {
-    return randomCodeGenerator.generateCode();
+    return randomCodeGenerator.generateCode(VERIFICATION_CODE_SIZE);
   }
 
   /**
