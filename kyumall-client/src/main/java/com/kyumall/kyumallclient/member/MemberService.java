@@ -27,10 +27,9 @@ public class MemberService {
    * @param email
    */
   public void sendVerificationEmail(String email) {
-    Optional<Verification> unverified = verificationRepository.findUnverifiedByEmail(email);
-    if (unverified.isPresent()) {
-      processWhenUnverifiedInfoExists(unverified.get());
-    }
+    verificationRepository.findUnverifiedByEmail(email)
+            .ifPresent(this::processWhenUnverifiedInfoExists);
+
     mailService.sendMail(email);
     verificationRepository.save(Verification.of(email, randomCodeGenerator, clock));
   }
