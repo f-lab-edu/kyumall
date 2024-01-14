@@ -11,16 +11,15 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-  @ExceptionHandler(IllegalArgumentException.class)
+  /**
+   * {@link KyumallException} 의 에러처리를 합니다.
+   * @param kyumallException
+   * @return
+   */
+  @ExceptionHandler(KyumallException.class)
   @ResponseStatus(HttpStatus.BAD_REQUEST)
-  public ResponseWrapper<Void> handleIllegalArgumentException(IllegalArgumentException ex) {
-    return ResponseWrapper.fail(ex);
-  }
-
-  @ExceptionHandler(IllegalStateException.class)
-  @ResponseStatus(HttpStatus.BAD_REQUEST)
-  public ResponseWrapper<Void> handleIllegalStateException(IllegalStateException ex) {
-    return ResponseWrapper.fail(ex);
+  public ResponseWrapper<Void> handleKyumallException(KyumallException kyumallException) {
+    return ResponseWrapper.fail(kyumallException);
   }
 
   /**
@@ -30,8 +29,8 @@ public class GlobalExceptionHandler {
    */
   @ExceptionHandler(Exception.class)
   @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-  public ResponseWrapper<Void> handleIllegalArgumentException(Exception ex) {
+  public ResponseWrapper<Void> handleException(Exception ex) {
     log.error("## error: {}, {}", ex.getClass().getSimpleName(), ex.getStackTrace());
-    return ResponseWrapper.fail(new Exception(ErrorCode.INTERNAL_SERVER_ERROR.getMessage()));
+    return ResponseWrapper.fail();
   }
 }

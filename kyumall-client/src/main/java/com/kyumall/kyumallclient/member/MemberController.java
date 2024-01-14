@@ -1,6 +1,5 @@
 package com.kyumall.kyumallclient.member;
 
-import com.kyumall.kyumallclient.response.ResponseWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,8 +18,7 @@ public class MemberController {
    * @return
    */
   @PostMapping("/send-verification-mail")
-  public ResponseWrapper<Void> sendVerificationMail(@RequestParam String email) {
+  public void sendVerificationMail(@RequestParam String email) {
     memberService.sendVerificationEmail(email);
-    return ResponseWrapper.ok();
   }
 }

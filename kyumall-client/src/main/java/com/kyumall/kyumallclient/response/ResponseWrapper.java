@@ -1,6 +1,7 @@
 package com.kyumall.kyumallclient.response;
 
 import com.kyumall.kyumallclient.exception.ErrorCode;
+import com.kyumall.kyumallclient.exception.KyumallException;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -29,7 +30,7 @@ public class ResponseWrapper<T> {
    * 성공(200) 응답, 반환 결과가 없을 경우
    */
   @ResponseStatus(HttpStatus.OK)
-  public static <T> ResponseWrapper<T> ok() {
+  public static ResponseWrapper<Void> ok() {
     return new ResponseWrapper<>("0", null, null);
   }
 
@@ -42,26 +43,15 @@ public class ResponseWrapper<T> {
     return new ResponseWrapper<>("0", null, result);
   }
 
-  /**
-   * Exception 으로 부터 실패 응답 생성
-   * {@link com.kyumall.kyumallclient.exception.GlobalExceptionHandler} 에서 호출됩니다.
-   * Exception Message 가 {@link ErrorCode}에 존재하는 경우 ErrorCode 로 부터 반환값이 생성됩니다.
-   * ErrorCode 에 존재하지 않는 경우, Exception Message 로 부터 반환값 생성됩니다.
-   * @param ex
-   * @return
-   */
-  public static ResponseWrapper<Void> fail(Exception ex) {
-    if (ErrorCode.isExists(ex.getMessage())) {
-      return fromErrorCode(ErrorCode.findCode(ex.getMessage()));
-    }
-    return fromExceptionMessage(ex.getMessage());
+ public static ResponseWrapper<Void> fail(KyumallException kyumallException) {
+    return ResponseWrapper.from(kyumallException.getErrorCode());
+ }
+
+  public static ResponseWrapper<Void> fail() {
+    return ResponseWrapper.from(ErrorCode.INTERNAL_SERVER_ERROR);
   }
 
-  private static ResponseWrapper<Void> fromErrorCode(ErrorCode errorCode) {
-    return new ResponseWrapper<>(errorCode.getCode(), errorCode.getMessage());
-  }
-
-  private static ResponseWrapper<Void> fromExceptionMessage(String exceptionMessage) {
-    return new ResponseWrapper<>("", exceptionMessage);
+  private static ResponseWrapper<Void> from(ErrorCode errorCode) {
+    return new ResponseWrapper<>(errorCode.getCode(), errorCode.getMessage(), null);
   }
 }

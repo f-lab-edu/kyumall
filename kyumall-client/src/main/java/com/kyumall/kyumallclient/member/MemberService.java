@@ -1,6 +1,7 @@
 package com.kyumall.kyumallclient.member;
 
 import com.kyumall.kyumallclient.exception.ErrorCode;
+import com.kyumall.kyumallclient.exception.KyumallException;
 import com.kyumall.kyumallcommon.Util.RandomCodeGenerator;
 import com.kyumall.kyumallcommon.mail.MailService;
 import com.kyumall.kyumallcommon.member.entity.Verification;
@@ -42,7 +43,7 @@ public class MemberService {
    */
   private void processWhenUnverifiedInfoExists(Verification unverifiedVerification) {
     if (!unverifiedVerification.checkAbleToSend(clock)) {
-      throw new IllegalStateException(ErrorCode.VERIFICATION_MAIL_CAN_SEND_IN_TERM.getMessage());
+      throw new KyumallException(ErrorCode.VERIFICATION_MAIL_CAN_SEND_IN_TERM);
     }
     unverifiedVerification.expired();
   }
