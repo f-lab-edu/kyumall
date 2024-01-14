@@ -1,11 +1,12 @@
 package com.kyumall.kyumallclient.member;
 
+import com.kyumall.kyumallclient.exception.ErrorCode;
+import com.kyumall.kyumallclient.exception.KyumallException;
 import com.kyumall.kyumallcommon.Util.RandomCodeGenerator;
 import com.kyumall.kyumallcommon.mail.MailService;
 import com.kyumall.kyumallcommon.member.entity.Verification;
 import com.kyumall.kyumallcommon.member.repository.VerificationRepository;
 import java.time.Clock;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,7 +43,7 @@ public class MemberService {
    */
   private void processWhenUnverifiedInfoExists(Verification unverifiedVerification) {
     if (!unverifiedVerification.checkAbleToSend(clock)) {
-      throw new IllegalStateException("본인 확인 메일은 3분 간격으로 전송 가능합니다.");
+      throw new KyumallException(ErrorCode.VERIFICATION_MAIL_CAN_SEND_IN_TERM);
     }
     unverifiedVerification.expired();
   }
