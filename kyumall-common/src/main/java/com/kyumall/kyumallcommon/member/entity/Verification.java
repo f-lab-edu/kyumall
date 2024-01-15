@@ -22,6 +22,7 @@ import lombok.NoArgsConstructor;
 @Entity
 public class Verification extends BaseTimeEntity {
   private static final Integer SEND_RESTRICTED_PERIOD = 3;  // 메일 전송 쿨타임
+  private static final Integer MAX_TRY_COUNT = 3;
   private static final int VERIFICATION_CODE_SIZE = 6;  // 인증 코드 길이
 
   @Id
@@ -60,5 +61,30 @@ public class Verification extends BaseTimeEntity {
 
   public void expired() {
     status = VerificationStatus.EXPIRED;
+  }
+
+  public void verified() {
+    status = VerificationStatus.VERIFIED;
+  }
+
+  public boolean verify(String code) {
+    boolean isVerified = this.code.equals(code);
+    if (isVerified) {
+      verified();
+    }
+    return isVerified;
+  }
+
+  /**
+   * 인증 시도가 가능한지 체크합니다.
+   * tryCount 가 3회 미만이어야 합니다.
+   * @return
+   */
+  public boolean isUnderTryCount() {
+    return this.tryCount < MAX_TRY_COUNT;
+  }
+
+  public void increaseTryCount() {
+    tryCount += 1;
   }
 }

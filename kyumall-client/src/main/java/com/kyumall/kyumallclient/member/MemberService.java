@@ -2,6 +2,7 @@ package com.kyumall.kyumallclient.member;
 
 import com.kyumall.kyumallclient.exception.ErrorCode;
 import com.kyumall.kyumallclient.exception.KyumallException;
+import com.kyumall.kyumallclient.member.dto.VerifySentCodeRequest;
 import com.kyumall.kyumallcommon.Util.RandomCodeGenerator;
 import com.kyumall.kyumallcommon.mail.MailService;
 import com.kyumall.kyumallcommon.member.entity.Verification;
@@ -12,7 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
-@Transactional
 @Service
 public class MemberService {
   private final VerificationRepository verificationRepository;
@@ -27,6 +27,7 @@ public class MemberService {
    * @throws IllegalStateException 메일 전송 이력이 있고 메일 쿨타임이 지나지 않은 경우
    * @param email
    */
+  @Transactional
   public void sendVerificationEmail(String email) {
     verificationRepository.findUnverifiedByEmail(email)
             .ifPresent(this::processWhenUnverifiedInfoExists);
@@ -46,5 +47,33 @@ public class MemberService {
       throw new KyumallException(ErrorCode.VERIFICATION_MAIL_CAN_SEND_IN_TERM);
     }
     unverifiedVerification.expired();
+  }
+
+  /**
+   * 본인인증 코드와 일치하는지 검증합니다.
+   * @param request
+   * @return String 인증결과
+   *    SUCCESS: 인증 성공
+   *    FAIL: 인증 실패
+   *    EXCEED_COUNT: 인증 실패 & 시도 횟수 초과
+   */
+  @Transactional
+  public String verifySentCode(VerifySentCodeRequest request) {
+    Verification verification = verificationRepository.findUnverifiedByEmail(request.getEmail())
+        .orElseThrow(() -> new KyumallException(ErrorCode.VERIFICATION_MAIL_NOT_MATCH));
+    // 인증 성공
+    if (verification.verify(request.getCode())) {
+      return "SUCCESS";
+    }
+    // 인증 실패
+    if (verification.isUnderTryCount()) { // 시도 횟수 3회 미만
+      verification.increaseTryCount();
+      return "FAIL";
+      //throw new KyumallException(ErrorCode.VERIFICATION_FAILED);  // 예외 발생 시 Tx Rollback 됨
+    }
+    // 시도횟수 초과
+    verification.expired();
+    return "EXCEED_COUNT";
+    //throw new KyumallException(ErrorCode.VERIFICATION_EXCEED_TRY_COUNT);
   }
 }
