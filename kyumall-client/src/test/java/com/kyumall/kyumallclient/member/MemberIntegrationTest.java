@@ -5,12 +5,14 @@ import static org.mockito.BDDMockito.*;
 
 import com.kyumall.kyumallclient.IntegrationTest;
 import com.kyumall.kyumallclient.TestUtil;
+import com.kyumall.kyumallclient.member.dto.VerifySentCodeRequest;
 import com.kyumall.kyumallcommon.Util.RandomCodeGenerator;
 import com.kyumall.kyumallcommon.mail.MailService;
 import com.kyumall.kyumallcommon.member.entity.Verification;
 import com.kyumall.kyumallcommon.member.repository.VerificationRepository;
 import com.kyumall.kyumallcommon.member.vo.VerificationStatus;
 import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
 import java.time.Clock;
@@ -97,6 +99,72 @@ class MemberIntegrationTest extends IntegrationTest {
     then(mailService).should(times(2)).sendMail(email);
   }
 
+  @Test
+  @DisplayName("본인인증에 성공합니다.")
+  void verifySentCode_success() {
+    // given
+    String email = "example@example.com";
+    String code = "000000";
+    LocalDateTime firstSendTime = LocalDateTime.of(2024, 1, 1, 0, 0);
+    // 본인인증 메일 전송
+    requestSendVerificationMail(email, firstSendTime, code);
+
+    // when
+    ExtractableResponse<Response> response = requestVerifySentCode(email, code);
+
+    // then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
+    Verification verification = verificationRepository.findByContact(email)
+        .orElseThrow(() -> new RuntimeException());
+    assertThat(verification.getStatus()).isEqualTo(VerificationStatus.VERIFIED);
+  }
+
+  @Test
+  @DisplayName("인증번호가 맞지 않아 본인인증에 실패하고 시도횟수를 1 증가시킵니다.")
+  void verifySentCode_fail_because_code_not_match() {
+    // given
+    String email = "example@example.com";
+    String rightCode = "000000";
+    LocalDateTime firstSendTime = LocalDateTime.of(2024, 1, 1, 0, 0);
+    // 본인인증 메일 전송
+    requestSendVerificationMail(email, firstSendTime, rightCode);
+    String wrongCode = "000011";
+
+    // when
+    ExtractableResponse<Response> response = requestVerifySentCode(email, wrongCode);
+
+    // then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_BAD_REQUEST);
+    Verification verification = verificationRepository.findByContact(email)
+        .orElseThrow(() -> new RuntimeException());
+    assertThat(verification.getStatus()).isEqualTo(VerificationStatus.UNVERIFIED);
+    assertThat(verification.getTryCount()).isEqualTo(1);
+  }
+
+  @Test
+  @DisplayName("인증번호가 맞지 않고, 시도횟수가 초과하여 본인인증에 실패하고, 인증번호는 만료됩니다.")
+  void verifySentCode_fail_because_code_not_match_and_exceed_try() {
+    // given
+    String email = "example@example.com";
+    String rightCode = "000000";
+    LocalDateTime firstSendTime = LocalDateTime.of(2024, 1, 1, 0, 0);
+    // 본인인증 메일 전송
+    requestSendVerificationMail(email, firstSendTime, rightCode);
+    String wrongCode = "000011";
+    requestVerifySentCode(email, wrongCode); // try 1
+    requestVerifySentCode(email, wrongCode); // try 2
+    requestVerifySentCode(email, wrongCode); // try 3
+
+    // when
+    ExtractableResponse<Response> response = requestVerifySentCode(email, wrongCode);
+
+    // then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_BAD_REQUEST);
+    Verification verification = verificationRepository.findByContact(email)
+        .orElseThrow(() -> new RuntimeException());
+    assertThat(verification.getStatus()).isEqualTo(VerificationStatus.EXPIRED);
+  }
+
   private ExtractableResponse<Response> requestSendVerificationMail(String email, LocalDateTime sendDateTime, String code) {
     // 전송시간 모킹
     Clock sendTimeClock = TestUtil.convertLocalDateTimeToClock(sendDateTime);
@@ -108,6 +176,16 @@ class MemberIntegrationTest extends IntegrationTest {
     return RestAssured.given().log().all()
         .queryParam("email", email)
         .when().post("/members/send-verification-mail")
+        .then().log().all()
+        .extract();
+  }
+
+  private ExtractableResponse<Response> requestVerifySentCode(String email, String code) {
+    VerifySentCodeRequest request = new VerifySentCodeRequest(email, code);
+
+    return RestAssured.given().log().all()
+        .body(request).contentType(ContentType.JSON)
+        .when().post("/members/verify-sent-code")
         .then().log().all()
         .extract();
   }
