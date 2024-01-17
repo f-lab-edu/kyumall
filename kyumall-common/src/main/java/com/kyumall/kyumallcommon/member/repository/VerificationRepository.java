@@ -11,4 +11,6 @@ public interface VerificationRepository extends JpaRepository<Verification, Long
       + "where v.contact = :email "
       + "and v.status = 'UNVERIFIED'")
   Optional<Verification> findUnverifiedByEmail(String email);
+
+  Optional<Verification> findByContact(String email);
 }
