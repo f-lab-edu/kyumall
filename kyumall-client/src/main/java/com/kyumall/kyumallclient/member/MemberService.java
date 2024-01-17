@@ -2,11 +2,21 @@ package com.kyumall.kyumallclient.member;
 
 import com.kyumall.kyumallclient.exception.ErrorCode;
 import com.kyumall.kyumallclient.exception.KyumallException;
+import com.kyumall.kyumallclient.member.dto.SignUpRequest;
+import com.kyumall.kyumallclient.member.dto.TermAndAgree;
 import com.kyumall.kyumallclient.member.dto.VerifySentCodeRequest;
 import com.kyumall.kyumallcommon.Util.RandomCodeGenerator;
 import com.kyumall.kyumallcommon.mail.MailService;
+import com.kyumall.kyumallcommon.member.entity.Agreement;
+import com.kyumall.kyumallcommon.member.entity.Member;
+import com.kyumall.kyumallcommon.member.entity.Term;
 import com.kyumall.kyumallcommon.member.entity.Verification;
+import com.kyumall.kyumallcommon.member.repository.AgreementRepository;
+import com.kyumall.kyumallcommon.member.repository.MemberRepository;
+import com.kyumall.kyumallcommon.member.repository.TermRepository;
 import com.kyumall.kyumallcommon.member.repository.VerificationRepository;
+import com.kyumall.kyumallcommon.member.vo.MemberStatus;
+import com.kyumall.kyumallcommon.member.vo.MemberType;
 import java.time.Clock;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,6 +29,9 @@ public class MemberService {
   private final MailService mailService;
   private final RandomCodeGenerator randomCodeGenerator;
   private final Clock clock;
+  private final MemberRepository memberRepository;
+  private final TermRepository termRepository;
+  private final AgreementRepository agreementRepository;
 
   /**
    * 본인 인증 메일을 발송합니다.
@@ -29,7 +42,7 @@ public class MemberService {
    */
   @Transactional
   public void sendVerificationEmail(String email) {
-    verificationRepository.findUnverifiedByEmail(email)
+    verificationRepository.findUnverifiedByContact(email)
             .ifPresent(this::processWhenUnverifiedInfoExists);
 
     mailService.sendMail(email);
@@ -59,7 +72,7 @@ public class MemberService {
    */
   @Transactional
   public String verifySentCode(VerifySentCodeRequest request) {
-    Verification verification = verificationRepository.findUnverifiedByEmail(request.getEmail())
+    Verification verification = verificationRepository.findUnverifiedByContact(request.getEmail())
         .orElseThrow(() -> new KyumallException(ErrorCode.VERIFICATION_MAIL_NOT_MATCH));
     // 인증 성공
     if (verification.verify(request.getCode())) {
@@ -75,5 +88,37 @@ public class MemberService {
     verification.expired();
     return "EXCEED_COUNT";
     //throw new KyumallException(ErrorCode.VERIFICATION_EXCEED_TRY_COUNT);
+  }
+
+  /**
+   * 회원가입
+   * @param request
+   */
+  @Transactional
+  public void signUp(SignUpRequest request) {
+    // 회원 저장
+    Member member = memberRepository.save(Member.builder()
+        .username(request.getUsername())
+        .email(request.getEmail())
+        .password(request.getPassword())
+        .type(MemberType.USER)
+        .status(MemberStatus.INUSE)
+        .build());
+
+    // 약관 동의 내역 저장
+    for (TermAndAgree termAndAgree: request.getTermAndAgrees()) {
+      Term term = termRepository.findById(termAndAgree.getTermId())
+          .orElseThrow(() -> new KyumallException(ErrorCode.TERM_NOT_EXISTS));
+      // 필수 약관 체크
+      if (term.isRequired() && !termAndAgree.isAgree()) {
+        throw new KyumallException(ErrorCode.REQUIRED_TERM_MUST_AGREED);
+      }
+
+      agreementRepository.save(Agreement.builder()
+          .member(member)
+          .term(term)
+          .agree(termAndAgree.isAgree())
+          .build());
+    }
   }
 }

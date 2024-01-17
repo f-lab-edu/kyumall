@@ -25,4 +25,12 @@ public class Term extends BaseTimeEntity {
   @Column(columnDefinition = "TEXT")
   private String content; // 약관 내용
   private TermType type;
+
+  /**
+   * 해당 약관이 필수인지 반환합니다
+   * @return
+   */
+  public boolean isRequired() {
+    return type.equals(TermType.REQUIRED);
+  }
 }
