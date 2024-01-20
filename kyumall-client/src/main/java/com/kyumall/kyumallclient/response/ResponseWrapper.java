@@ -1,9 +1,15 @@
 package com.kyumall.kyumallclient.response;
 
+import static com.kyumall.kyumallclient.exception.ErrorCode.*;
+
 import com.kyumall.kyumallclient.exception.ErrorCode;
 import com.kyumall.kyumallclient.exception.KyumallException;
+import java.util.List;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 /**
@@ -43,15 +49,40 @@ public class ResponseWrapper<T> {
     return new ResponseWrapper<>("0", null, result);
   }
 
+  private static ResponseWrapper<Void> from(ErrorCode errorCode) {
+    return new ResponseWrapper<>(errorCode.getCode(), errorCode.getMessage(), null);
+  }
+
  public static ResponseWrapper<Void> fail(KyumallException kyumallException) {
     return ResponseWrapper.from(kyumallException.getErrorCode());
  }
 
   public static ResponseWrapper<Void> fail() {
-    return ResponseWrapper.from(ErrorCode.INTERNAL_SERVER_ERROR);
+    return ResponseWrapper.from(INTERNAL_SERVER_ERROR);
   }
 
-  private static ResponseWrapper<Void> from(ErrorCode errorCode) {
-    return new ResponseWrapper<>(errorCode.getCode(), errorCode.getMessage(), null);
+  public static ResponseWrapper<List<BindingError>> fail(BindingResult bindingResult) {
+    return new ResponseWrapper<>(METHOD_ARGS_INVALID.getCode(), METHOD_ARGS_INVALID.getMessage()
+        , bindingResult.getFieldErrors().stream()
+                    .map(BindingError::from)
+                    .toList());
+  }
+
+  @Getter @AllArgsConstructor
+  public static class BindingError {
+    private String fieldName;
+    private String errorMessage;
+
+    public static BindingError from(FieldError fieldError) {
+      return new BindingError(fieldError.getField(), fieldError.getDefaultMessage());
+    }
+
+    @Override
+    public String toString() {
+      return "BindingError{" +
+          "fieldName='" + fieldName + '\'' +
+          ", errorMessage='" + errorMessage + '\'' +
+          '}';
+    }
   }
 }

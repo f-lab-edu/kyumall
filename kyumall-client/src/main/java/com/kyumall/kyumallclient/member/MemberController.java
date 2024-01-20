@@ -2,9 +2,14 @@ package com.kyumall.kyumallclient.member;
 
 import com.kyumall.kyumallclient.exception.ErrorCode;
 import com.kyumall.kyumallclient.exception.KyumallException;
+import com.kyumall.kyumallclient.member.dto.SignUpRequest;
 import com.kyumall.kyumallclient.member.dto.VerifySentCodeRequest;
-import com.kyumall.kyumallclient.response.ResponseWrapper;
+import com.kyumall.kyumallclient.member.dto.VerifySentCodeResult;
+import com.kyumall.kyumallclient.member.validator.SignUpRequestValidator;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,6 +21,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class MemberController {
   private final MemberService memberService;
+  private final SignUpRequestValidator signUpRequestValidator;
+
+  @InitBinder("signUpRequest")  // 검증 하고자 하는 객체의 이름
+  public void initBinder(WebDataBinder webDataBinder) {
+    webDataBinder.addValidators(signUpRequestValidator);
+  }
 
   /**
    * 본인확인 메일을 전송합니다.
@@ -34,12 +45,22 @@ public class MemberController {
    */
   @PostMapping("/verify-sent-code")
   public void verifySentCode(@RequestBody VerifySentCodeRequest request) {
-    String result = memberService.verifySentCode(request);
+    VerifySentCodeResult result = memberService.verifySentCode(request);
     // 트랜잭션 내에서 exception을 발생시키면 트랜잭션이 롤백 되어서 밖에서 처리하였습니다.
-    if (result.equals("FAIL")) {
+    if (result == VerifySentCodeResult.FAIL) {
       throw new KyumallException(ErrorCode.VERIFICATION_FAILED);
-    } else if (result.equals("EXCEED_COUNT")) {
+    }
+    if (result == VerifySentCodeResult.EXCEED_COUNT) {
       throw new KyumallException(ErrorCode.VERIFICATION_EXCEED_TRY_COUNT);
     }
+  }
+
+  /**
+   * 회원가입
+   * @param request
+   */
+  @PostMapping("/sign-up")
+  public void signUp(@RequestBody @Valid SignUpRequest request) {
+    memberService.signUp(request);
   }
 }

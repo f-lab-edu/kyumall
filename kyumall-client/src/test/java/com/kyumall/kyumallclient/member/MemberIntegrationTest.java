@@ -5,11 +5,22 @@ import static org.mockito.BDDMockito.*;
 
 import com.kyumall.kyumallclient.IntegrationTest;
 import com.kyumall.kyumallclient.TestUtil;
+import com.kyumall.kyumallclient.member.dto.SignUpRequest;
+import com.kyumall.kyumallclient.member.dto.TermAndAgree;
 import com.kyumall.kyumallclient.member.dto.VerifySentCodeRequest;
 import com.kyumall.kyumallcommon.Util.RandomCodeGenerator;
 import com.kyumall.kyumallcommon.mail.MailService;
+import com.kyumall.kyumallcommon.member.entity.Agreement;
+import com.kyumall.kyumallcommon.member.entity.Member;
+import com.kyumall.kyumallcommon.member.entity.Term;
 import com.kyumall.kyumallcommon.member.entity.Verification;
+import com.kyumall.kyumallcommon.member.repository.AgreementRepository;
+import com.kyumall.kyumallcommon.member.repository.MemberRepository;
+import com.kyumall.kyumallcommon.member.repository.TermRepository;
 import com.kyumall.kyumallcommon.member.repository.VerificationRepository;
+import com.kyumall.kyumallcommon.member.vo.MemberStatus;
+import com.kyumall.kyumallcommon.member.vo.MemberType;
+import com.kyumall.kyumallcommon.member.vo.TermType;
 import com.kyumall.kyumallcommon.member.vo.VerificationStatus;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
@@ -17,7 +28,9 @@ import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.util.List;
 import org.apache.http.HttpStatus;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +46,28 @@ class MemberIntegrationTest extends IntegrationTest {
   RandomCodeGenerator randomCodeGenerator;
   @Autowired
   VerificationRepository verificationRepository;
+  @Autowired
+  TermRepository termRepository;
+  @Autowired
+  MemberRepository memberRepository;
+  @Autowired
+  AgreementRepository agreementRepository;
+
+  private Term privateInfoTerm;
+  private Term marketingTerm;
+
+  @BeforeEach
+  void init_data() {
+    privateInfoTerm = termRepository.save(Term.builder()
+        .name("개인정보 수집 및 이용 동의")
+        .content("개인정 수집 및 이용에 동의합니다.")
+        .type(TermType.REQUIRED).build());
+
+    marketingTerm = termRepository.save(Term.builder()
+        .name("마케팅 목적의 개인정보 수집 및 이용 동의 (선택)")
+        .content("마케팅 목적으로 개인정보를 수집하고 이용하는 것에 동의합니다.")
+        .type(TermType.OPTIONAL).build());
+  }
 
   @Test
   @DisplayName("본인 확인 이메일을 보내는데 성공합니다.")
@@ -50,7 +85,7 @@ class MemberIntegrationTest extends IntegrationTest {
     // 메일발송 메서드 호출 체크
     then(mailService).should(times(1)).sendMail(email);
     // DB 저장 체크
-    Verification verification = verificationRepository.findUnverifiedByEmail(email)
+    Verification verification = verificationRepository.findUnverifiedByContact(email)
         .orElseThrow(() -> new RuntimeException("테스트 실패"));
     assertThat(verification.getContact()).isEqualTo(email);
     assertThat(verification.getCode()).isEqualTo(code);
@@ -165,6 +200,149 @@ class MemberIntegrationTest extends IntegrationTest {
     assertThat(verification.getStatus()).isEqualTo(VerificationStatus.EXPIRED);
   }
 
+  @Test
+  @DisplayName("회원가입에 성공합니다.")
+  void signUp_success() {
+    // given
+    SignUpRequest request = SignUpRequest.builder()
+        .username("username1")
+        .email("email1@example.com")
+        .password("password1")
+        .passwordCheck("password1")
+        .termAndAgrees(List.of(
+            new TermAndAgree(privateInfoTerm.getId(), true),
+            new TermAndAgree(marketingTerm.getId(), false)))
+        .build();
+    // 본인 인증 성공 처리
+    sendMailAndValidComplete(request.getEmail());
+
+    // when
+    ExtractableResponse<Response> response = requestSignUp(request);
+
+    // then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
+    // 회원 객체 검증
+    Member member = memberRepository.findByUsername(request.getUsername())
+        .orElseThrow(() -> new RuntimeException());
+    assertThat(member.getUsername()).isEqualTo(request.getUsername());
+    assertThat(member.getEmail()).isEqualTo(request.getEmail());
+    assertThat(member.getStatus()).isEqualTo(MemberStatus.INUSE);
+    assertThat(member.getType()).isEqualTo(MemberType.USER);
+    // 동의 객체 검증
+    List<Agreement> agreements = agreementRepository.findByMember(member);
+    assertThat(agreements).hasSize(2);
+  }
+
+  @Test
+  @DisplayName("중복된 username 이 존재하여 회원가입에 실패합니다.")
+  void signUp_fail_because_duplicate_username() {
+    // given
+    // 첫번째 회원가입
+    SignUpRequest request1 = new SignUpRequest("username1", "email1@example.com", "password1", "password1",
+        List.of(new TermAndAgree(privateInfoTerm.getId(), true),
+            new TermAndAgree(marketingTerm.getId(), false)));
+
+    sendMailAndValidComplete(request1.getEmail());
+    requestSignUp(request1);
+
+    // 중복된 아이디 회원가입
+    SignUpRequest request2 = new SignUpRequest("username1", "email2@example.com", "password1", "password1",
+        List.of(new TermAndAgree(privateInfoTerm.getId(), true),
+            new TermAndAgree(marketingTerm.getId(), false)));
+    sendMailAndValidComplete(request2.getEmail());
+    // when
+    ExtractableResponse<Response> response = requestSignUp(request2);
+
+    // then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_BAD_REQUEST);
+  }
+
+  @Test
+  @DisplayName("중복된 email 이 존재하여 회원가입에 실패합니다.")
+  void signUp_fail_because_duplicate_email() {
+    // given
+    // 첫번째 회원가입
+    SignUpRequest request1 = new SignUpRequest("username1", "email1@example.com", "password1", "password1",
+        List.of(new TermAndAgree(privateInfoTerm.getId(), true),
+            new TermAndAgree(marketingTerm.getId(), false)));
+
+    sendMailAndValidComplete(request1.getEmail());
+    requestSignUp(request1);
+
+    // 중복된 아이디 회원가입
+    SignUpRequest request2 = new SignUpRequest("username2", "email1@example.com", "password1", "password1",
+        List.of(new TermAndAgree(privateInfoTerm.getId(), true),
+            new TermAndAgree(marketingTerm.getId(), false)));
+    sendMailAndValidComplete(request2.getEmail());
+    // when
+    ExtractableResponse<Response> response = requestSignUp(request2);
+
+    // then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_BAD_REQUEST);
+  }
+
+  @Test
+  @DisplayName("비밀번호와 비밀번호 확인이 일치하지 않아 회원가입에 실패합니다.")
+  void signUp_fail_because_not_match_passwordCheck() {
+    // given
+    // 첫번째 회원가입
+    SignUpRequest request = new SignUpRequest("username1", "email1@example.com", "password1", "password2",
+        List.of(new TermAndAgree(privateInfoTerm.getId(), true),
+            new TermAndAgree(marketingTerm.getId(), false)));
+
+    sendMailAndValidComplete(request.getEmail());
+
+    // when
+    ExtractableResponse<Response> response = requestSignUp(request);
+
+    // then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_BAD_REQUEST);
+  }
+
+  @Test
+  @DisplayName("필수 약관에 동의하지 않아 회원가입에 실패합니다.")
+  void signUp_fail_because_not_agree_on_required_term() {
+    // given
+    // 첫번째 회원가입
+    SignUpRequest request = new SignUpRequest("username1", "email1@example.com", "password1", "password1",
+        List.of(new TermAndAgree(privateInfoTerm.getId(), false), // 필수약관 미동의
+            new TermAndAgree(marketingTerm.getId(), false)));
+
+    sendMailAndValidComplete(request.getEmail());
+
+    // when
+    ExtractableResponse<Response> response = requestSignUp(request);
+
+    // then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_BAD_REQUEST);
+  }
+
+  /*
+  회원가입 요청을 보냅니다.
+   */
+  private static ExtractableResponse<Response> requestSignUp(SignUpRequest request) {
+    ExtractableResponse<Response> response = RestAssured.given().log().all()
+        .contentType(ContentType.JSON)
+        .body(request)
+        .when().post("/members/sign-up")
+        .then().log().all()
+        .extract();
+    return response;
+  }
+
+  /**
+   * 본인인증메일을 보내고 인증 확인까지 통과합니다.
+   */
+  private void sendMailAndValidComplete(String email) {
+    String code = "000000";
+    LocalDateTime sendTime = LocalDateTime.of(2024,1,1,1,1);
+    requestSendVerificationMail(email, sendTime, code);
+    requestVerifySentCode(email, code);
+  }
+
+  /*
+  인증메일을 전송 요청을 보냅니다.
+   */
   private ExtractableResponse<Response> requestSendVerificationMail(String email, LocalDateTime sendDateTime, String code) {
     // 전송시간 모킹
     Clock sendTimeClock = TestUtil.convertLocalDateTimeToClock(sendDateTime);
@@ -180,6 +358,9 @@ class MemberIntegrationTest extends IntegrationTest {
         .extract();
   }
 
+  /*
+  본인 인증 요청을 보냅니다.
+   */
   private ExtractableResponse<Response> requestVerifySentCode(String email, String code) {
     VerifySentCodeRequest request = new VerifySentCodeRequest(email, code);
 

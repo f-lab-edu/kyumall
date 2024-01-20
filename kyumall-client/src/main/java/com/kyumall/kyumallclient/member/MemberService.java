@@ -2,12 +2,25 @@ package com.kyumall.kyumallclient.member;
 
 import com.kyumall.kyumallclient.exception.ErrorCode;
 import com.kyumall.kyumallclient.exception.KyumallException;
+import com.kyumall.kyumallclient.member.dto.SignUpRequest;
+import com.kyumall.kyumallclient.member.dto.TermAndAgree;
 import com.kyumall.kyumallclient.member.dto.VerifySentCodeRequest;
+import com.kyumall.kyumallclient.member.dto.VerifySentCodeResult;
 import com.kyumall.kyumallcommon.Util.RandomCodeGenerator;
 import com.kyumall.kyumallcommon.mail.MailService;
+import com.kyumall.kyumallcommon.member.entity.Agreement;
+import com.kyumall.kyumallcommon.member.entity.Member;
+import com.kyumall.kyumallcommon.member.entity.Term;
 import com.kyumall.kyumallcommon.member.entity.Verification;
+import com.kyumall.kyumallcommon.member.repository.AgreementRepository;
+import com.kyumall.kyumallcommon.member.repository.MemberRepository;
+import com.kyumall.kyumallcommon.member.repository.TermRepository;
 import com.kyumall.kyumallcommon.member.repository.VerificationRepository;
 import java.time.Clock;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +32,9 @@ public class MemberService {
   private final MailService mailService;
   private final RandomCodeGenerator randomCodeGenerator;
   private final Clock clock;
+  private final MemberRepository memberRepository;
+  private final TermRepository termRepository;
+  private final AgreementRepository agreementRepository;
 
   /**
    * 본인 인증 메일을 발송합니다.
@@ -29,7 +45,7 @@ public class MemberService {
    */
   @Transactional
   public void sendVerificationEmail(String email) {
-    verificationRepository.findUnverifiedByEmail(email)
+    verificationRepository.findUnverifiedByContact(email)
             .ifPresent(this::processWhenUnverifiedInfoExists);
 
     mailService.sendMail(email);
@@ -51,29 +67,84 @@ public class MemberService {
 
   /**
    * 본인인증 코드와 일치하는지 검증합니다.
+   * 예외 발생 시 Tx Rollback 되기 때문에 실패시, 예외를 트랜잭션 안에서 던지지 않고 결과를 enum 으로 반환합니다.
    * @param request
-   * @return String 인증결과
-   *    SUCCESS: 인증 성공
-   *    FAIL: 인증 실패
-   *    EXCEED_COUNT: 인증 실패 & 시도 횟수 초과
+   * @return VerifySentCodeResult 인증결과
    */
   @Transactional
-  public String verifySentCode(VerifySentCodeRequest request) {
-    Verification verification = verificationRepository.findUnverifiedByEmail(request.getEmail())
+  public VerifySentCodeResult verifySentCode(VerifySentCodeRequest request) {
+    Verification verification = verificationRepository.findUnverifiedByContact(request.getEmail())
         .orElseThrow(() -> new KyumallException(ErrorCode.VERIFICATION_MAIL_NOT_MATCH));
     // 인증 성공
     if (verification.verify(request.getCode())) {
-      return "SUCCESS";
+      return VerifySentCodeResult.SUCCESS;
     }
     // 인증 실패
     if (verification.isUnderTryCount()) { // 시도 횟수 3회 미만
       verification.increaseTryCount();
-      return "FAIL";
-      //throw new KyumallException(ErrorCode.VERIFICATION_FAILED);  // 예외 발생 시 Tx Rollback 됨
+      return VerifySentCodeResult.FAIL;
     }
     // 시도횟수 초과
     verification.expired();
-    return "EXCEED_COUNT";
-    //throw new KyumallException(ErrorCode.VERIFICATION_EXCEED_TRY_COUNT);
+    return VerifySentCodeResult.EXCEED_COUNT;
+  }
+
+  /**
+   * 회원가입
+   * 회원의 정보를 저장하고, 약관의 동의 내역을 저장합니다.
+   * @param request
+   */
+  @Transactional
+  public void signUp(SignUpRequest request) {
+    // 회원 저장
+    Member member = memberRepository.save(request.toEntity());
+
+    // 약관 동의 내역 저장
+    saveAgreementsOfTerms(request, member);
+  }
+
+  private void saveAgreementsOfTerms(SignUpRequest request, Member member) {
+    List<Long> termIds = request.extractTermIds();
+    List<Term> terms = termRepository.findAllByIdIn(termIds);
+
+    List<Agreement> agreementsToSave = new ArrayList<>();
+    for (TermAndAgree termAndAgree: request.getTermAndAgrees()) {
+      Term term = findTermByIdFromList(terms, termAndAgree.getTermId())
+          .orElseThrow(() -> new KyumallException(ErrorCode.TERM_NOT_EXISTS));
+
+      validRequiredTermAgreed(termAndAgree, term);
+
+      agreementsToSave.add(Agreement.builder()
+          .member(member)
+          .term(term)
+          .agree(termAndAgree.isAgree())
+          .build());
+    }
+    // saveAll Agreements
+    agreementRepository.saveAll(agreementsToSave);
+  }
+
+  /**
+   * 필수약관 동의 했는지 체크
+   */
+  private static void validRequiredTermAgreed(TermAndAgree termAndAgree, Term term) {
+    if (term.isRequired() && !termAndAgree.isAgree()) {
+      throw new KyumallException(ErrorCode.REQUIRED_TERM_MUST_AGREED);
+    }
+  }
+
+  /**
+   * Term List 중 termId를 가지는 Term 을 찾아 반환합니다.
+   * @param terms
+   * @param termId
+   * @return
+   */
+  private Optional<Term> findTermByIdFromList(List<Term> terms, Long termId) {
+    for (Term term: terms) {
+      if (Objects.equals(term.getId(), termId)) {
+        return Optional.of(term);
+      }
+    }
+    return Optional.empty();
   }
 }
