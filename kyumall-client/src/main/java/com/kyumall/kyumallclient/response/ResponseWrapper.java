@@ -5,9 +5,7 @@ import static com.kyumall.kyumallclient.exception.ErrorCode.*;
 import com.kyumall.kyumallclient.exception.ErrorCode;
 import com.kyumall.kyumallclient.exception.KyumallException;
 import java.util.List;
-import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindingResult;
@@ -67,7 +65,7 @@ public class ResponseWrapper<T> {
     return new ResponseWrapper<>(METHOD_ARGS_INVALID.getCode(), METHOD_ARGS_INVALID.getMessage()
         , bindingResult.getFieldErrors().stream()
                     .map(BindingError::from)
-                    .collect(Collectors.toList()));
+                    .toList());
   }
 
   @Getter @AllArgsConstructor

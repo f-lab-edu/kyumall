@@ -1,5 +1,8 @@
 package com.kyumall.kyumallclient.member.dto;
 
+import com.kyumall.kyumallcommon.member.entity.Member;
+import com.kyumall.kyumallcommon.member.vo.MemberStatus;
+import com.kyumall.kyumallcommon.member.vo.MemberType;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
@@ -25,5 +28,15 @@ public class SignUpRequest {
 
   public List<Long> extractTermIds() {
     return termAndAgrees.stream().map(TermAndAgree::getTermId).collect(Collectors.toList());
+  }
+
+  public Member toEntity() {
+    return Member.builder()    // 서비스에는
+        .username(username)
+        .email(email)
+        .password(password)
+        .type(MemberType.USER)
+        .status(MemberStatus.INUSE)
+        .build();
   }
 }
