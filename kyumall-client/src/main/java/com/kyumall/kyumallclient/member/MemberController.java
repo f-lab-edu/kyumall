@@ -3,12 +3,16 @@ package com.kyumall.kyumallclient.member;
 import com.kyumall.kyumallclient.exception.ErrorCode;
 import com.kyumall.kyumallclient.exception.KyumallException;
 import com.kyumall.kyumallclient.member.dto.SignUpRequest;
+import com.kyumall.kyumallclient.member.dto.TermDto;
 import com.kyumall.kyumallclient.member.dto.VerifySentCodeRequest;
 import com.kyumall.kyumallclient.member.dto.VerifySentCodeResult;
 import com.kyumall.kyumallclient.member.validator.SignUpRequestValidator;
+import com.kyumall.kyumallclient.response.ResponseWrapper;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -62,5 +66,14 @@ public class MemberController {
   @PostMapping("/sign-up")
   public void signUp(@RequestBody @Valid SignUpRequest request) {
     memberService.signUp(request);
+  }
+
+  /**
+   * 회원가입에 필요한 약관을 조회합니다.
+   * @return
+   */
+  @GetMapping("/sign-up-terms")
+  public ResponseWrapper<List<TermDto>> getSignUpTerms() {
+    return ResponseWrapper.ok(memberService.getSignUpTerms());
   }
 }

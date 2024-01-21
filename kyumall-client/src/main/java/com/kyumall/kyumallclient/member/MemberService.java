@@ -4,6 +4,7 @@ import com.kyumall.kyumallclient.exception.ErrorCode;
 import com.kyumall.kyumallclient.exception.KyumallException;
 import com.kyumall.kyumallclient.member.dto.SignUpRequest;
 import com.kyumall.kyumallclient.member.dto.TermAndAgree;
+import com.kyumall.kyumallclient.member.dto.TermDto;
 import com.kyumall.kyumallclient.member.dto.VerifySentCodeRequest;
 import com.kyumall.kyumallclient.member.dto.VerifySentCodeResult;
 import com.kyumall.kyumallcommon.Util.RandomCodeGenerator;
@@ -146,5 +147,13 @@ public class MemberService {
       }
     }
     return Optional.empty();
+  }
+
+  /**
+   * 현재 '사용중' 상태인 모든 약관을 조회합니다.
+   */
+  public List<TermDto> getSignUpTerms() {
+    return termRepository.findAllTermsInUse()
+        .stream().map(TermDto::from).toList();
   }
 }

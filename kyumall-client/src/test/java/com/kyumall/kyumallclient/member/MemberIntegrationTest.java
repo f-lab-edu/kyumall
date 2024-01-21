@@ -7,6 +7,7 @@ import com.kyumall.kyumallclient.IntegrationTest;
 import com.kyumall.kyumallclient.TestUtil;
 import com.kyumall.kyumallclient.member.dto.SignUpRequest;
 import com.kyumall.kyumallclient.member.dto.TermAndAgree;
+import com.kyumall.kyumallclient.member.dto.TermDto;
 import com.kyumall.kyumallclient.member.dto.VerifySentCodeRequest;
 import com.kyumall.kyumallcommon.Util.RandomCodeGenerator;
 import com.kyumall.kyumallcommon.mail.MailService;
@@ -20,6 +21,7 @@ import com.kyumall.kyumallcommon.member.repository.TermRepository;
 import com.kyumall.kyumallcommon.member.repository.VerificationRepository;
 import com.kyumall.kyumallcommon.member.vo.MemberStatus;
 import com.kyumall.kyumallcommon.member.vo.MemberType;
+import com.kyumall.kyumallcommon.member.vo.TermStatus;
 import com.kyumall.kyumallcommon.member.vo.TermType;
 import com.kyumall.kyumallcommon.member.vo.VerificationStatus;
 import io.restassured.RestAssured;
@@ -61,12 +63,14 @@ class MemberIntegrationTest extends IntegrationTest {
     privateInfoTerm = termRepository.save(Term.builder()
         .name("개인정보 수집 및 이용 동의")
         .content("개인정 수집 및 이용에 동의합니다.")
-        .type(TermType.REQUIRED).build());
+        .type(TermType.REQUIRED)
+        .status(TermStatus.INUSE).build());
 
     marketingTerm = termRepository.save(Term.builder()
         .name("마케팅 목적의 개인정보 수집 및 이용 동의 (선택)")
         .content("마케팅 목적으로 개인정보를 수집하고 이용하는 것에 동의합니다.")
-        .type(TermType.OPTIONAL).build());
+        .type(TermType.OPTIONAL)
+        .status(TermStatus.INUSE).build());
   }
 
   @Test
@@ -315,6 +319,24 @@ class MemberIntegrationTest extends IntegrationTest {
 
     // then
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_BAD_REQUEST);
+  }
+
+  @Test
+  @DisplayName("회원가입시 보여줄 약관을 조회합니다.")
+  void getSignUpTerms_success() {
+    //given
+    // when
+    ExtractableResponse<Response> response = RestAssured.given().log().all()
+        .when().get("/members/sign-up-terms")
+        .then().log().all()
+        .extract();
+
+    // then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
+    List<TermDto> terms = response.body().jsonPath().getList("result", TermDto.class);
+    assertThat(terms).hasSize(2);
+    assertThat(terms).extracting("termId").contains(privateInfoTerm.getId());
+    assertThat(terms).extracting("termId").contains(marketingTerm.getId());
   }
 
   /*
