@@ -76,4 +76,14 @@ public class MemberController {
   public ResponseWrapper<List<TermDto>> getSignUpTerms() {
     return ResponseWrapper.ok(memberService.getSignUpTerms());
   }
+
+  /**
+   * 이메일로 아이디 찾기
+   * @param email
+   * @return
+   */
+  @PostMapping("/find-username")
+  public ResponseWrapper<String> findUsername(@RequestParam String email) {
+    return ResponseWrapper.ok(memberService.findUsername(email));
+  }
 }

@@ -156,4 +156,10 @@ public class MemberService {
     return termRepository.findAllTermsInUse()
         .stream().map(TermDto::from).toList();
   }
+
+  public String findUsername(String email) {
+    Member member = memberRepository.findByEmail(email)
+        .orElseThrow(() -> new KyumallException(ErrorCode.MEMBER_NOT_EXISTS));
+    return member.getUsername();
+  }
 }
