@@ -339,6 +339,65 @@ class MemberIntegrationTest extends IntegrationTest {
     assertThat(terms).extracting("termId").contains(marketingTerm.getId());
   }
 
+  @Test
+  @DisplayName("이메일로 회원 아이디 찾기에 성공합니다.")
+  void findUsername_success() {
+    // given
+    Member member = createMember("username1", "email@example.com", "password11");
+
+    // when
+    ExtractableResponse<Response> response = requestFindUsername(member.getEmail());
+
+    // then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
+    String username =  response.body().jsonPath().get("result");
+    assertThat(username).isEqualTo(member.getUsername());
+  }
+
+
+
+  @Test
+  @DisplayName("이메일에 해당하는 회원이 없어서 아이디 찾기에 실패합니다.")
+  void findUsername_fail_because_email_not_found() {
+    // given
+    Member member = createMember("username1", "email@example.com", "password11");
+
+    // when
+    ExtractableResponse<Response> response = requestFindUsername("incorrect_email@example.com");
+
+    // then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_BAD_REQUEST);
+  }
+
+  public Member createMember(String username, String email, String password) {
+    sendMailAndValidComplete(email);
+
+    SignUpRequest request = SignUpRequest.builder()
+        .username(username)
+        .email(email)
+        .password(password)
+        .passwordCheck(password)
+        .termAndAgrees(List.of(
+            new TermAndAgree(privateInfoTerm.getId(), true),
+            new TermAndAgree(marketingTerm.getId(), false)))
+        .build();
+    requestSignUp(request);
+    return memberRepository.findByEmail(email)
+        .orElseThrow(() -> new RuntimeException());
+  }
+
+  /*
+  findUsername 요청을 보냅니다.
+   */
+  private static ExtractableResponse<Response> requestFindUsername(String email) {
+    return RestAssured.given().log().all()
+        .contentType(ContentType.JSON)
+        .queryParam("email", email)
+        .when().post("/members/find-username")
+        .then().log().all()
+        .extract();
+  }
+
   /*
   회원가입 요청을 보냅니다.
    */
@@ -383,7 +442,7 @@ class MemberIntegrationTest extends IntegrationTest {
   /*
   본인 인증 요청을 보냅니다.
    */
-  private ExtractableResponse<Response> requestVerifySentCode(String email, String code) {
+  private static ExtractableResponse<Response> requestVerifySentCode(String email, String code) {
     VerifySentCodeRequest request = new VerifySentCodeRequest(email, code);
 
     return RestAssured.given().log().all()
