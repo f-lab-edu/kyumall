@@ -2,12 +2,15 @@ package com.kyumall.kyumallclient.member;
 
 import com.kyumall.kyumallclient.exception.ErrorCode;
 import com.kyumall.kyumallclient.exception.KyumallException;
+import com.kyumall.kyumallclient.member.dto.RecoverPasswordRequest;
+import com.kyumall.kyumallclient.member.dto.ResetPasswordRequest;
 import com.kyumall.kyumallclient.member.dto.SignUpRequest;
 import com.kyumall.kyumallclient.member.dto.TermAndAgree;
 import com.kyumall.kyumallclient.member.dto.TermDto;
 import com.kyumall.kyumallclient.member.dto.VerifySentCodeRequest;
 import com.kyumall.kyumallclient.member.dto.VerifySentCodeResult;
 import com.kyumall.kyumallcommon.Util.RandomCodeGenerator;
+import com.kyumall.kyumallcommon.mail.Mail;
 import com.kyumall.kyumallcommon.mail.MailService;
 import com.kyumall.kyumallcommon.member.entity.Agreement;
 import com.kyumall.kyumallcommon.member.entity.Member;
@@ -161,5 +164,45 @@ public class MemberService {
     Member member = memberRepository.findByEmail(email)
         .orElseThrow(() -> new KyumallException(ErrorCode.MEMBER_NOT_EXISTS));
     return member.getUsername();
+  }
+
+  /**
+   * 임시 비밀번호 발급
+   * 임시 비밀번호를 이메일로 전송합니다.
+   * @param request
+   */
+  @Transactional
+  public void recoverPassword(RecoverPasswordRequest request) {
+    Member member = memberRepository.findByUsernameAndEmail(request.getUsername(),
+            request.getEmail())
+        .orElseThrow(() -> new KyumallException(ErrorCode.MEMBER_NOT_EXISTS));
+
+    String newPassword = member.resetRandomPassword(randomCodeGenerator);
+
+    mailService.sendMail(Mail.builder()
+            .to(member.getEmail())
+            .subject("kyumall 임시 비밀번호")
+            .message("임시 비밀번호:" + newPassword)
+        .build());
+  }
+
+  /**
+   * 비밀번호를 재설정합니다.
+   * @param request
+   */
+  @Transactional
+  public void resetPassword(ResetPasswordRequest request) {
+    if (!request.getNewPassword().equals(request.getNewPasswordConfirm())) {
+      throw new KyumallException(ErrorCode.PASSWORD_AND_CONFIRM_NOT_EQUALS);
+    }
+    Member member = memberRepository.findByUsernameAndEmail(request.getUsername(),
+            request.getEmail())
+        .orElseThrow(() -> new KyumallException(ErrorCode.MEMBER_NOT_EXISTS));
+
+    if (!member.verifyPassword(request.getPassword())) {
+      throw new KyumallException(ErrorCode.PASSWORD_NOT_MATCHED);
+    }
+
+    member.resetPassword(request.getNewPassword());
   }
 }

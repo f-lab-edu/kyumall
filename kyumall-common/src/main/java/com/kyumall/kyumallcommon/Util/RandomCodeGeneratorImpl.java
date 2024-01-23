@@ -9,4 +9,9 @@ public class RandomCodeGeneratorImpl implements RandomCodeGenerator {
   public String generateCode(int size) {
     return RandomStringUtils.randomNumeric(size);
   }
+
+  @Override
+  public String generatePassword() {
+    return RandomStringUtils.random(8);
+  }
 }
