@@ -9,6 +9,7 @@ import com.kyumall.kyumallclient.member.dto.TermAndAgree;
 import com.kyumall.kyumallclient.member.dto.TermDto;
 import com.kyumall.kyumallclient.member.dto.VerifySentCodeRequest;
 import com.kyumall.kyumallclient.member.dto.VerifySentCodeResult;
+import com.kyumall.kyumallcommon.Util.EncryptUtil;
 import com.kyumall.kyumallcommon.Util.RandomCodeGenerator;
 import com.kyumall.kyumallcommon.mail.Mail;
 import com.kyumall.kyumallcommon.mail.MailService;
@@ -25,13 +26,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import javax.crypto.SecretKey;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.yaml.snakeyaml.events.Event.ID;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class MemberService {
+  public static final String ID_ENCRYPTION_ALGORITHM = "AES";
   private final VerificationRepository verificationRepository;
   private final MailService mailService;
   private final RandomCodeGenerator randomCodeGenerator;
@@ -39,6 +46,8 @@ public class MemberService {
   private final MemberRepository memberRepository;
   private final TermRepository termRepository;
   private final AgreementRepository agreementRepository;
+  @Value("${encrypt.key}")
+  private String encryptKey;
 
   /**
    * 본인 인증 메일을 발송합니다.
@@ -46,14 +55,25 @@ public class MemberService {
    * 이미 발송된 메일이 있는 경우, 재발송 가능한지 체크 후 발송합니다.
    * @throws IllegalStateException 메일 전송 이력이 있고 메일 쿨타임이 지나지 않은 경우
    * @param email
+   * @return verification 객체의 ID를 암호화 한 값
    */
   @Transactional
-  public void sendVerificationEmail(String email) {
+  public String sendVerificationEmail(String email) {
     verificationRepository.findUnverifiedByContact(email)
             .ifPresent(this::processWhenUnverifiedInfoExists);
 
     mailService.sendMail(email);
-    verificationRepository.save(Verification.of(email, randomCodeGenerator, clock));
+    Verification verification = verificationRepository.save(
+        Verification.of(email, randomCodeGenerator, clock));
+
+    try {
+      SecretKey secretKey = EncryptUtil.decodeStringToKey(encryptKey, ID_ENCRYPTION_ALGORITHM);
+      return EncryptUtil.encrypt(ID_ENCRYPTION_ALGORITHM,
+          String.valueOf(verification.getId()), secretKey);
+    } catch (Exception e) {
+      log.error(e.toString());
+      throw new KyumallException(ErrorCode.FAIL_TO_ENCRYPT);
+    }
   }
 
   /**
@@ -72,6 +92,7 @@ public class MemberService {
   /**
    * 본인인증 코드와 일치하는지 검증합니다.
    * 예외 발생 시 Tx Rollback 되기 때문에 실패시, 예외를 트랜잭션 안에서 던지지 않고 결과를 enum 으로 반환합니다.
+   * 인증객체의 ID와 전달받은 ID를 암호화한 값이 동일한지 검증합니다.
    * @param request
    * @return VerifySentCodeResult 인증결과
    */
@@ -79,6 +100,9 @@ public class MemberService {
   public VerifySentCodeResult verifySentCode(VerifySentCodeRequest request) {
     Verification verification = verificationRepository.findUnverifiedByContact(request.getEmail())
         .orElseThrow(() -> new KyumallException(ErrorCode.VERIFICATION_MAIL_NOT_MATCH));
+
+    validateVerificationId(verification.getId(), request.getVerificationId());
+
     // 인증 성공
     if (verification.verify(request.getCode())) {
       return VerifySentCodeResult.SUCCESS;
@@ -88,9 +112,21 @@ public class MemberService {
       verification.increaseTryCount();
       return VerifySentCodeResult.FAIL;
     }
-    // 시도횟수 초과
+    // 시도횟수 초과시 만료 처리
     verification.expired();
     return VerifySentCodeResult.EXCEED_COUNT;
+  }
+
+  private void validateVerificationId(Long verificationId, String encryptedId) {
+    try {
+      SecretKey secretKey = EncryptUtil.decodeStringToKey(encryptKey, ID_ENCRYPTION_ALGORITHM);
+      String decryptId = EncryptUtil.decrypt(ID_ENCRYPTION_ALGORITHM, encryptedId, secretKey);
+      if (verificationId != Long.parseLong(decryptId)) {
+        throw new KyumallException(ErrorCode.VERIFICATION_FAILED);
+      }
+    } catch (Exception e) {
+      throw new KyumallException(ErrorCode.VERIFICATION_FAILED);
+    }
   }
 
   /**

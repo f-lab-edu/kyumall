@@ -40,8 +40,8 @@ public class MemberController {
    * @return
    */
   @PostMapping("/send-verification-mail")
-  public void sendVerificationMail(@RequestParam String email) {
-    memberService.sendVerificationEmail(email);
+  public ResponseWrapper<String> sendVerificationMail(@RequestParam String email) {
+    return ResponseWrapper.ok(memberService.sendVerificationEmail(email));
   }
 
   /**
