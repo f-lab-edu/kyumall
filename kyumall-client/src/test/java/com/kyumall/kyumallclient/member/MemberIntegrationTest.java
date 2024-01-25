@@ -11,6 +11,7 @@ import com.kyumall.kyumallclient.member.dto.SignUpRequest;
 import com.kyumall.kyumallclient.member.dto.TermAndAgree;
 import com.kyumall.kyumallclient.member.dto.TermDto;
 import com.kyumall.kyumallclient.member.dto.VerifySentCodeRequest;
+import com.kyumall.kyumallcommon.Util.EncryptUtil;
 import com.kyumall.kyumallcommon.Util.RandomCodeGenerator;
 import com.kyumall.kyumallcommon.mail.Mail;
 import com.kyumall.kyumallcommon.mail.MailService;
@@ -31,14 +32,21 @@ import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
 @DisplayName("회원 통합테스트")
@@ -57,12 +65,16 @@ class MemberIntegrationTest extends IntegrationTest {
   MemberRepository memberRepository;
   @Autowired
   AgreementRepository agreementRepository;
+  @Value("${encrypt.key}")
+  private String encryptKey;
+  private SecretKey secretKey;
 
   private Term privateInfoTerm;
   private Term marketingTerm;
 
   @BeforeEach
   void init_data() {
+    secretKey = EncryptUtil.decodeStringToKey(encryptKey, MemberService.ID_ENCRYPTION_ALGORITHM);
     privateInfoTerm = termRepository.save(Term.builder()
         .name("개인정보 수집 및 이용 동의")
         .content("개인정 수집 및 이용에 동의합니다.")
@@ -78,7 +90,8 @@ class MemberIntegrationTest extends IntegrationTest {
 
   @Test
   @DisplayName("본인 확인 이메일을 보내는데 성공합니다.")
-  void sendVerificationMail_success() {
+  void sendVerificationMail_success()
+      throws NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
     // given
     String email = "example@example.com";
     LocalDateTime sendDatetime = LocalDateTime.of(2024,1,1,0,0);
@@ -99,6 +112,10 @@ class MemberIntegrationTest extends IntegrationTest {
     assertThat(verification.getSendDateTime()).isEqualTo(sendDatetime);
     assertThat(verification.getStatus()).isEqualTo(VerificationStatus.UNVERIFIED);
     assertThat(verification.getTryCount()).isEqualTo(0);
+    // 암호화하여 반환한 ID값 체크
+    String verificationId = response.body().jsonPath().get("result");
+    String decryptId = EncryptUtil.decrypt(MemberService.ID_ENCRYPTION_ALGORITHM, verificationId, secretKey);
+    assertThat(Long.parseLong(decryptId)).isEqualTo(verification.getId());
   }
 
   @Test
@@ -149,16 +166,34 @@ class MemberIntegrationTest extends IntegrationTest {
     String code = "000000";
     LocalDateTime firstSendTime = LocalDateTime.of(2024, 1, 1, 0, 0);
     // 본인인증 메일 전송
-    requestSendVerificationMail(email, firstSendTime, code);
+    String verificationId = requestSendVerificationMail(email, firstSendTime, code).body().jsonPath().get("result");
 
     // when
-    ExtractableResponse<Response> response = requestVerifySentCode(email, code);
+    ExtractableResponse<Response> response = requestVerifySentCode(email, code, verificationId);
 
     // then
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
     Verification verification = verificationRepository.findByContact(email)
         .orElseThrow(() -> new RuntimeException());
     assertThat(verification.getStatus()).isEqualTo(VerificationStatus.VERIFIED);
+  }
+
+  @Test
+  @DisplayName("verificationId 가 일치하지 않아 본인 인증에 실패합니다.")
+  void verifySentCode_fail_because_verificationId_incorrect() {
+    // given
+    String email = "example@example.com";
+    String code = "000000";
+    LocalDateTime firstSendTime = LocalDateTime.of(2024, 1, 1, 0, 0);
+    // 본인인증 메일 전송
+    String verificationId = requestSendVerificationMail(email, firstSendTime, code).body().jsonPath().get("result");
+    String incorrectId = "incorrect_id";
+
+    // when
+    ExtractableResponse<Response> response = requestVerifySentCode(email, code, incorrectId);
+
+    // then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_BAD_REQUEST);
   }
 
   @Test
@@ -169,11 +204,11 @@ class MemberIntegrationTest extends IntegrationTest {
     String rightCode = "000000";
     LocalDateTime firstSendTime = LocalDateTime.of(2024, 1, 1, 0, 0);
     // 본인인증 메일 전송
-    requestSendVerificationMail(email, firstSendTime, rightCode);
+    String verificationId = requestSendVerificationMail(email, firstSendTime, rightCode).body().jsonPath().get("result");
     String wrongCode = "000011";
 
     // when
-    ExtractableResponse<Response> response = requestVerifySentCode(email, wrongCode);
+    ExtractableResponse<Response> response = requestVerifySentCode(email, wrongCode, verificationId);
 
     // then
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_BAD_REQUEST);
@@ -191,14 +226,14 @@ class MemberIntegrationTest extends IntegrationTest {
     String rightCode = "000000";
     LocalDateTime firstSendTime = LocalDateTime.of(2024, 1, 1, 0, 0);
     // 본인인증 메일 전송
-    requestSendVerificationMail(email, firstSendTime, rightCode);
+    String verificationId = requestSendVerificationMail(email, firstSendTime, rightCode).body().jsonPath().get("result");
     String wrongCode = "000011";
-    requestVerifySentCode(email, wrongCode); // try 1
-    requestVerifySentCode(email, wrongCode); // try 2
-    requestVerifySentCode(email, wrongCode); // try 3
+    requestVerifySentCode(email, wrongCode, verificationId); // try 1
+    requestVerifySentCode(email, wrongCode, verificationId); // try 2
+    requestVerifySentCode(email, wrongCode, verificationId); // try 3
 
     // when
-    ExtractableResponse<Response> response = requestVerifySentCode(email, wrongCode);
+    ExtractableResponse<Response> response = requestVerifySentCode(email, wrongCode, verificationId);
 
     // then
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_BAD_REQUEST);
@@ -532,8 +567,8 @@ class MemberIntegrationTest extends IntegrationTest {
   private void sendMailAndValidComplete(String email) {
     String code = "000000";
     LocalDateTime sendTime = LocalDateTime.of(2024,1,1,1,1);
-    requestSendVerificationMail(email, sendTime, code);
-    requestVerifySentCode(email, code);
+    String verificationId = requestSendVerificationMail(email, sendTime, code).body().jsonPath().get("result");
+    requestVerifySentCode(email, code, verificationId);
   }
 
   /*
@@ -557,8 +592,8 @@ class MemberIntegrationTest extends IntegrationTest {
   /*
   본인 인증 요청을 보냅니다.
    */
-  private static ExtractableResponse<Response> requestVerifySentCode(String email, String code) {
-    VerifySentCodeRequest request = new VerifySentCodeRequest(email, code);
+  private static ExtractableResponse<Response> requestVerifySentCode(String email, String code, String verificationId) {
+    VerifySentCodeRequest request = new VerifySentCodeRequest(email, code, verificationId);
 
     return RestAssured.given().log().all()
         .body(request).contentType(ContentType.JSON)
