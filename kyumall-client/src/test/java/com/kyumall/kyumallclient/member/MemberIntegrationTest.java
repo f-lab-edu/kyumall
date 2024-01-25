@@ -5,11 +5,14 @@ import static org.mockito.BDDMockito.*;
 
 import com.kyumall.kyumallclient.IntegrationTest;
 import com.kyumall.kyumallclient.TestUtil;
+import com.kyumall.kyumallclient.member.dto.RecoverPasswordRequest;
+import com.kyumall.kyumallclient.member.dto.ResetPasswordRequest;
 import com.kyumall.kyumallclient.member.dto.SignUpRequest;
 import com.kyumall.kyumallclient.member.dto.TermAndAgree;
 import com.kyumall.kyumallclient.member.dto.TermDto;
 import com.kyumall.kyumallclient.member.dto.VerifySentCodeRequest;
 import com.kyumall.kyumallcommon.Util.RandomCodeGenerator;
+import com.kyumall.kyumallcommon.mail.Mail;
 import com.kyumall.kyumallcommon.mail.MailService;
 import com.kyumall.kyumallcommon.member.entity.Agreement;
 import com.kyumall.kyumallcommon.member.entity.Member;
@@ -339,6 +342,177 @@ class MemberIntegrationTest extends IntegrationTest {
     assertThat(terms).extracting("termId").contains(marketingTerm.getId());
   }
 
+  @Test
+  @DisplayName("이메일로 회원 아이디 찾기에 성공합니다.")
+  void findUsername_success() {
+    // given
+    Member member = createMember("username1", "email@example.com", "password11");
+
+    // when
+    ExtractableResponse<Response> response = requestFindUsername(member.getEmail());
+
+    // then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
+    String username =  response.body().jsonPath().get("result");
+    assertThat(username).isEqualTo(member.getUsername());
+  }
+
+
+
+  @Test
+  @DisplayName("이메일에 해당하는 회원이 없어서 아이디 찾기에 실패합니다.")
+  void findUsername_fail_because_email_not_found() {
+    // given
+    Member member = createMember("username1", "email@example.com", "password11");
+
+    // when
+    ExtractableResponse<Response> response = requestFindUsername("incorrect_email@example.com");
+
+    // then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_BAD_REQUEST);
+  }
+
+  @Test
+  @DisplayName("임시 비밀번호 발급에 성공합니다.")
+  void recoverPassword_success() {
+    // given
+    Member member = createMember("username1", "email@example.com", "password11");
+    String tempPassword = "12345678";
+    given(randomCodeGenerator.generatePassword()).willReturn(tempPassword);
+
+    // when
+    ExtractableResponse<Response> response = requestRecoverPassword(member.getUsername(), member.getEmail());
+
+    // then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
+    then(mailService).should().sendMail(any(Mail.class));
+    Member updatedMember = memberRepository.findByUsername(member.getUsername())
+        .orElseThrow(() -> new RuntimeException());
+    assertThat(updatedMember.getPassword()).isEqualTo(tempPassword);
+  }
+
+  @Test
+  @DisplayName("이메일과 username 이 존재하지 않아, 임시 비밀번호 발급에 실패합니다.")
+  void recoverPassword_fail_because_email_or_username_not_exists() {
+    // given
+    Member member = createMember("username1", "email@example.com", "password11");
+
+    // when
+    ExtractableResponse<Response> response = requestRecoverPassword("wrongUsername", "wrong@example.com");
+
+    // then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_BAD_REQUEST);
+  }
+
+  @Test
+  @DisplayName("비밀번호 재설성에 성공합니다.")
+  void resetPassword_success() {
+    // given
+    Member member = createMember("username1", "email@example.com", "password11");
+    // 임시 비밀번호 생성
+    String tempPassword = "12345678";
+    given(randomCodeGenerator.generatePassword()).willReturn(tempPassword);
+    requestRecoverPassword(member.getUsername(), member.getEmail());
+
+    String newPassword = "newPassword123";
+    ResetPasswordRequest request = ResetPasswordRequest.builder()
+        .username(member.getUsername())
+        .email(member.getEmail())
+        .password(tempPassword)
+        .newPassword(newPassword)
+        .newPasswordConfirm(newPassword).build();
+
+    // when
+    ExtractableResponse<Response> response = requestResetPasswordRequest(request);
+
+    // then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
+    Member updatedMember = memberRepository.findByUsername(member.getUsername())
+        .orElseThrow(() -> new RuntimeException());
+    assertThat(updatedMember.getPassword()).isEqualTo(newPassword);
+  }
+
+  @Test
+  @DisplayName("비밀번호가 일치하지 않아 비밀번호 재설성에 실패합니다.")
+  void resetPassword_fail_because_password_not_matched() {
+    // given
+    Member member = createMember("username1", "email@example.com", "password11");
+    // 임시 비밀번호 생성
+    String tempPassword = "12345678";
+    given(randomCodeGenerator.generatePassword()).willReturn(tempPassword);
+    requestRecoverPassword(member.getUsername(), member.getEmail());
+
+    String newPassword = "newPassword123";
+    ResetPasswordRequest request = ResetPasswordRequest.builder()
+        .username(member.getUsername())
+        .email(member.getEmail())
+        .password("wrongPassword")  // 틀린 비밀번호
+        .newPassword(newPassword)
+        .newPasswordConfirm(newPassword).build();
+
+    // when
+    ExtractableResponse<Response> response = requestResetPasswordRequest(request);
+
+    // then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_BAD_REQUEST);
+  }
+
+
+  public Member createMember(String username, String email, String password) {
+    sendMailAndValidComplete(email);
+
+    SignUpRequest request = SignUpRequest.builder()
+        .username(username)
+        .email(email)
+        .password(password)
+        .passwordCheck(password)
+        .termAndAgrees(List.of(
+            new TermAndAgree(privateInfoTerm.getId(), true),
+            new TermAndAgree(marketingTerm.getId(), false)))
+        .build();
+    requestSignUp(request);
+    return memberRepository.findByEmail(email)
+        .orElseThrow(() -> new RuntimeException());
+  }
+
+  /*
+  비밀번호 재설정 요청을 보냅니다.
+  */
+  private static ExtractableResponse<Response> requestResetPasswordRequest(ResetPasswordRequest request) {
+    return RestAssured.given().log().all()
+        .contentType(ContentType.JSON)
+        .body(request)
+        .when().post("/members/reset-password")
+        .then().log().all()
+        .extract();
+  }
+
+  /*
+  임시 비밀번호 설정 요청을 보냅니다.
+  */
+  private static ExtractableResponse<Response> requestRecoverPassword(String username, String email) {
+    RecoverPasswordRequest request = new RecoverPasswordRequest(username, email);
+
+    return RestAssured.given().log().all()
+        .contentType(ContentType.JSON)
+        .body(request)
+        .when().post("/members/recover-password")
+        .then().log().all()
+        .extract();
+  }
+
+  /*
+  findUsername 요청을 보냅니다.
+   */
+  private static ExtractableResponse<Response> requestFindUsername(String email) {
+    return RestAssured.given().log().all()
+        .contentType(ContentType.JSON)
+        .queryParam("email", email)
+        .when().post("/members/find-username")
+        .then().log().all()
+        .extract();
+  }
+
   /*
   회원가입 요청을 보냅니다.
    */
@@ -383,7 +557,7 @@ class MemberIntegrationTest extends IntegrationTest {
   /*
   본인 인증 요청을 보냅니다.
    */
-  private ExtractableResponse<Response> requestVerifySentCode(String email, String code) {
+  private static ExtractableResponse<Response> requestVerifySentCode(String email, String code) {
     VerifySentCodeRequest request = new VerifySentCodeRequest(email, code);
 
     return RestAssured.given().log().all()

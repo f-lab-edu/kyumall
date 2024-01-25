@@ -2,6 +2,8 @@ package com.kyumall.kyumallclient.member;
 
 import com.kyumall.kyumallclient.exception.ErrorCode;
 import com.kyumall.kyumallclient.exception.KyumallException;
+import com.kyumall.kyumallclient.member.dto.RecoverPasswordRequest;
+import com.kyumall.kyumallclient.member.dto.ResetPasswordRequest;
 import com.kyumall.kyumallclient.member.dto.SignUpRequest;
 import com.kyumall.kyumallclient.member.dto.TermDto;
 import com.kyumall.kyumallclient.member.dto.VerifySentCodeRequest;
@@ -75,5 +77,33 @@ public class MemberController {
   @GetMapping("/sign-up-terms")
   public ResponseWrapper<List<TermDto>> getSignUpTerms() {
     return ResponseWrapper.ok(memberService.getSignUpTerms());
+  }
+
+  /**
+   * 이메일로 아이디 찾기
+   * @param email
+   * @return
+   */
+  @PostMapping("/find-username")
+  public ResponseWrapper<String> findUsername(@RequestParam String email) {
+    return ResponseWrapper.ok(memberService.findUsername(email));
+  }
+
+  /**
+   * 임시 비밀번호 발급
+   * @param request
+   */
+  @PostMapping("/recover-password")
+  public void recoverPassword(@RequestBody RecoverPasswordRequest request) {
+    memberService.recoverPassword(request);
+  }
+
+  /**
+   * 비밀번호 재설정
+   * @param request
+   */
+  @PostMapping("/reset-password")
+  public void resetPassword(@RequestBody ResetPasswordRequest request) {
+    memberService.resetPassword(request);
   }
 }

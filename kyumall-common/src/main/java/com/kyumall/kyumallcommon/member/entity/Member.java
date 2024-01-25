@@ -1,6 +1,7 @@
 package com.kyumall.kyumallcommon.member.entity;
 
 import com.kyumall.kyumallcommon.BaseTimeEntity;
+import com.kyumall.kyumallcommon.Util.RandomCodeGenerator;
 import com.kyumall.kyumallcommon.member.vo.MemberStatus;
 import com.kyumall.kyumallcommon.member.vo.MemberType;
 import jakarta.persistence.Entity;
@@ -30,4 +31,18 @@ public class Member extends BaseTimeEntity {
   private MemberType type;
   @Enumerated(value = EnumType.STRING)
   private MemberStatus status;
+
+  public String resetRandomPassword(RandomCodeGenerator randomCodeGenerator) {
+    String newPassword = randomCodeGenerator.generatePassword();
+    this.password = newPassword;
+    return newPassword;
+  }
+
+  public boolean verifyPassword(String password) {
+    return this.password.equals(password);
+  }
+
+  public void resetPassword(String newPassword) {
+    this.password = newPassword;
+  }
 }
