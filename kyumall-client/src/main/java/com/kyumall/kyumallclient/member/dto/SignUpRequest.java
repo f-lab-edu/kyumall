@@ -24,14 +24,10 @@ public class SignUpRequest {
   private String password;
   @NotEmpty
   private String passwordCheck; // 비밀번호 확인
-  private List<TermAndAgree> termAndAgrees;
-
-  public List<Long> extractTermIds() {
-    return termAndAgrees.stream().map(TermAndAgree::getTermId).collect(Collectors.toList());
-  }
+  private List<Long> agreedTermIds;
 
   public Member toEntity() {
-    return Member.builder()    // 서비스에는
+    return Member.builder()
         .username(username)
         .email(email)
         .password(password)

@@ -8,7 +8,6 @@ import com.kyumall.kyumallclient.TestUtil;
 import com.kyumall.kyumallclient.member.dto.RecoverPasswordRequest;
 import com.kyumall.kyumallclient.member.dto.ResetPasswordRequest;
 import com.kyumall.kyumallclient.member.dto.SignUpRequest;
-import com.kyumall.kyumallclient.member.dto.TermAndAgree;
 import com.kyumall.kyumallclient.member.dto.TermDto;
 import com.kyumall.kyumallclient.member.dto.VerifySentCodeRequest;
 import com.kyumall.kyumallcommon.Util.EncryptUtil;
@@ -251,9 +250,7 @@ class MemberIntegrationTest extends IntegrationTest {
         .email("email1@example.com")
         .password("password1")
         .passwordCheck("password1")
-        .termAndAgrees(List.of(
-            new TermAndAgree(privateInfoTerm.getId(), true),
-            new TermAndAgree(marketingTerm.getId(), false)))
+        .agreedTermIds(List.of(privateInfoTerm.getId(), marketingTerm.getId()))
         .build();
     // 본인 인증 성공 처리
     sendMailAndValidComplete(request.getEmail());
@@ -281,16 +278,14 @@ class MemberIntegrationTest extends IntegrationTest {
     // given
     // 첫번째 회원가입
     SignUpRequest request1 = new SignUpRequest("username1", "email1@example.com", "password1", "password1",
-        List.of(new TermAndAgree(privateInfoTerm.getId(), true),
-            new TermAndAgree(marketingTerm.getId(), false)));
+        List.of(privateInfoTerm.getId(), marketingTerm.getId()));
 
     sendMailAndValidComplete(request1.getEmail());
     requestSignUp(request1);
 
     // 중복된 아이디 회원가입
     SignUpRequest request2 = new SignUpRequest("username1", "email2@example.com", "password1", "password1",
-        List.of(new TermAndAgree(privateInfoTerm.getId(), true),
-            new TermAndAgree(marketingTerm.getId(), false)));
+        List.of(privateInfoTerm.getId(), marketingTerm.getId()));
     sendMailAndValidComplete(request2.getEmail());
     // when
     ExtractableResponse<Response> response = requestSignUp(request2);
@@ -305,16 +300,14 @@ class MemberIntegrationTest extends IntegrationTest {
     // given
     // 첫번째 회원가입
     SignUpRequest request1 = new SignUpRequest("username1", "email1@example.com", "password1", "password1",
-        List.of(new TermAndAgree(privateInfoTerm.getId(), true),
-            new TermAndAgree(marketingTerm.getId(), false)));
+        List.of(privateInfoTerm.getId(), marketingTerm.getId()));
 
     sendMailAndValidComplete(request1.getEmail());
     requestSignUp(request1);
 
     // 중복된 아이디 회원가입
     SignUpRequest request2 = new SignUpRequest("username2", "email1@example.com", "password1", "password1",
-        List.of(new TermAndAgree(privateInfoTerm.getId(), true),
-            new TermAndAgree(marketingTerm.getId(), false)));
+        List.of(privateInfoTerm.getId(), marketingTerm.getId()));
     sendMailAndValidComplete(request2.getEmail());
     // when
     ExtractableResponse<Response> response = requestSignUp(request2);
@@ -329,8 +322,7 @@ class MemberIntegrationTest extends IntegrationTest {
     // given
     // 첫번째 회원가입
     SignUpRequest request = new SignUpRequest("username1", "email1@example.com", "password1", "password2",
-        List.of(new TermAndAgree(privateInfoTerm.getId(), true),
-            new TermAndAgree(marketingTerm.getId(), false)));
+        List.of(privateInfoTerm.getId(), marketingTerm.getId()));
 
     sendMailAndValidComplete(request.getEmail());
 
@@ -347,8 +339,7 @@ class MemberIntegrationTest extends IntegrationTest {
     // given
     // 첫번째 회원가입
     SignUpRequest request = new SignUpRequest("username1", "email1@example.com", "password1", "password1",
-        List.of(new TermAndAgree(privateInfoTerm.getId(), false), // 필수약관 미동의
-            new TermAndAgree(marketingTerm.getId(), false)));
+        List.of(marketingTerm.getId())); //필수 약관 미동의
 
     sendMailAndValidComplete(request.getEmail());
 
@@ -501,10 +492,7 @@ class MemberIntegrationTest extends IntegrationTest {
         .email(email)
         .password(password)
         .passwordCheck(password)
-        .termAndAgrees(List.of(
-            new TermAndAgree(privateInfoTerm.getId(), true),
-            new TermAndAgree(marketingTerm.getId(), false)))
-        .build();
+        .agreedTermIds(List.of(privateInfoTerm.getId(), marketingTerm.getId())).build();
     requestSignUp(request);
     return memberRepository.findByEmail(email)
         .orElseThrow(() -> new RuntimeException());

@@ -5,7 +5,6 @@ import com.kyumall.kyumallclient.exception.KyumallException;
 import com.kyumall.kyumallclient.member.dto.RecoverPasswordRequest;
 import com.kyumall.kyumallclient.member.dto.ResetPasswordRequest;
 import com.kyumall.kyumallclient.member.dto.SignUpRequest;
-import com.kyumall.kyumallclient.member.dto.TermAndAgree;
 import com.kyumall.kyumallclient.member.dto.TermDto;
 import com.kyumall.kyumallclient.member.dto.VerifySentCodeRequest;
 import com.kyumall.kyumallclient.member.dto.VerifySentCodeResult;
@@ -21,18 +20,17 @@ import com.kyumall.kyumallcommon.member.repository.AgreementRepository;
 import com.kyumall.kyumallcommon.member.repository.MemberRepository;
 import com.kyumall.kyumallcommon.member.repository.TermRepository;
 import com.kyumall.kyumallcommon.member.repository.VerificationRepository;
+import com.kyumall.kyumallcommon.member.vo.TermStatus;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import javax.crypto.SecretKey;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.yaml.snakeyaml.events.Event.ID;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -144,55 +142,38 @@ public class MemberService {
   }
 
   private void saveAgreementsOfTerms(SignUpRequest request, Member member) {
-    List<Long> termIds = request.extractTermIds();
-    List<Term> terms = termRepository.findAllByIdIn(termIds);
+    List<Term> terms = termRepository.findAllByStatus(TermStatus.INUSE);
 
     List<Agreement> agreementsToSave = new ArrayList<>();
-    for (TermAndAgree termAndAgree: request.getTermAndAgrees()) {
-      Term term = findTermByIdFromList(terms, termAndAgree.getTermId())
-          .orElseThrow(() -> new KyumallException(ErrorCode.TERM_NOT_EXISTS));
 
-      validRequiredTermAgreed(termAndAgree, term);
-
+    for (Term term: terms) {
+      if (!checkTermInAgreeIds(term, request.getAgreedTermIds())) {
+        throw new KyumallException(ErrorCode.REQUIRED_TERM_MUST_AGREED);
+      }
       agreementsToSave.add(Agreement.builder()
           .member(member)
           .term(term)
-          .agree(termAndAgree.isAgree())
+          .agree(true)
           .build());
     }
     // saveAll Agreements
     agreementRepository.saveAll(agreementsToSave);
   }
 
-  /**
-   * 필수약관 동의 했는지 체크
-   */
-  private static void validRequiredTermAgreed(TermAndAgree termAndAgree, Term term) {
-    if (term.isRequired() && !termAndAgree.isAgree()) {
-      throw new KyumallException(ErrorCode.REQUIRED_TERM_MUST_AGREED);
-    }
-  }
-
-  /**
-   * Term List 중 termId를 가지는 Term 을 찾아 반환합니다.
-   * @param terms
-   * @param termId
-   * @return
-   */
-  private Optional<Term> findTermByIdFromList(List<Term> terms, Long termId) {
-    for (Term term: terms) {
-      if (Objects.equals(term.getId(), termId)) {
-        return Optional.of(term);
+  boolean checkTermInAgreeIds(Term term, List<Long> agreedIds) {
+    for (Long agreedId: agreedIds) {
+      if (Objects.equals(term.getId(), agreedId)) {
+        return true;
       }
     }
-    return Optional.empty();
+    return false;
   }
 
   /**
    * 현재 '사용중' 상태인 모든 약관을 조회합니다.
    */
   public List<TermDto> getSignUpTerms() {
-    return termRepository.findAllTermsInUse()
+    return termRepository.findAllByStatus(TermStatus.INUSE)
         .stream().map(TermDto::from).toList();
   }
 
