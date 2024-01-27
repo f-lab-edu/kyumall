@@ -1,18 +1,26 @@
 package com.kyumall.kyumallclient.member;
 
+import static com.kyumall.kyumallclient.member.MemberService.ID_ENCRYPTION_ALGORITHM;
+
 import com.kyumall.kyumallclient.exception.ErrorCode;
 import com.kyumall.kyumallclient.exception.KyumallException;
+import com.kyumall.kyumallclient.member.dto.FindUsernameResponse;
 import com.kyumall.kyumallclient.member.dto.RecoverPasswordRequest;
 import com.kyumall.kyumallclient.member.dto.ResetPasswordRequest;
+import com.kyumall.kyumallclient.member.dto.SendVerificationEmailResponse;
 import com.kyumall.kyumallclient.member.dto.SignUpRequest;
 import com.kyumall.kyumallclient.member.dto.TermDto;
 import com.kyumall.kyumallclient.member.dto.VerifySentCodeRequest;
 import com.kyumall.kyumallclient.member.dto.VerifySentCodeResult;
 import com.kyumall.kyumallclient.member.validator.SignUpRequestValidator;
 import com.kyumall.kyumallclient.response.ResponseWrapper;
+import com.kyumall.kyumallcommon.Util.EncryptUtil;
 import jakarta.validation.Valid;
 import java.util.List;
+import javax.crypto.SecretKey;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.InitBinder;
@@ -22,10 +30,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RequiredArgsConstructor
 @RequestMapping("/members")
 @RestController
 public class MemberController {
+  @Value("${encrypt.key}")
+  private String encryptKey;
   private final MemberService memberService;
   private final SignUpRequestValidator signUpRequestValidator;
 
@@ -40,8 +51,9 @@ public class MemberController {
    * @return
    */
   @PostMapping("/send-verification-mail")
-  public void sendVerificationMail(@RequestParam String email) {
-    memberService.sendVerificationEmail(email);
+  public ResponseWrapper<SendVerificationEmailResponse> sendVerificationMail(@RequestParam String email) {
+    SecretKey secretKey = EncryptUtil.decodeStringToKey(encryptKey, ID_ENCRYPTION_ALGORITHM);
+    return ResponseWrapper.ok(SendVerificationEmailResponse.of(memberService.sendVerificationEmail(email, secretKey)));
   }
 
   /**
@@ -51,7 +63,9 @@ public class MemberController {
    */
   @PostMapping("/verify-sent-code")
   public void verifySentCode(@RequestBody VerifySentCodeRequest request) {
-    VerifySentCodeResult result = memberService.verifySentCode(request);
+    String decryptKey = decryptKey(request.getVerificationKey());
+
+    VerifySentCodeResult result = memberService.verifySentCode(request, decryptKey);
     // 트랜잭션 내에서 exception을 발생시키면 트랜잭션이 롤백 되어서 밖에서 처리하였습니다.
     if (result == VerifySentCodeResult.FAIL) {
       throw new KyumallException(ErrorCode.VERIFICATION_FAILED);
@@ -59,6 +73,18 @@ public class MemberController {
     if (result == VerifySentCodeResult.EXCEED_COUNT) {
       throw new KyumallException(ErrorCode.VERIFICATION_EXCEED_TRY_COUNT);
     }
+  }
+
+  private String decryptKey(String verificationKey) {
+    String decryptId;
+    try { // 암호화 해제
+      SecretKey secretKey = EncryptUtil.decodeStringToKey(encryptKey, ID_ENCRYPTION_ALGORITHM);
+      decryptId = EncryptUtil.decrypt(ID_ENCRYPTION_ALGORITHM, verificationKey, secretKey);
+    } catch (Exception e) {
+      log.error(e.toString());
+      throw new KyumallException(ErrorCode.VERIFICATION_FAILED);
+    }
+    return decryptId;
   }
 
   /**
@@ -85,7 +111,7 @@ public class MemberController {
    * @return
    */
   @PostMapping("/find-username")
-  public ResponseWrapper<String> findUsername(@RequestParam String email) {
+  public ResponseWrapper<FindUsernameResponse> findUsername(@RequestParam String email) {
     return ResponseWrapper.ok(memberService.findUsername(email));
   }
 

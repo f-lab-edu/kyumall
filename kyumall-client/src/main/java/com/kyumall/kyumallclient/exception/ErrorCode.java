@@ -9,6 +9,7 @@ public enum ErrorCode {
   // 공통 에러 1000 ~ 1999
   INTERNAL_SERVER_ERROR("1000", "서버 내부 에러입니다."),
   METHOD_ARGS_INVALID("1001", "입력값이 올바르지 않습니다."),
+  FAIL_TO_ENCRYPT("1002", "암호화에 실패했습니다."),
 
   // 회원파트 에러 2000 ~ 2999
   VERIFICATION_MAIL_CAN_SEND_IN_TERM("2000", "본인인증 메일은 3분 간격으로 전송 가능합니다."),
