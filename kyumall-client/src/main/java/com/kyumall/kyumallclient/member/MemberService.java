@@ -2,6 +2,7 @@ package com.kyumall.kyumallclient.member;
 
 import com.kyumall.kyumallclient.exception.ErrorCode;
 import com.kyumall.kyumallclient.exception.KyumallException;
+import com.kyumall.kyumallclient.member.dto.FindUsernameResponse;
 import com.kyumall.kyumallclient.member.dto.RecoverPasswordRequest;
 import com.kyumall.kyumallclient.member.dto.ResetPasswordRequest;
 import com.kyumall.kyumallclient.member.dto.SignUpRequest;
@@ -56,16 +57,14 @@ public class MemberService {
    * @return verification 객체의 ID를 암호화 한 값
    */
   @Transactional
-  public String sendVerificationEmail(String email) {
+  public String sendVerificationEmail(String email, SecretKey secretKey) {
     verificationRepository.findUnverifiedByContact(email)
             .ifPresent(this::processWhenUnverifiedInfoExists);
 
     mailService.sendMail(email);
     Verification verification = verificationRepository.save(
         Verification.of(email, randomCodeGenerator, clock));
-
     try {
-      SecretKey secretKey = EncryptUtil.decodeStringToKey(encryptKey, ID_ENCRYPTION_ALGORITHM);
       return EncryptUtil.encrypt(ID_ENCRYPTION_ALGORITHM,
           String.valueOf(verification.getId()), secretKey);
     } catch (Exception e) {
@@ -90,16 +89,16 @@ public class MemberService {
   /**
    * 본인인증 코드와 일치하는지 검증합니다.
    * 예외 발생 시 Tx Rollback 되기 때문에 실패시, 예외를 트랜잭션 안에서 던지지 않고 결과를 enum 으로 반환합니다.
-   * 인증객체의 ID와 전달받은 ID를 암호화한 값이 동일한지 검증합니다.
+   * 인증객체의 ID와 전달받은 ID(decryptedKey)를 값이 동일한지 검증합니다.
    * @param request
    * @return VerifySentCodeResult 인증결과
    */
   @Transactional
-  public VerifySentCodeResult verifySentCode(VerifySentCodeRequest request) {
+  public VerifySentCodeResult verifySentCode(VerifySentCodeRequest request, String decryptedKey) {
     Verification verification = verificationRepository.findUnverifiedByContact(request.getEmail())
         .orElseThrow(() -> new KyumallException(ErrorCode.VERIFICATION_MAIL_NOT_MATCH));
 
-    validateVerificationId(verification.getId(), request.getVerificationId());
+    validateVerificationKey(verification.getId(), decryptedKey);
 
     // 인증 성공
     if (verification.verify(request.getCode())) {
@@ -115,14 +114,8 @@ public class MemberService {
     return VerifySentCodeResult.EXCEED_COUNT;
   }
 
-  private void validateVerificationId(Long verificationId, String encryptedId) {
-    try {
-      SecretKey secretKey = EncryptUtil.decodeStringToKey(encryptKey, ID_ENCRYPTION_ALGORITHM);
-      String decryptId = EncryptUtil.decrypt(ID_ENCRYPTION_ALGORITHM, encryptedId, secretKey);
-      if (verificationId != Long.parseLong(decryptId)) {
-        throw new KyumallException(ErrorCode.VERIFICATION_FAILED);
-      }
-    } catch (Exception e) {
+  private void validateVerificationKey(Long verificationId, String decryptedKey) {
+    if (verificationId != Long.parseLong(decryptedKey)) {
       throw new KyumallException(ErrorCode.VERIFICATION_FAILED);
     }
   }
@@ -177,10 +170,10 @@ public class MemberService {
         .stream().map(TermDto::from).toList();
   }
 
-  public String findUsername(String email) {
+  public FindUsernameResponse findUsername(String email) {
     Member member = memberRepository.findByEmail(email)
         .orElseThrow(() -> new KyumallException(ErrorCode.MEMBER_NOT_EXISTS));
-    return member.getUsername();
+    return FindUsernameResponse.of(member.getUsername());
   }
 
   /**

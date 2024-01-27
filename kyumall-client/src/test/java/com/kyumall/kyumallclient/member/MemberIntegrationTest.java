@@ -112,7 +112,7 @@ class MemberIntegrationTest extends IntegrationTest {
     assertThat(verification.getStatus()).isEqualTo(VerificationStatus.UNVERIFIED);
     assertThat(verification.getTryCount()).isEqualTo(0);
     // 암호화하여 반환한 ID값 체크
-    String verificationId = response.body().jsonPath().get("result");
+    String verificationId = response.body().jsonPath().get("result.key");
     String decryptId = EncryptUtil.decrypt(MemberService.ID_ENCRYPTION_ALGORITHM, verificationId, secretKey);
     assertThat(Long.parseLong(decryptId)).isEqualTo(verification.getId());
   }
@@ -165,7 +165,7 @@ class MemberIntegrationTest extends IntegrationTest {
     String code = "000000";
     LocalDateTime firstSendTime = LocalDateTime.of(2024, 1, 1, 0, 0);
     // 본인인증 메일 전송
-    String verificationId = requestSendVerificationMail(email, firstSendTime, code).body().jsonPath().get("result");
+    String verificationId = requestSendVerificationMail(email, firstSendTime, code).body().jsonPath().get("result.key");
 
     // when
     ExtractableResponse<Response> response = requestVerifySentCode(email, code, verificationId);
@@ -185,7 +185,7 @@ class MemberIntegrationTest extends IntegrationTest {
     String code = "000000";
     LocalDateTime firstSendTime = LocalDateTime.of(2024, 1, 1, 0, 0);
     // 본인인증 메일 전송
-    String verificationId = requestSendVerificationMail(email, firstSendTime, code).body().jsonPath().get("result");
+    String verificationId = requestSendVerificationMail(email, firstSendTime, code).body().jsonPath().get("result.key");
     String incorrectId = "incorrect_id";
 
     // when
@@ -203,7 +203,7 @@ class MemberIntegrationTest extends IntegrationTest {
     String rightCode = "000000";
     LocalDateTime firstSendTime = LocalDateTime.of(2024, 1, 1, 0, 0);
     // 본인인증 메일 전송
-    String verificationId = requestSendVerificationMail(email, firstSendTime, rightCode).body().jsonPath().get("result");
+    String verificationId = requestSendVerificationMail(email, firstSendTime, rightCode).body().jsonPath().get("result.key");
     String wrongCode = "000011";
 
     // when
@@ -225,7 +225,7 @@ class MemberIntegrationTest extends IntegrationTest {
     String rightCode = "000000";
     LocalDateTime firstSendTime = LocalDateTime.of(2024, 1, 1, 0, 0);
     // 본인인증 메일 전송
-    String verificationId = requestSendVerificationMail(email, firstSendTime, rightCode).body().jsonPath().get("result");
+    String verificationId = requestSendVerificationMail(email, firstSendTime, rightCode).body().jsonPath().get("result.key");
     String wrongCode = "000011";
     requestVerifySentCode(email, wrongCode, verificationId); // try 1
     requestVerifySentCode(email, wrongCode, verificationId); // try 2
@@ -379,7 +379,7 @@ class MemberIntegrationTest extends IntegrationTest {
 
     // then
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
-    String username =  response.body().jsonPath().get("result");
+    String username =  response.body().jsonPath().get("result.key");
     assertThat(username).isEqualTo(member.getUsername());
   }
 
@@ -555,7 +555,7 @@ class MemberIntegrationTest extends IntegrationTest {
   private void sendMailAndValidComplete(String email) {
     String code = "000000";
     LocalDateTime sendTime = LocalDateTime.of(2024,1,1,1,1);
-    String verificationId = requestSendVerificationMail(email, sendTime, code).body().jsonPath().get("result");
+    String verificationId = requestSendVerificationMail(email, sendTime, code).body().jsonPath().get("result.key");
     requestVerifySentCode(email, code, verificationId);
   }
 
