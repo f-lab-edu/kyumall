@@ -23,13 +23,13 @@ public class Term extends BaseTimeEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
-  private String groupName; // 약관 그룹명 (영문)
-  private Integer version;  // 버전
+  //private String groupName; // 약관 그룹명 (영문)
+  //private Integer version;  // 버전
   private String name;  // 약관명
   @Lob
   @Column(columnDefinition = "TEXT")
   private String content; // 약관 내용
-  private Integer order;  // 약관 정렬 순서
+  //private Integer order;  // 약관 정렬 순서
   @Enumerated(EnumType.STRING)
   private TermType type;
   @Enumerated(EnumType.STRING)
