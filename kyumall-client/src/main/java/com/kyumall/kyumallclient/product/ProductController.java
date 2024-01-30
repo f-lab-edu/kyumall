@@ -1,0 +1,23 @@
+package com.kyumall.kyumallclient.product;
+
+import com.kyumall.kyumallclient.product.dto.CreateProductRequest;
+import com.kyumall.kyumallclient.product.dto.CreateProductResponse;
+import com.kyumall.kyumallclient.response.ResponseWrapper;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RequiredArgsConstructor
+@RequestMapping("/products")
+@RestController
+public class ProductController {
+  private final ProductService productService;
+
+  @PostMapping
+  public ResponseWrapper<CreateProductResponse> createProduct(@RequestBody CreateProductRequest request) {
+    Long productId = productService.createProduct(request);
+    return ResponseWrapper.ok(new CreateProductResponse(productId));
+  }
+}
