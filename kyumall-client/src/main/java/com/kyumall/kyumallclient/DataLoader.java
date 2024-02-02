@@ -4,6 +4,9 @@ import com.kyumall.kyumallcommon.member.entity.Term;
 import com.kyumall.kyumallcommon.member.repository.TermRepository;
 import com.kyumall.kyumallcommon.member.vo.TermStatus;
 import com.kyumall.kyumallcommon.member.vo.TermType;
+import com.kyumall.kyumallcommon.product.entity.Category;
+import com.kyumall.kyumallcommon.product.repository.CategoryRepository;
+import com.kyumall.kyumallcommon.product.vo.CategoryStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
@@ -17,9 +20,29 @@ import org.springframework.stereotype.Component;
 public class DataLoader implements CommandLineRunner {
 
   private final TermRepository termRepository;
+  private final CategoryRepository categoryRepository;
 
   @Override
   public void run(String... args) throws Exception {
+    saveTerms();
+    saveCategories();
+  }
+
+  private void saveCategories() {
+    Category food = Category.builder()
+        .name("식품")
+        .status(CategoryStatus.INUSE)
+        .build();
+    categoryRepository.save(food);
+    Category fruit = Category.builder()
+        .name("과일")
+        .parent(food)
+        .status(CategoryStatus.INUSE)
+        .build();
+    categoryRepository.save(fruit);
+  }
+
+  private void saveTerms() {
     Term kyumallTerm = Term.builder()
         .name("큐몰 이용약관")
         .content(

@@ -4,3 +4,5 @@ TRUNCATE TABLE member;
 TRUNCATE TABLE verification;
 TRUNCATE TABLE term;
 TRUNCATE TABLE agreement;
+TRUNCATE TABLE category;
+TRUNCATE TABLE product;

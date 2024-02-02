@@ -20,7 +20,11 @@ public enum ErrorCode {
   REQUIRED_TERM_MUST_AGREED("2005", "필수 약관은 반드시 동의해야합니다."),
   MEMBER_NOT_EXISTS("2006", "회원 정보가 존재하지 않습니다."),
   PASSWORD_AND_CONFIRM_NOT_EQUALS("2007", "비밀번호와 비밀번호 확인이 일치하지 않습니다."),
-  PASSWORD_NOT_MATCHED("2008", "비밀번호가 일치하지 않습니다.");
+  PASSWORD_NOT_MATCHED("2008", "비밀번호가 일치하지 않습니다."),
+
+  // 상품파트 에러 (3000 ~ 3999)
+  CATEGORY_NOT_EXISTS("3000", "카테고리가 존재하지 않습니다.");
+
 
   private final String code;
   private final String message;
