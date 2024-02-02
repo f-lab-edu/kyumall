@@ -4,6 +4,8 @@ import com.kyumall.kyumallclient.exception.ErrorCode;
 import com.kyumall.kyumallclient.exception.KyumallException;
 import com.kyumall.kyumallclient.product.dto.CreateProductRequest;
 import com.kyumall.kyumallclient.product.dto.ProductSimpleDto;
+import com.kyumall.kyumallcommon.member.entity.Member;
+import com.kyumall.kyumallcommon.member.repository.MemberRepository;
 import com.kyumall.kyumallcommon.product.entity.Category;
 import com.kyumall.kyumallcommon.product.entity.Product;
 import com.kyumall.kyumallcommon.product.repository.CategoryRepository;
@@ -19,14 +21,19 @@ public class ProductService {
 
   private final CategoryRepository categoryRepository;
   private final ProductRepository productRepository;
+  private final MemberRepository memberRepository;
 
   public Long createProduct(CreateProductRequest request) {
     Category category = categoryRepository.findById(request.getCategoryId())
         .orElseThrow(() -> new KyumallException(ErrorCode.CATEGORY_NOT_EXISTS));
 
+    Member seller = memberRepository.findByUsername(request.getSellerUsername())
+        .orElseThrow(() -> new KyumallException(ErrorCode.MEMBER_NOT_EXISTS));
+
     Product product = productRepository.save(Product.builder()
         .name(request.getProductName())
         .category(category)
+        .seller(seller)
         .price(request.getPrice())
         .detail(request.getDetail())
         .build());

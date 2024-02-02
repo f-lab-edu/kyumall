@@ -3,8 +3,11 @@ package com.kyumall.kyumallclient.product;
 import static org.assertj.core.api.Assertions.*;
 
 import com.kyumall.kyumallclient.IntegrationTest;
+import com.kyumall.kyumallclient.member.MemberFactory;
 import com.kyumall.kyumallclient.product.dto.CreateProductRequest;
 import com.kyumall.kyumallclient.product.dto.ProductSimpleDto;
+import com.kyumall.kyumallcommon.member.entity.Member;
+import com.kyumall.kyumallcommon.member.vo.MemberType;
 import com.kyumall.kyumallcommon.product.entity.Category;
 import com.kyumall.kyumallcommon.product.entity.Product;
 import com.kyumall.kyumallcommon.product.repository.CategoryRepository;
@@ -24,12 +27,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 @DisplayName("상품 통합테스트")
 class ProductIntegrationTest extends IntegrationTest {
-
+  @Autowired
+  private MemberFactory memberFactory;
   @Autowired
   private CategoryRepository categoryRepository;
   @Autowired
   private ProductRepository productRepository;
 
+  Member seller01;
   Category food;
   Category fruit;
   Category meet;
@@ -39,6 +44,7 @@ class ProductIntegrationTest extends IntegrationTest {
 
   @BeforeEach
   void initData() {
+    seller01 = memberFactory.createMember("user01", "email@example.com", "password", MemberType.SELLER);
     food = categoryRepository.save(Category.builder()
         .name("식품")
         .status(CategoryStatus.INUSE)
@@ -53,9 +59,9 @@ class ProductIntegrationTest extends IntegrationTest {
         .parent(food)
         .status(CategoryStatus.INUSE)
         .build());
-    apple = createProductForTest(new CreateProductRequest("얼음골사과", fruit.getId(), 40000,
+    apple = createProductForTest(new CreateProductRequest("얼음골사과", fruit.getId(), seller01.getUsername() ,40000,
         "<h1>맛있는 사과</h1>"));
-    beef = createProductForTest(new CreateProductRequest("소고기", meet.getId(), 50000,
+    beef = createProductForTest(new CreateProductRequest("소고기", meet.getId(), seller01.getUsername() ,50000,
         "<h1>맛있는 소고기</h1>"));
     allProducts.add(apple);
     allProducts.add(beef);
@@ -68,6 +74,7 @@ class ProductIntegrationTest extends IntegrationTest {
     CreateProductRequest request = CreateProductRequest.builder()
         .productName("얼음골 사과")
         .categoryId(fruit.getId())
+        .sellerUsername(seller01.getUsername())
         .price(30000)
         .detail("사과입니다.").build();
     // when
@@ -80,6 +87,7 @@ class ProductIntegrationTest extends IntegrationTest {
     Product savedProduct = findProductById(createdId.longValue());
     assertThat(savedProduct.getName()).isEqualTo(request.getProductName());
     assertThat(savedProduct.getCategory().getId()).isEqualTo(request.getCategoryId());
+    assertThat(savedProduct.getSeller().getId()).isEqualTo(seller01.getId());
     assertThat(savedProduct.getPrice()).isEqualTo(request.getPrice());
     assertThat(savedProduct.getDetail()).isEqualTo(request.getDetail());
   }

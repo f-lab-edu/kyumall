@@ -13,6 +13,8 @@ public class CreateProductRequest {
   private String productName;
   @NotNull
   private Long categoryId;
+  @NotEmpty
+  private String sellerUsername;
   @NotNull @Min(0)
   private Integer price;
   private String detail;
