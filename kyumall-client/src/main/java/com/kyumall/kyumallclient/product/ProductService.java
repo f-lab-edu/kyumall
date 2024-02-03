@@ -1,7 +1,7 @@
 package com.kyumall.kyumallclient.product;
 
-import com.kyumall.kyumallclient.exception.ErrorCode;
-import com.kyumall.kyumallclient.exception.KyumallException;
+import com.kyumall.kyumallcommon.exception.ErrorCode;
+import com.kyumall.kyumallcommon.exception.KyumallException;
 import com.kyumall.kyumallclient.product.dto.CreateProductRequest;
 import com.kyumall.kyumallclient.product.dto.ProductSimpleDto;
 import com.kyumall.kyumallcommon.member.entity.Member;

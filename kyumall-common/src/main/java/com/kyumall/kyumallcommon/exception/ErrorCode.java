@@ -1,4 +1,4 @@
-package com.kyumall.kyumallclient.exception;
+package com.kyumall.kyumallcommon.exception;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

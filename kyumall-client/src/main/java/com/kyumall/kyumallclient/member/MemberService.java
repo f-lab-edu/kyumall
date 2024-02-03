@@ -1,7 +1,7 @@
 package com.kyumall.kyumallclient.member;
 
-import com.kyumall.kyumallclient.exception.ErrorCode;
-import com.kyumall.kyumallclient.exception.KyumallException;
+import com.kyumall.kyumallcommon.exception.ErrorCode;
+import com.kyumall.kyumallcommon.exception.KyumallException;
 import com.kyumall.kyumallclient.member.dto.FindUsernameResponse;
 import com.kyumall.kyumallclient.member.dto.RecoverPasswordRequest;
 import com.kyumall.kyumallclient.member.dto.ResetPasswordRequest;
@@ -28,7 +28,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import javax.crypto.SecretKey;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

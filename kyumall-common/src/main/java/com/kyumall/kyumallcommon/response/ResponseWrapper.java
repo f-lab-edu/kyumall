@@ -1,9 +1,9 @@
-package com.kyumall.kyumallclient.response;
+package com.kyumall.kyumallcommon.response;
 
-import static com.kyumall.kyumallclient.exception.ErrorCode.*;
+import static com.kyumall.kyumallcommon.exception.ErrorCode.*;
 
-import com.kyumall.kyumallclient.exception.ErrorCode;
-import com.kyumall.kyumallclient.exception.KyumallException;
+import com.kyumall.kyumallcommon.exception.ErrorCode;
+import com.kyumall.kyumallcommon.exception.KyumallException;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

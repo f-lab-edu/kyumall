@@ -1,4 +1,4 @@
-package com.kyumall.kyumallclient.exception;
+package com.kyumall.kyumallcommon.exception;
 
 public class KyumallException extends RuntimeException {
   private ErrorCode errorCode;
