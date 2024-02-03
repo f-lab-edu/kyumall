@@ -16,6 +16,7 @@ import com.kyumall.kyumallcommon.mail.MailService;
 import com.kyumall.kyumallcommon.member.entity.Agreement;
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.member.entity.Term;
+import com.kyumall.kyumallcommon.member.entity.TermDetail;
 import com.kyumall.kyumallcommon.member.entity.Verification;
 import com.kyumall.kyumallcommon.member.repository.AgreementRepository;
 import com.kyumall.kyumallcommon.member.repository.MemberRepository;
@@ -24,8 +25,10 @@ import com.kyumall.kyumallcommon.member.repository.VerificationRepository;
 import com.kyumall.kyumallcommon.member.vo.TermStatus;
 import java.time.Clock;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import javax.crypto.SecretKey;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -166,8 +169,17 @@ public class MemberService {
    * 현재 '사용중' 상태인 모든 약관을 조회합니다.
    */
   public List<TermDto> getSignUpTerms() {
-    return termRepository.findAllByStatus(TermStatus.INUSE)
-        .stream().map(TermDto::from).toList();
+    List<Term> terms = termRepository.findAllByStatus(TermStatus.INUSE);
+
+    List<TermDto> termDtos = new ArrayList<>();
+    for (Term term: terms) {
+      TermDetail latestTermDetail = term.getTermDetails().stream()
+          .max(Comparator.comparingInt(TermDetail::getVersion))
+          .orElseThrow(() -> new KyumallException(ErrorCode.TERM_DETAIL_NOT_EXISTS));
+
+      termDtos.add(TermDto.of(term, latestTermDetail));
+    }
+    return termDtos;
   }
 
   public FindUsernameResponse findUsername(String email) {
