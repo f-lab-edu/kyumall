@@ -9,4 +9,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface TermRepository extends JpaRepository<Term, Long> {
   @EntityGraph(attributePaths = {"termDetails"})
   List<Term> findAllByStatus(TermStatus status);
+
+  List<Term> findByNameContainsOrderByOrdering(String name);
 }

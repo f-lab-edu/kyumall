@@ -39,4 +39,11 @@ public class Term extends BaseTimeEntity {
   public boolean isRequired() {
     return type.equals(TermType.REQUIRED);
   }
+
+  public void update(String name, Integer ordering, TermType type, TermStatus status) {
+    this.name = name;
+    this.ordering = ordering;
+    this.type = type;
+    this.status = status;
+  }
 }
