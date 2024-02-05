@@ -29,4 +29,10 @@ public class TermDetail extends BaseTimeEntity {
   @Basic(fetch = FetchType.LAZY)
   private String content; // 약관 내용
   private Integer version;
+
+  public void update(String title, String content, Integer version) {
+    this.title = title;
+    this.content = content;
+    this.version = version;
+  }
 }

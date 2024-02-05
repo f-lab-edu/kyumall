@@ -1,6 +1,8 @@
 package com.kyumall.kyumalladmin.member;
 
+import com.kyumall.kyumalladmin.member.dto.SaveTermDetailRequest;
 import com.kyumall.kyumalladmin.member.dto.SaveTermRequest;
+import com.kyumall.kyumalladmin.member.dto.TermDetailDto;
 import com.kyumall.kyumalladmin.member.dto.TermDto;
 import com.kyumall.kyumallcommon.dto.CreatedIdDto;
 import com.kyumall.kyumallcommon.response.ResponseWrapper;
@@ -54,5 +56,41 @@ public class TermController {
   @GetMapping
   public ResponseWrapper<List<TermDto>> searchTerms(@RequestParam String termName) {
     return ResponseWrapper.ok(termService.searchTerms(termName));
+  }
+
+  /**
+   * 약관 상세를 생성합니다.
+   * @param termId 약관 ID
+   * @param request
+   * @return
+   */
+  @PostMapping("/{termId}/details")
+  public ResponseWrapper<CreatedIdDto> createTermDetail(@PathVariable Long termId, @Valid @RequestBody
+      SaveTermDetailRequest request) {
+    return ResponseWrapper.ok(CreatedIdDto.of(termService.createTermDetail(termId, request)));
+  }
+
+  /**
+   * 약관 상세를 수정합니다.
+   * @param termId
+   * @param termDetailId
+   * @param request
+   * @return
+   */
+  @PutMapping("/{termId}/details/{termDetailId}")
+  public ResponseWrapper<Void> updateTermDetail(@PathVariable Long termId, @PathVariable Long termDetailId
+      , @Valid @RequestBody SaveTermDetailRequest request) {
+    termService.updateTermDetail(termId, termDetailId, request);
+    return ResponseWrapper.ok();
+  }
+
+  /**
+   * 약관에 해당하는 약관 상세를 조회합니다.
+   * @param termId
+   * @return
+   */
+  @GetMapping("/{termId}/details")
+  public ResponseWrapper<List<TermDetailDto>> getTermDetailsByTerm(@PathVariable Long termId) {
+    return ResponseWrapper.ok(termService.getTermDetailsByTermId(termId));
   }
 }
