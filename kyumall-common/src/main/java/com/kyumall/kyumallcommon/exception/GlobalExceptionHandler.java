@@ -1,7 +1,7 @@
-package com.kyumall.kyumallclient.exception;
+package com.kyumall.kyumallcommon.exception;
 
-import com.kyumall.kyumallclient.response.ResponseWrapper;
-import com.kyumall.kyumallclient.response.ResponseWrapper.BindingError;
+import com.kyumall.kyumallcommon.response.ResponseWrapper;
+import com.kyumall.kyumallcommon.response.ResponseWrapper.BindingError;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

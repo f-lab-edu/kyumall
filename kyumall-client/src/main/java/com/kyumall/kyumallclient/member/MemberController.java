@@ -2,8 +2,8 @@ package com.kyumall.kyumallclient.member;
 
 import static com.kyumall.kyumallclient.member.MemberService.ID_ENCRYPTION_ALGORITHM;
 
-import com.kyumall.kyumallclient.exception.ErrorCode;
-import com.kyumall.kyumallclient.exception.KyumallException;
+import com.kyumall.kyumallcommon.exception.ErrorCode;
+import com.kyumall.kyumallcommon.exception.KyumallException;
 import com.kyumall.kyumallclient.member.dto.FindUsernameResponse;
 import com.kyumall.kyumallclient.member.dto.RecoverPasswordRequest;
 import com.kyumall.kyumallclient.member.dto.ResetPasswordRequest;
@@ -13,7 +13,7 @@ import com.kyumall.kyumallclient.member.dto.TermDto;
 import com.kyumall.kyumallclient.member.dto.VerifySentCodeRequest;
 import com.kyumall.kyumallclient.member.dto.VerifySentCodeResult;
 import com.kyumall.kyumallclient.member.validator.SignUpRequestValidator;
-import com.kyumall.kyumallclient.response.ResponseWrapper;
+import com.kyumall.kyumallcommon.response.ResponseWrapper;
 import com.kyumall.kyumallcommon.Util.EncryptUtil;
 import jakarta.validation.Valid;
 import java.util.List;

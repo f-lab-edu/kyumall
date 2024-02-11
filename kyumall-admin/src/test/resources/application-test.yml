@@ -1,0 +1,14 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3346/kyumall
+  jpa:
+    database: mysql
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate.format_sql: true
+      dialect: org.hibernate.dialect.MySQL8Dialect
+encrypt:
+  key: /MHRr8os9VnGseZ6Crf4SA==
