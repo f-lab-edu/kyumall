@@ -12,13 +12,14 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import java.util.ArrayList;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+@EqualsAndHashCode(of = {"id"}, callSuper = false)
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor @Builder
@@ -33,8 +34,10 @@ public class Category extends BaseTimeEntity {
   private Category parent;
   @Enumerated(value = EnumType.STRING)
   private CategoryStatus status;
-  @OneToMany(mappedBy = "parent")
-  private List<Category> child = new ArrayList<>();
   @OneToMany(mappedBy = "category")
   private List<Product> products;
+
+  public Long getParentId() {
+    return parent.getId();
+  }
 }
