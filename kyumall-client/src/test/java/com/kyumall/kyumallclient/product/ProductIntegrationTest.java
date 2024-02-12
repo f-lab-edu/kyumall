@@ -42,6 +42,7 @@ class ProductIntegrationTest extends IntegrationTest {
   Product apple;
   Product beef;
   List<Product> allProducts = new ArrayList<>();
+  String[] comparedProductSimpleDtoFieldNames = new String[] {"name", "price", "image"};
 
   @BeforeEach
   void initData() {
@@ -49,7 +50,8 @@ class ProductIntegrationTest extends IntegrationTest {
     food = saveCategory("식품", null);
     fruit = saveCategory("과일", food);
     meet = saveCategory("육류", food);
-    apple = createProductForTest(new CreateProductRequest("얼음골사과", fruit.getId(), seller01.getUsername() ,40000,
+    Category appleAndPear = saveCategory("사과/배", fruit);
+    apple = createProductForTest(new CreateProductRequest("얼음골사과", appleAndPear.getId(), seller01.getUsername() ,40000,
         "<h1>맛있는 사과</h1>"));
     beef = createProductForTest(new CreateProductRequest("소고기", meet.getId(), seller01.getUsername() ,50000,
         "<h1>맛있는 소고기</h1>"));
@@ -137,6 +139,22 @@ class ProductIntegrationTest extends IntegrationTest {
     assertThat(categories.get(1).getSubCategories().get(0).getSubCategories().get(1).getName()).isEqualTo("키친타올");
   }
 
+  @Test
+  @DisplayName("카테고리에 해당하는 물품을 조회합니다.")
+  void getProductsInCategory_success() {
+    Long categoryId = food.getId();
+
+    ExtractableResponse<Response> response = RestAssured.given().log().all()
+        .pathParam("categoryId", categoryId)
+        .when().get("/categories/{categoryId}/products")
+        .then().log().all()
+        .extract();
+
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
+    List<ProductSimpleDto> productList = response.jsonPath().getList("result.content", ProductSimpleDto.class);
+    assertThat(productList).extracting("name").contains(beef.getName());
+    assertThat(productList).extracting("name").contains(apple.getName());
+  }
 
   private Product createProductForTest(CreateProductRequest request) {
     Integer newProductId = requestCreateProduct(request).body().jsonPath().get("result.id");
