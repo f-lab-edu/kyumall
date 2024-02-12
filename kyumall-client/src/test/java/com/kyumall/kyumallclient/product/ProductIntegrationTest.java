@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.*;
 
 import com.kyumall.kyumallclient.IntegrationTest;
 import com.kyumall.kyumallclient.member.MemberFactory;
+import com.kyumall.kyumallclient.product.dto.CategoryDto;
 import com.kyumall.kyumallclient.product.dto.CreateProductRequest;
 import com.kyumall.kyumallclient.product.dto.ProductSimpleDto;
 import com.kyumall.kyumallcommon.member.entity.Member;
@@ -45,26 +46,23 @@ class ProductIntegrationTest extends IntegrationTest {
   @BeforeEach
   void initData() {
     seller01 = memberFactory.createMember("user01", "email@example.com", "password", MemberType.SELLER);
-    food = categoryRepository.save(Category.builder()
-        .name("식품")
-        .status(CategoryStatus.INUSE)
-        .build());
-    fruit = categoryRepository.save(Category.builder()
-        .name("과일")
-        .parent(food)
-        .status(CategoryStatus.INUSE)
-        .build());
-    meet = categoryRepository.save(Category.builder()
-        .name("육류")
-        .parent(food)
-        .status(CategoryStatus.INUSE)
-        .build());
+    food = saveCategory("식품", null);
+    fruit = saveCategory("과일", food);
+    meet = saveCategory("육류", food);
     apple = createProductForTest(new CreateProductRequest("얼음골사과", fruit.getId(), seller01.getUsername() ,40000,
         "<h1>맛있는 사과</h1>"));
     beef = createProductForTest(new CreateProductRequest("소고기", meet.getId(), seller01.getUsername() ,50000,
         "<h1>맛있는 소고기</h1>"));
     allProducts.add(apple);
     allProducts.add(beef);
+  }
+
+  private Category saveCategory(String name, Category parent) {
+    return categoryRepository.save(Category.builder()
+        .name(name)
+        .parent(parent)
+        .status(CategoryStatus.INUSE)
+        .build());
   }
 
   @Test
@@ -113,6 +111,32 @@ class ProductIntegrationTest extends IntegrationTest {
       assertThat(dto).usingRecursiveComparison().comparingOnlyFields("name", "price", "image").isIn(allProducts);
     }
   }
+
+  @Test
+  @DisplayName("모든 카테고리를 조회합니다.")
+  void getAllCategories_success() {
+    Category houseItem = saveCategory("생활용품", null);
+    Category toiletPaper = saveCategory("화장지", houseItem);
+    Category wetWipe = saveCategory("물티슈", toiletPaper);
+    Category paperTowel = saveCategory("키친타올", toiletPaper);
+
+    ExtractableResponse<Response> response = RestAssured.given().log().all()
+        .when().get("/categories")
+        .then().log().all()
+        .extract();
+
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
+    List<CategoryDto> categories = response.body().jsonPath().getList("result", CategoryDto.class);
+    assertThat(categories).hasSize(2);
+    assertThat(categories.get(0).getName()).isEqualTo("식품");
+    assertThat(categories.get(0).getSubCategories().get(0).getName()).isEqualTo("과일");
+    assertThat(categories.get(0).getSubCategories().get(1).getName()).isEqualTo("육류");
+    assertThat(categories.get(1).getName()).isEqualTo("생활용품");
+    assertThat(categories.get(1).getSubCategories().get(0).getName()).isEqualTo("화장지");
+    assertThat(categories.get(1).getSubCategories().get(0).getSubCategories().get(0).getName()).isEqualTo("물티슈");
+    assertThat(categories.get(1).getSubCategories().get(0).getSubCategories().get(1).getName()).isEqualTo("키친타올");
+  }
+
 
   private Product createProductForTest(CreateProductRequest request) {
     Integer newProductId = requestCreateProduct(request).body().jsonPath().get("result.id");
