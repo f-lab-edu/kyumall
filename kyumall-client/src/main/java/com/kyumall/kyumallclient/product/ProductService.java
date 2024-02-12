@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -50,6 +51,7 @@ public class ProductService {
     return productRepository.findAllByOrderByName(pageable).map(ProductSimpleDto::from);
   }
 
+  @Cacheable("allCategories")
   public List<CategoryDto> getAllCategories() {
     List<Category> allCategory = categoryRepository.findAllByStatus(CategoryStatus.INUSE);
 

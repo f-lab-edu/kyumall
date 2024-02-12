@@ -140,6 +140,37 @@ class ProductIntegrationTest extends IntegrationTest {
   }
 
   @Test
+  @DisplayName("모든 카테고리를 조회합니다.(두번째 결과는 캐싱된 값을 반환합니다.)")
+  void getAllCategories_cache_success() {
+    Category houseItem = saveCategory("생활용품", null);
+    Category toiletPaper = saveCategory("화장지", houseItem);
+    Category wetWipe = saveCategory("물티슈", toiletPaper);
+    Category paperTowel = saveCategory("키친타올", toiletPaper);
+
+    RestAssured.given().log().all()
+        .when().get("/categories")
+        .then().log().all()
+        .extract();
+
+    ExtractableResponse<Response> response = RestAssured.given().log().all()
+        .when().get("/categories")
+        .then().log().all()
+        .extract();
+
+
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
+    List<CategoryDto> categories = response.body().jsonPath().getList("result", CategoryDto.class);
+    assertThat(categories).hasSize(2);
+    assertThat(categories.get(0).getName()).isEqualTo("식품");
+    assertThat(categories.get(0).getSubCategories().get(0).getName()).isEqualTo("과일");
+    assertThat(categories.get(0).getSubCategories().get(1).getName()).isEqualTo("육류");
+    assertThat(categories.get(1).getName()).isEqualTo("생활용품");
+    assertThat(categories.get(1).getSubCategories().get(0).getName()).isEqualTo("화장지");
+    assertThat(categories.get(1).getSubCategories().get(0).getSubCategories().get(0).getName()).isEqualTo("물티슈");
+    assertThat(categories.get(1).getSubCategories().get(0).getSubCategories().get(1).getName()).isEqualTo("키친타올");
+  }
+
+  @Test
   @DisplayName("카테고리에 해당하는 물품을 조회합니다.")
   void getProductsInCategory_success() {
     Long categoryId = food.getId();

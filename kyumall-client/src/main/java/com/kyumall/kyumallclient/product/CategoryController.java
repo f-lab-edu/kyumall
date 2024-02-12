@@ -13,8 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-// TODO: 캐시 , 잘 바뀌지 않는 데이터, map > map or class > class
-// TODO: DB를 통채로 조회
+// TODO: 캐시 , 잘 바뀌지 않는 데이터, map or class
 // TODO: 리로드 API
 @RequiredArgsConstructor
 @RequestMapping("/categories")
@@ -22,11 +21,22 @@ import org.springframework.web.bind.annotation.RestController;
 public class CategoryController {
   private final ProductService productService;
 
+  /**
+   * 전체 카테고리를 조회합니다.
+   * @return
+   */
   @GetMapping
   public ResponseWrapper<List<CategoryDto>> getAllCategories() {
     return ResponseWrapper.ok(productService.getAllCategories());
   }
 
+  /**
+   * 카테고리에 해당하는 상품 목록을 조회합니다.
+   * 하위 카테고리 상품까지 조회됩니다.
+   * @param categoryId
+   * @param pageable
+   * @return
+   */
   @GetMapping("/{categoryId}/products")
   public ResponseWrapper<Slice<ProductSimpleDto>> getProductsInCategory(@PathVariable Long categoryId,
       @PageableDefault(size = 10) Pageable pageable) {
