@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 
 @RequiredArgsConstructor
@@ -80,5 +81,11 @@ public class ProductService {
   private Category findCategoryById(Long categoryId) {
     return categoryRepository.findById(categoryId)
         .orElseThrow(() -> new KyumallException(ErrorCode.CATEGORY_NOT_EXISTS));
+  }
+
+  public Slice<ProductSimpleDto> getProductsInCategory(Long categoryId, Pageable pageable) {
+    List<Long> subCategoryIds = categoryRepository.findSubCategoryIds(categoryId);
+    subCategoryIds.add(categoryId);
+    return productRepository.findByCategoryIds(subCategoryIds, pageable).map(ProductSimpleDto::from);
   }
 }
