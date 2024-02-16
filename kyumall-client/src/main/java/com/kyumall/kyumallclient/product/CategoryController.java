@@ -2,8 +2,11 @@ package com.kyumall.kyumallclient.product;
 
 import com.kyumall.kyumallclient.product.dto.CategoryDto;
 import com.kyumall.kyumallclient.product.dto.ProductSimpleDto;
+import com.kyumall.kyumallcommon.product.entity.Category;
 import com.kyumall.kyumallcommon.response.ResponseWrapper;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -13,8 +16,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-// TODO: 캐시 , 잘 바뀌지 않는 데이터, map or class
-// TODO: 리로드 API
 @RequiredArgsConstructor
 @RequestMapping("/categories")
 @RestController
@@ -27,7 +28,36 @@ public class CategoryController {
    */
   @GetMapping
   public ResponseWrapper<List<CategoryDto>> getAllCategories() {
-    return ResponseWrapper.ok(productService.getAllCategories());
+    Map<Long, List<Category>> categoryGroupingByParent = productService.findCategoryGroupingByParent();
+    return ResponseWrapper.ok(convertToCategoryHierarchy(categoryGroupingByParent));
+  }
+
+  /**
+   * 카테고리 Map을 계층형 구조의 List로 변경
+   * @param groupingByParentId
+   * @return
+   */
+  private List<CategoryDto> convertToCategoryHierarchy(Map<Long, List<Category>> groupingByParentId) {
+    List<CategoryDto> rootCategories = groupingByParentId.get(0L).stream().map(CategoryDto::from)
+        .toList();
+    addSubCategories(rootCategories, groupingByParentId);
+    return rootCategories;
+  }
+
+  /**
+   * 재귀 호출로 카테고리의 서브 카테고리를 추가
+   * @param categoryDtos
+   * @param groupingByParentId
+   */
+  private void addSubCategories(List<CategoryDto> categoryDtos, Map<Long, List<Category>> groupingByParentId) {
+    categoryDtos.stream().forEach(
+        categoryDto -> {
+          List<CategoryDto> subCategories = groupingByParentId.getOrDefault(categoryDto.getId(), new ArrayList<>())
+              .stream().map(CategoryDto::from).toList();
+          categoryDto.setSubCategories(subCategories);
+          addSubCategories(subCategories, groupingByParentId);
+        }
+    );
   }
 
   /**

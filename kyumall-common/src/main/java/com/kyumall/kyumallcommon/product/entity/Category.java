@@ -38,6 +38,16 @@ public class Category extends BaseTimeEntity {
   private List<Product> products;
 
   public Long getParentId() {
+    if (parent == null) {
+      return getParentIdAsZeroIfRoot();
+    }
     return parent.getId();
+  }
+
+  /**
+   * 루트 카테고리의 경우, ParentID 를 0으로 반환합니다.
+   */
+  public Long getParentIdAsZeroIfRoot() {
+    return 0L;
   }
 }

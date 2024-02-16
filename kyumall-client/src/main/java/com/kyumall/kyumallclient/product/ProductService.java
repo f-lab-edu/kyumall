@@ -51,35 +51,18 @@ public class ProductService {
     return productRepository.findAllByOrderByName(pageable).map(ProductSimpleDto::from);
   }
 
-  @Cacheable("allCategories")
-  public List<CategoryDto> getAllCategories() {
+  /**
+   * 전체 카테고리를 조회하여 parentId 로 group by 한 Map 을 만듭니다.
+   * @return all category grouping by parent id
+   */
+  @Cacheable("categoryMap")
+  public Map<Long, List<Category>> findCategoryGroupingByParent() {
     List<Category> allCategory = categoryRepository.findAllByStatus(CategoryStatus.INUSE);
-
-    List<CategoryDto> rootCategories = allCategory.stream()
-        .filter(category -> category.getParent() == null)
-        .map(CategoryDto::from).toList();
-    // parentId로 grouping 하여 map 을 만듭니다.
-    Map<Long, List<Category>> groupingByParent = allCategory.stream()
-        .filter(category -> category.getParent() != null)
-        .collect(Collectors.groupingBy(Category::getParentId));
-
-    addSubCategories(rootCategories, groupingByParent);
-    return rootCategories;
+    return allCategory.stream().collect(Collectors.groupingBy(Category::getParentId));
   }
 
-  private void addSubCategories(List<CategoryDto> categoryDtos,
-      Map<Long, List<Category>> groupingByParentId) {
-
-    categoryDtos.stream().forEach(
-        categoryDto -> {
-          List<CategoryDto> subCategories = groupingByParentId.getOrDefault(categoryDto.getId(), new ArrayList<>())
-              .stream().map(CategoryDto::from).toList();
-          categoryDto.setSubCategories(subCategories);
-          addSubCategories(subCategories, groupingByParentId);
-        }
-    );
-  }
-
+  //캐시는 히트율이 중요함
+  //@Cacheable(value = "allCategories", key = "#categoryId")
   private Category findCategoryById(Long categoryId) {
     return categoryRepository.findById(categoryId)
         .orElseThrow(() -> new KyumallException(ErrorCode.CATEGORY_NOT_EXISTS));
