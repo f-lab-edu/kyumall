@@ -65,14 +65,20 @@ public class ProductService {
     return allCategory.stream().collect(Collectors.groupingBy(Category::getParentId));
   }
 
-  //캐시는 히트율이 중요함
-  //@Cacheable(value = "allCategories", key = "#categoryId")
+  //캐시는 히트율이 중요함 id 별로 카테고리를 캐시하지 말고, 전체 카테고리를 캐시해 둘 것
   private Category findCategoryById(Long categoryId) {
     return categoryRepository.findById(categoryId)
         .orElseThrow(() -> new KyumallException(ErrorCode.CATEGORY_NOT_EXISTS));
   }
 
-
+  /**
+   * 카테고리에 해당하는 아이템을 조회합니다.
+   * 입력받은 카테고리의 하위 카테고리에 해당하는 상품까지 조회합니다.
+   * ex) 입력받은 카테고리 : 식품 -> 과일, 육류 카테고리의 상품까지 조회됨
+   * @param categoryId
+   * @param pageable
+   * @return
+   */
   public Slice<ProductSimpleDto> getProductsInCategory(Long categoryId, Pageable pageable) {
     List<Long> subCategoryIds;
     try {
