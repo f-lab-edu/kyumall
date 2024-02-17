@@ -187,6 +187,29 @@ class ProductIntegrationTest extends IntegrationTest {
     assertThat(productList).extracting("name").contains(apple.getName());
   }
 
+  @Test
+  @DisplayName("카테고리에 해당하는 물품을 조회합니다. (캐시에서 조회합니다)")
+  void getProductsInCategory_fromCache_success() {
+    // 전체 카테고리 조회 호출하여 전체 카테고리 캐시 시키기
+    RestAssured.given().log().all()
+        .when().get("/categories")
+        .then().log().all()
+        .extract();
+
+    Long categoryId = food.getId();
+
+    ExtractableResponse<Response> response = RestAssured.given().log().all()
+        .pathParam("categoryId", categoryId)
+        .when().get("/categories/{categoryId}/products")
+        .then().log().all()
+        .extract();
+
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
+    List<ProductSimpleDto> productList = response.jsonPath().getList("result.content", ProductSimpleDto.class);
+    assertThat(productList).extracting("name").contains(beef.getName());
+    assertThat(productList).extracting("name").contains(apple.getName());
+  }
+
   private Product createProductForTest(CreateProductRequest request) {
     Integer newProductId = requestCreateProduct(request).body().jsonPath().get("result.id");
     return findProductById(newProductId.longValue());
