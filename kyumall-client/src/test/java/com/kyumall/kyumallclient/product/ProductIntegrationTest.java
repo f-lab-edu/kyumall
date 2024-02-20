@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.*;
 
 import com.kyumall.kyumallclient.IntegrationTest;
 import com.kyumall.kyumallclient.member.MemberFactory;
+import com.kyumall.kyumallclient.product.dto.CategoryDto;
 import com.kyumall.kyumallclient.product.dto.CreateProductRequest;
 import com.kyumall.kyumallclient.product.dto.ProductSimpleDto;
 import com.kyumall.kyumallcommon.member.entity.Member;
@@ -41,30 +42,29 @@ class ProductIntegrationTest extends IntegrationTest {
   Product apple;
   Product beef;
   List<Product> allProducts = new ArrayList<>();
+  String[] comparedProductSimpleDtoFieldNames = new String[] {"name", "price", "image"};
 
   @BeforeEach
   void initData() {
     seller01 = memberFactory.createMember("user01", "email@example.com", "password", MemberType.SELLER);
-    food = categoryRepository.save(Category.builder()
-        .name("식품")
-        .status(CategoryStatus.INUSE)
-        .build());
-    fruit = categoryRepository.save(Category.builder()
-        .name("과일")
-        .parent(food)
-        .status(CategoryStatus.INUSE)
-        .build());
-    meet = categoryRepository.save(Category.builder()
-        .name("육류")
-        .parent(food)
-        .status(CategoryStatus.INUSE)
-        .build());
-    apple = createProductForTest(new CreateProductRequest("얼음골사과", fruit.getId(), seller01.getUsername() ,40000,
+    food = saveCategory("식품", null);
+    fruit = saveCategory("과일", food);
+    meet = saveCategory("육류", food);
+    Category appleAndPear = saveCategory("사과/배", fruit);
+    apple = createProductForTest(new CreateProductRequest("얼음골사과", appleAndPear.getId(), seller01.getUsername() ,40000,
         "<h1>맛있는 사과</h1>"));
     beef = createProductForTest(new CreateProductRequest("소고기", meet.getId(), seller01.getUsername() ,50000,
         "<h1>맛있는 소고기</h1>"));
     allProducts.add(apple);
     allProducts.add(beef);
+  }
+
+  private Category saveCategory(String name, Category parent) {
+    return categoryRepository.save(Category.builder()
+        .name(name)
+        .parent(parent)
+        .status(CategoryStatus.INUSE)
+        .build());
   }
 
   @Test
@@ -112,6 +112,102 @@ class ProductIntegrationTest extends IntegrationTest {
     for (ProductSimpleDto dto: result) {
       assertThat(dto).usingRecursiveComparison().comparingOnlyFields("name", "price", "image").isIn(allProducts);
     }
+  }
+
+  @Test
+  @DisplayName("모든 카테고리를 조회합니다.")
+  void getAllCategories_success() {
+    Category houseItem = saveCategory("생활용품", null);
+    Category toiletPaper = saveCategory("화장지", houseItem);
+    Category wetWipe = saveCategory("물티슈", toiletPaper);
+    Category paperTowel = saveCategory("키친타올", toiletPaper);
+
+    ExtractableResponse<Response> response = RestAssured.given().log().all()
+        .when().get("/categories")
+        .then().log().all()
+        .extract();
+
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
+    List<CategoryDto> categories = response.body().jsonPath().getList("result", CategoryDto.class);
+    assertThat(categories).hasSize(2);
+    assertThat(categories.get(0).getName()).isEqualTo("식품");
+    assertThat(categories.get(0).getSubCategories().get(0).getName()).isEqualTo("과일");
+    assertThat(categories.get(0).getSubCategories().get(1).getName()).isEqualTo("육류");
+    assertThat(categories.get(1).getName()).isEqualTo("생활용품");
+    assertThat(categories.get(1).getSubCategories().get(0).getName()).isEqualTo("화장지");
+    assertThat(categories.get(1).getSubCategories().get(0).getSubCategories().get(0).getName()).isEqualTo("물티슈");
+    assertThat(categories.get(1).getSubCategories().get(0).getSubCategories().get(1).getName()).isEqualTo("키친타올");
+  }
+
+  @Test
+  @DisplayName("모든 카테고리를 조회합니다.(두번째 결과는 캐싱된 값을 반환합니다.)")
+  void getAllCategories_cache_success() {
+    Category houseItem = saveCategory("생활용품", null);
+    Category toiletPaper = saveCategory("화장지", houseItem);
+    Category wetWipe = saveCategory("물티슈", toiletPaper);
+    Category paperTowel = saveCategory("키친타올", toiletPaper);
+
+    RestAssured.given().log().all()
+        .when().get("/categories")
+        .then().log().all()
+        .extract();
+
+    ExtractableResponse<Response> response = RestAssured.given().log().all()
+        .when().get("/categories")
+        .then().log().all()
+        .extract();
+
+
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
+    List<CategoryDto> categories = response.body().jsonPath().getList("result", CategoryDto.class);
+    assertThat(categories).hasSize(2);
+    assertThat(categories.get(0).getName()).isEqualTo("식품");
+    assertThat(categories.get(0).getSubCategories().get(0).getName()).isEqualTo("과일");
+    assertThat(categories.get(0).getSubCategories().get(1).getName()).isEqualTo("육류");
+    assertThat(categories.get(1).getName()).isEqualTo("생활용품");
+    assertThat(categories.get(1).getSubCategories().get(0).getName()).isEqualTo("화장지");
+    assertThat(categories.get(1).getSubCategories().get(0).getSubCategories().get(0).getName()).isEqualTo("물티슈");
+    assertThat(categories.get(1).getSubCategories().get(0).getSubCategories().get(1).getName()).isEqualTo("키친타올");
+  }
+
+  @Test
+  @DisplayName("카테고리에 해당하는 물품을 조회합니다.")
+  void getProductsInCategory_success() {
+    Long categoryId = food.getId();
+
+    ExtractableResponse<Response> response = RestAssured.given().log().all()
+        .pathParam("categoryId", categoryId)
+        .when().get("/categories/{categoryId}/products")
+        .then().log().all()
+        .extract();
+
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
+    List<ProductSimpleDto> productList = response.jsonPath().getList("result.content", ProductSimpleDto.class);
+    assertThat(productList).extracting("name").contains(beef.getName());
+    assertThat(productList).extracting("name").contains(apple.getName());
+  }
+
+  @Test
+  @DisplayName("카테고리에 해당하는 물품을 조회합니다. (캐시에서 조회합니다)")
+  void getProductsInCategory_fromCache_success() {
+    // 전체 카테고리 조회 호출하여 전체 카테고리 캐시 시키기
+    RestAssured.given().log().all()
+        .when().get("/categories")
+        .then().log().all()
+        .extract();
+
+    Long categoryId = food.getId();
+
+    ExtractableResponse<Response> response = RestAssured.given().log().all()
+        .pathParam("categoryId", categoryId)
+        .when().get("/categories/{categoryId}/products")
+        .then().log().all()
+        .extract();
+
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
+    List<ProductSimpleDto> productList = response.jsonPath().getList("result.content", ProductSimpleDto.class);
+    assertThat(productList).extracting("name").contains(beef.getName());
+    assertThat(productList).extracting("name").contains(apple.getName());
   }
 
   private Product createProductForTest(CreateProductRequest request) {
