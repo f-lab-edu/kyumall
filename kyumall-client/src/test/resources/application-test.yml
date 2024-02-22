@@ -2,6 +2,8 @@ spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3346/kyumall
+    username: root
+    password: 12
   jpa:
     database: mysql
     database-platform: org.hibernate.dialect.MySQL8Dialect
@@ -17,3 +19,18 @@ logging:
   level:
     org.springframework: INFO
     org.hibernate.orm.jdbc.bind: TRACE
+
+cloud:
+  naver:
+    credentials:
+      accessKey: test
+      secretKey: test
+    region:
+      static: ap-northeast-2
+    stack:
+      auto: false
+    object-storage:
+      endpoint: https://kr.object.ncloudstorage.com
+      bucket:
+        name: test
+
