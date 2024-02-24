@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class CategoryController {
   private final ProductService productService;
+  private final CategoryService categoryService;
 
   /**
    * 전체 카테고리를 조회합니다.
@@ -28,7 +29,7 @@ public class CategoryController {
    */
   @GetMapping
   public ResponseWrapper<List<CategoryDto>> getAllCategories() {
-    Map<Long, List<Category>> categoryGroupingByParent = productService.findCategoryGroupingByParent();
+    Map<Long, List<Category>> categoryGroupingByParent = categoryService.findCategoryGroupingByParent();
     return ResponseWrapper.ok(convertToCategoryHierarchy(categoryGroupingByParent));
   }
 
