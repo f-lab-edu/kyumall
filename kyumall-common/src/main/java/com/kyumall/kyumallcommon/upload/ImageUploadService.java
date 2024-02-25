@@ -28,7 +28,7 @@ public class ImageUploadService {
    * @return
    */
   public Long uploadImage(MultipartFile multipartFile) {
-    UploadFile uploadFile = storeImage.storeImage(multipartFile);
+    UploadFile uploadFile = storeImage.store(multipartFile);
     return tempImageRepository.save(uploadFile.toEntity()).getId();
   }
 

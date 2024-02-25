@@ -17,14 +17,14 @@ import org.springframework.web.multipart.MultipartFile;
 @Slf4j
 @RequiredArgsConstructor
 @Component
-public class StoreImageToObjectStorage implements StoreImage{
+public class StoreImageToObjectStorage extends AbstractStoreImage {
 
   @Value("${cloud.naver.object-storage.bucket.name}")
   private String bucketName;
   private final AmazonS3 s3Client;
 
   @Override
-  public UploadFile storeImage(MultipartFile multipartFile) {
+  public UploadFile store(MultipartFile multipartFile) {
     String storeFileName = createStoreFileName(multipartFile.getOriginalFilename());
     ObjectMetadata objectMetadata = new ObjectMetadata();
     objectMetadata.setContentType(multipartFile.getContentType());
