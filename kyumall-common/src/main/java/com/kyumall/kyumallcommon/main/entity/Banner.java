@@ -1,6 +1,7 @@
 package com.kyumall.kyumallcommon.main.entity;
 
 import com.kyumall.kyumallcommon.BaseTimeEntity;
+import com.kyumall.kyumallcommon.upload.entity.Image;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -24,4 +25,7 @@ public class Banner extends BaseTimeEntity {
   private BannerGroup bannerGroup;
   private String name;
   private String url;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn
+  private Image image;
 }

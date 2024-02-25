@@ -40,8 +40,19 @@ public class ImageUploadService {
   public List<Image> migrateTempImageToImage(List<Long> tempImageIds) {
     List<TempImage> tempImages = tempImageRepository.findByIdIn(tempImageIds);
     if (tempImages.size() != tempImageIds.size()) {
-      throw new KyumallException(ErrorCode.TEMP_IMAGE_ID_PARTIALLY_NOT_EXISTS);
+      throw new KyumallException(ErrorCode.TEMP_IMAGE_ID_NOT_EXISTS);
     }
     return imageRepository.saveAll(tempImages.stream().map(TempImage::convertToImageEntity).toList());
+  }
+
+  /**
+   * 임시 이미지 테이블에 저장된 이미지를 이미지 테이블로 이동시킵니다.
+   * @param tempImageId 임시이미지 ID
+   * @return 저장된 이미지 객체
+   */
+  public Image migrateTempImageToImage(Long tempImageId) {
+    TempImage tempImage = tempImageRepository.findById(tempImageId)
+        .orElseThrow(() -> new KyumallException(ErrorCode.TEMP_IMAGE_ID_NOT_EXISTS));
+    return imageRepository.save(tempImage.convertToImageEntity());
   }
 }

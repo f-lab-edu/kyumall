@@ -11,7 +11,8 @@ public enum ErrorCode {
   METHOD_ARGS_INVALID("1001", "입력값이 올바르지 않습니다."),
   FAIL_TO_ENCRYPT("1002", "암호화에 실패했습니다."),
   FAIL_TO_IMAGE_UPLOAD("1003", "이미지 업로드에 실패했습니다."),
-  TEMP_IMAGE_ID_PARTIALLY_NOT_EXISTS("1004", "해당 임시 이미지가 일부 존재하지 않습니다."),
+  TEMP_IMAGE_ID_NOT_EXISTS("1004", "임시 이미지가 존재하지 않습니다."),
+  TEMP_IMAGE_ID_PARTIALLY_NOT_EXISTS("1005", "해당 임시 이미지가 일부 존재하지 않습니다."),
 
   // 회원파트 에러 2000 ~ 2999
   VERIFICATION_MAIL_CAN_SEND_IN_TERM("2000", "본인인증 메일은 3분 간격으로 전송 가능합니다."),
@@ -26,7 +27,10 @@ public enum ErrorCode {
   TERM_DETAIL_NOT_EXISTS("2009", "약관 상세가 존재하지 않습니다."),
 
   // 상품파트 에러 (3000 ~ 3999)
-  CATEGORY_NOT_EXISTS("3000", "카테고리가 존재하지 않습니다.");
+  CATEGORY_NOT_EXISTS("3000", "카테고리가 존재하지 않습니다."),
+
+  // 메인 파트 에러 (4000 ~ 4999)
+  BANNER_GROUP_NOT_FOUND("4000", "배너 그룹을 찾을 수 없습니다.");
 
 
   private final String code;

@@ -1,6 +1,7 @@
 package com.kyumall.kyumalladmin.main;
 
 import com.kyumall.kyumalladmin.main.dto.CreateBannerGroupRequest;
+import com.kyumall.kyumalladmin.main.dto.CreateBannerRequest;
 import com.kyumall.kyumallcommon.dto.CreatedIdDto;
 import com.kyumall.kyumallcommon.response.ResponseWrapper;
 import jakarta.validation.Valid;
@@ -19,5 +20,10 @@ public class BannerController {
   @PostMapping("/banner-groups")
   public ResponseWrapper<CreatedIdDto> createBannerGroup(@Valid @RequestBody CreateBannerGroupRequest request) {
     return ResponseWrapper.ok(CreatedIdDto.of(bannerService.createBannerGroup(request)));
+  }
+
+  @PostMapping("/banners")
+  public ResponseWrapper<CreatedIdDto> createBanner(@Valid @RequestBody CreateBannerRequest request) {
+    return ResponseWrapper.ok(CreatedIdDto.of(bannerService.createBanner(request)));
   }
 }
