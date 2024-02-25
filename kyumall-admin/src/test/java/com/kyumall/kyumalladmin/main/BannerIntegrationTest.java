@@ -1,18 +1,23 @@
 package com.kyumall.kyumalladmin.main;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.*;
 
 import com.kyumall.kyumalladmin.IntegrationTest;
 import com.kyumall.kyumalladmin.main.dto.CreateBannerGroupRequest;
+import com.kyumall.kyumalladmin.main.dto.CreateBannerRequest;
+import com.kyumall.kyumallcommon.main.entity.Banner;
 import com.kyumall.kyumallcommon.main.entity.BannerGroup;
 import com.kyumall.kyumallcommon.main.repository.BannerGroupRepository;
+import com.kyumall.kyumallcommon.main.repository.BannerRepository;
+import com.kyumall.kyumallcommon.upload.entity.Image;
+import com.kyumall.kyumallcommon.upload.entity.TempImage;
+import com.kyumall.kyumallcommon.upload.repository.ImageRepository;
+import com.kyumall.kyumallcommon.upload.repository.TempImageRepository;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
 import org.apache.http.HttpStatus;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,8 +27,15 @@ class BannerIntegrationTest extends IntegrationTest {
 
   @Autowired
   private BannerGroupRepository bannerGroupRepository;
+  @Autowired
+  private BannerRepository bannerRepository;
+  @Autowired
+  private TempImageRepository tempImageRepository;
+  @Autowired
+  private ImageRepository imageRepository;
 
   String[] comparedBannerGroupFieldNames = new String[] {"name", "description"};
+  String[] comparedBannerFieldNames = new String[] {"name", "description"};
 
   @Test
   @DisplayName("배너 그룹을 등록합니다.")
@@ -43,12 +55,70 @@ class BannerIntegrationTest extends IntegrationTest {
         .isEqualTo(request);
   }
 
+  @Test
+  @DisplayName("배너 등록에 성공합니다.")
+  void createBanner_success() {
+    // given
+    BannerGroup bannerGroup = makeBannerGroup("테스트 배너 그룹");
+    String originalFileName = "test.png";
+    String storedFileName = "test-test-test";
+    TempImage tempImage = storeTempImage(originalFileName, storedFileName);
+
+    CreateBannerRequest request = CreateBannerRequest.builder()
+        .bannerGroupId(bannerGroup.getId())
+        .name("배너1")
+        .url("/test")
+        .imageId(tempImage.getId()).build();
+
+    // when
+    ExtractableResponse<Response> response = requestCreateBanner(request);
+
+    // then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
+    // 이미지 엔티티
+    Image image = imageRepository.findByStoredFileName(storedFileName)
+        .orElseThrow(() -> new RuntimeException(""));
+    // 배너
+    Banner storedBanner = bannerRepository.findById(response.body().jsonPath().getLong("result.id"))
+        .orElseThrow(() -> new RuntimeException(""));
+    assertThat(storedBanner.getBannerGroup().getId()).isEqualTo(request.getBannerGroupId());
+    assertThat(storedBanner.getName()).isEqualTo(request.getName());
+    assertThat(storedBanner.getUrl()).isEqualTo(request.getUrl());
+    assertThat(storedBanner.getImage().getId()).isEqualTo(image.getId());
+  }
+
+  private TempImage storeTempImage(String originalImageName, String storedImageName) {
+    return tempImageRepository.save(TempImage.builder()
+        .originalFileName(originalImageName)
+        .storedFileName(storedImageName)
+        .build());
+  }
+
+  private BannerGroup makeBannerGroup(String name) {
+    CreateBannerGroupRequest request = CreateBannerGroupRequest.builder()
+        .name(name)
+        .description("test").build();
+    ExtractableResponse<Response> response = requestCreateBannerGroup(request);
+    return bannerGroupRepository.findById(
+        response.body().jsonPath().getLong("result.id")).orElseThrow(() -> new RuntimeException(""));
+  }
+
   private static ExtractableResponse<Response> requestCreateBannerGroup(
       CreateBannerGroupRequest request) {
     return RestAssured.given().log().all()
         .contentType(ContentType.JSON)
         .body(request)
-        .when().post("/banner-group")
+        .when().post("/banner-groups")
+        .then().log().all()
+        .extract();
+  }
+
+  private static ExtractableResponse<Response> requestCreateBanner(
+      CreateBannerRequest request) {
+    return RestAssured.given().log().all()
+        .contentType(ContentType.JSON)
+        .body(request)
+        .when().post("/banners")
         .then().log().all()
         .extract();
   }
