@@ -42,7 +42,11 @@ public class ImageUploadService {
     if (tempImages.size() != tempImageIds.size()) {
       throw new KyumallException(ErrorCode.TEMP_IMAGE_ID_NOT_EXISTS);
     }
-    return imageRepository.saveAll(tempImages.stream().map(TempImage::convertToImageEntity).toList());
+    List<Image> images = imageRepository.saveAll(
+        tempImages.stream().map(TempImage::convertToImageEntity).toList());
+    // 임시 이미지 삭제
+    tempImageRepository.deleteAllInBatch(tempImages);
+    return images;
   }
 
   /**
@@ -53,6 +57,9 @@ public class ImageUploadService {
   public Image migrateTempImageToImage(Long tempImageId) {
     TempImage tempImage = tempImageRepository.findById(tempImageId)
         .orElseThrow(() -> new KyumallException(ErrorCode.TEMP_IMAGE_ID_NOT_EXISTS));
-    return imageRepository.save(tempImage.convertToImageEntity());
+    Image image = imageRepository.save(tempImage.convertToImageEntity());
+    // 임시 이미지 테이블에서 삭제
+    tempImageRepository.delete(tempImage);
+    return image;
   }
 }

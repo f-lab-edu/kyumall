@@ -17,6 +17,7 @@ import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
+import java.util.Optional;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -78,6 +79,8 @@ class BannerIntegrationTest extends IntegrationTest {
     // 이미지 엔티티
     Image image = imageRepository.findByStoredFileName(storedFileName)
         .orElseThrow(() -> new RuntimeException(""));
+    // 임시 이미지 엔티티에서 삭제되었는지 체크
+    assertThat(tempImageRepository.existsById(tempImage.getId())).isFalse();
     // 배너
     Banner storedBanner = bannerRepository.findById(response.body().jsonPath().getLong("result.id"))
         .orElseThrow(() -> new RuntimeException(""));
