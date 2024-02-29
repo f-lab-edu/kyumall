@@ -28,4 +28,5 @@ public class Banner extends BaseTimeEntity {
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn
   private Image image;
+  private Integer sortOrder;
 }
