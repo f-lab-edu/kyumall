@@ -18,4 +18,8 @@ public class Image extends BaseTimeEntity {
   private Long id;
   private String originalFileName;
   private String storedFileName;
+
+  public String getImageUrl() {
+    return storedFileName;
+  }
 }
