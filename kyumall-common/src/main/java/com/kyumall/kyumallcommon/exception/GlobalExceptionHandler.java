@@ -20,13 +20,13 @@ public class GlobalExceptionHandler {
    */
   @ExceptionHandler(KyumallException.class)
   public ResponseEntity<ResponseWrapper<Void>> handleKyumallException(KyumallException ex) {
-    log.info("## info: {}, {}", ex.getClass().getSimpleName(), ex);
+    log.info("## info: {}", ex.getClass().getSimpleName(), ex);
     return ResponseWrapper.fail(ex);
   }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<ResponseWrapper<List<BindingError>>> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
-    log.info("## info: {}, {}", ex.getClass().getSimpleName(), ex);
+    log.info("## info: {}", ex.getClass().getSimpleName(), ex);
     return  ResponseWrapper.fail(
         ex.getBindingResult());
   }
@@ -38,7 +38,7 @@ public class GlobalExceptionHandler {
    */
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ResponseWrapper<Void>> handleException(Exception ex) {
-    log.error("## error: {}, {}", ex.getClass().getSimpleName(), ex);   // ex 그대로 반환 -> 에러 메세지 상세하게 표시
+    log.error("## error: {}", ex.getClass().getSimpleName(), ex);   // ex 그대로 반환 -> 에러 메세지 상세하게 표시
     return ResponseWrapper.fail();
   }
 }
