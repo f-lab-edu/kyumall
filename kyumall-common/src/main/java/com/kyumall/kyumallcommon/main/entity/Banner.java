@@ -25,7 +25,8 @@ public class Banner extends BaseTimeEntity {
   private BannerGroup bannerGroup;
   private String name;
   private String url;
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn
-  private Image image;
+  //@ManyToOne(fetch = FetchType.LAZY)
+  //@JoinColumn
+  //private Image image;
+  private String imageName;
 }

@@ -25,11 +25,11 @@ public class ImageUploadService {
   /**
    * 임시 테이블에 이미지를 업로드 합니다.
    * @param multipartFile
-   * @return
+   * @return 업로드 이미지 이름
    */
-  public Long uploadImage(MultipartFile multipartFile) {
+  public String uploadImage(MultipartFile multipartFile) {
     UploadFile uploadFile = storeImage.store(multipartFile);
-    return tempImageRepository.save(uploadFile.toEntity()).getId();
+    return uploadFile.getStoredFileName();
   }
 
   /**

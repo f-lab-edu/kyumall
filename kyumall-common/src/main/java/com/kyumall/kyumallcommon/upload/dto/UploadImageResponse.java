@@ -6,5 +6,6 @@ import lombok.Getter;
 @AllArgsConstructor
 @Getter
 public class UploadImageResponse {
-  private Long imageId;
+  //private Long imageId;
+  private String encryptedImageName; // 암호화 한 이미지명
 }
