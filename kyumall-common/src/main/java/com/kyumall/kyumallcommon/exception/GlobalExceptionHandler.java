@@ -21,6 +21,10 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(KyumallException.class)
   public ResponseEntity<ResponseWrapper<Void>> handleKyumallException(KyumallException ex) {
     log.info("## info: {}", ex.getClass().getSimpleName(), ex);
+    if (!ex.getParameters().isEmpty()) {
+      ex.getParameters().entrySet().stream()
+          .forEach(entry -> log.info("{} : {}", entry.getKey(), entry.getValue()));
+    }
     return ResponseWrapper.fail(ex);
   }
 
