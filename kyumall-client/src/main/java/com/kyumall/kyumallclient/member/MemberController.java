@@ -15,7 +15,14 @@ import com.kyumall.kyumallclient.member.dto.VerifySentCodeResult;
 import com.kyumall.kyumallclient.member.validator.SignUpRequestValidator;
 import com.kyumall.kyumallcommon.response.ResponseWrapper;
 import com.kyumall.kyumallcommon.Util.EncryptUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import java.util.List;
 import javax.crypto.SecretKey;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +37,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+@Tag(name = "Member API", description = "회원 API")
 @Slf4j
 @RequiredArgsConstructor
 @RequestMapping("/members")
@@ -50,8 +58,13 @@ public class MemberController {
    * @param email
    * @return
    */
+  @Operation(summary = "본인 확인 메일 전송", description = "이메일 주소로 본인인증 코드를 전송합니다.")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "전송 성공", content = { @Content(mediaType = "application/json") }),
+      @ApiResponse(responseCode = "400", description = "이메일 형식이 정상적이지 않습니다.")
+  })
   @PostMapping("/send-verification-mail")
-  public ResponseWrapper<SendVerificationEmailResponse> sendVerificationMail(@RequestParam String email) {
+  public ResponseWrapper<SendVerificationEmailResponse> sendVerificationMail(@NotEmpty @Parameter(description = "인증하려는 이메일", required = true, example = "example@example.com") @RequestParam String email) {
     SecretKey secretKey = EncryptUtil.decodeStringToKey(encryptKey, ID_ENCRYPTION_ALGORITHM);
     return ResponseWrapper.ok(SendVerificationEmailResponse.of(memberService.sendVerificationEmail(email, secretKey)));
   }
@@ -61,6 +74,11 @@ public class MemberController {
    * @param request
    * @return
    */
+  @Operation(summary = "본인인증코드 검증", description = "본인인증 코드와 일치하는지 검증합니다.")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "본인인증성공"),
+      @ApiResponse(responseCode = "400", description = "본인인증에 실패했습니다 / 본인인증 시도 횟수를 초과하였습니다")
+  })
   @PostMapping("/verify-sent-code")
   public void verifySentCode(@RequestBody VerifySentCodeRequest request) {
     String decryptKey = decryptKey(request.getVerificationKey());
@@ -91,6 +109,11 @@ public class MemberController {
    * 회원가입
    * @param request
    */
+  @Operation(summary = "회원가입", description = "회원가입 요청을 보냅니다.")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "회원가입 성공"),
+      @ApiResponse(responseCode = "400", description = "입력값이 올바르지 않습니다.")
+  })
   @PostMapping("/sign-up")
   public void signUp(@RequestBody @Valid SignUpRequest request) {
     memberService.signUp(request);
