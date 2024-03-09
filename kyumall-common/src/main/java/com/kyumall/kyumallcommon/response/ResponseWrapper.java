@@ -4,6 +4,7 @@ import static com.kyumall.kyumallcommon.exception.ErrorCode.*;
 
 import com.kyumall.kyumallcommon.exception.ErrorCode;
 import com.kyumall.kyumallcommon.exception.KyumallException;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -18,8 +19,11 @@ import org.springframework.web.bind.annotation.ResponseStatus;
  */
 @Getter
 public class ResponseWrapper<T> {
+  @Schema(description = "반환코드, 성공:0, 실패:에러코드", example = "반환코드")
   String code;       // 성공: 0, 실패: 에러코드
+  @Schema(description = "응답에 대한 메세지, 메세지가 필요 없을 경우, null 을 반환함", example = "반환메세지")
   String message;    // 응답에 대한 메세지, 메세지가 필요 없을 경우, null 을 반환함
+  @Schema(description = "요청에 대한 응답 결과")
   T result;          // 요청에 대한 응답 결과
 
   public ResponseWrapper(String code, String message, T result) {
@@ -75,7 +79,9 @@ public class ResponseWrapper<T> {
 
   @Getter @AllArgsConstructor
   public static class BindingError {
+    @Schema(description = "에러난 필드명", example = "에러난 필드명")
     private String fieldName;
+    @Schema(description = "에러난 이유", example = "에러난 이유")
     private String errorMessage;
 
     public static BindingError from(FieldError fieldError) {
