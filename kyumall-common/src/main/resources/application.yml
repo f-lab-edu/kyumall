@@ -2,9 +2,9 @@ spring:
   profiles:
     group:
       local:
-        - app
+        - app-local
         - ncloud
       dev:
-        - app
+        - app-dev
         - ncloud
     active: local

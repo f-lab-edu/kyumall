@@ -1,23 +1,17 @@
+
 plugins {
-	id 'java'
-	id 'org.springframework.boot' version '3.2.1'
-	id 'io.spring.dependency-management' version '1.1.4'
+	id 'base'
+	id 'org.springframework.boot' version '3.2.1' apply false
+	id 'io.spring.dependency-management' version '1.1.4' apply false
 }
 
-bootJar { enabled = false }
-jar { enabled = true }
-
-group 'org.example'
-version '1.0-SNAPSHOT'
-
 subprojects {
-	group 'org.example'
-	version '1.0-SNAPSHOT'
-
-	apply plugin: 'java'
 	apply plugin: 'java-library'
 	apply plugin: 'org.springframework.boot'
 	apply plugin: 'io.spring.dependency-management'
+
+	sourceCompatibility = 17
+	targetCompatibility = 17
 
 	configurations {
 		compileOnly {
@@ -38,29 +32,8 @@ subprojects {
 	test {
 		useJUnitPlatform()
 	}
-}
 
-repositories {
-	mavenCentral()
-}
-
-
-dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-web'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-}
-
-test {
-	useJUnitPlatform()
-}
-
-project(':kyumall-admin') { // 컴파일 시
-	dependencies {
+	jar {
+		enabled = false;
 	}
 }
-
-project(':kyumall-common') { // 컴파일 시
-	dependencies {
-	}
-}
-
