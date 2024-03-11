@@ -11,7 +11,6 @@ public interface RecommendationRepository extends JpaRepository<Recommendation, 
       + "from Recommendation r "
       + "join fetch r.recommendationItems ri "
       + "join fetch ri.product "
-      + "join fetch ri.product.image "
       + "where r.inUse = true "
       + "order by r.sortOrder")
   List<Recommendation> findAllInUse();

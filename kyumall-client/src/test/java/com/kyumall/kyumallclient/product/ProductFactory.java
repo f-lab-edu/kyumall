@@ -52,7 +52,7 @@ public class ProductFactory {
             .seller(seller)
             .name(name)
             .price(price)
-            .image(image)
+            .image(image.getStoredFileName())
             .detail(detail)
         .build());
   }
@@ -63,7 +63,7 @@ public class ProductFactory {
         .seller(memberFactory.createSeller("testSeller", "testSeller@email.com"))
         .name(name)
         .price(price)
-        .image(createImage())
+        .image(createImage().getStoredFileName())
         .detail("detail")
         .build());
   }
@@ -74,7 +74,7 @@ public class ProductFactory {
         .seller(memberFactory.createSeller("testSeller", "testSeller@email.com"))
         .name(name)
         .price(price)
-        .image(createImage())
+        .image(createImage().getStoredFileName())
         .detail("detail")
         .build());
   }

@@ -70,19 +70,19 @@ class MainIntegrationTest extends IntegrationTest {
         .bannerGroup(mainBannerGroup)
         .name("삼겹살 먹는 날")
         .url("/test1")
-        .image(testImage1)
+        .imageName(testImage1.getStoredFileName())
         .sortOrder(1).build());
     banner3 = bannerRepository.save(Banner.builder()
         .bannerGroup(mainBannerGroup)
         .name("2024 패션 위크")
         .url("/test2")
-        .image(testImage1)
+        .imageName(testImage1.getStoredFileName())
         .sortOrder(3).build());
     banner2 = bannerRepository.save(Banner.builder()
         .bannerGroup(mainBannerGroup)
         .name("특가 세일 상품")
         .url("/test3")
-        .image(testImage1)
+        .imageName(testImage1.getStoredFileName())
         .sortOrder(2).build());
 
     // 추천1 데이터 준비

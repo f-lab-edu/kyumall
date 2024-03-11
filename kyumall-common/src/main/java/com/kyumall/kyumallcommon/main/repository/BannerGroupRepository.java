@@ -6,6 +6,6 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface BannerGroupRepository extends JpaRepository<BannerGroup, Long> {
-  @EntityGraph(attributePaths = {"banners", "banners.image"})
+  @EntityGraph(attributePaths = {"banners"})
   Optional<BannerGroup> findByName(String groupName);
 }
