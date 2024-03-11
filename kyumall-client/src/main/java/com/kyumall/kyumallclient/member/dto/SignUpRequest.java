@@ -7,7 +7,6 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import java.util.List;
-import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -31,7 +30,7 @@ public class SignUpRequest {
         .username(username)
         .email(email)
         .password(password)
-        .type(MemberType.USER)
+        .type(MemberType.CLIENT)
         .status(MemberStatus.INUSE)
         .build();
   }

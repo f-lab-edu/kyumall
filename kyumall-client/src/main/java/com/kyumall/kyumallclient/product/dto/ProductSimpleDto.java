@@ -17,7 +17,7 @@ public class ProductSimpleDto {
     return ProductSimpleDto.builder()
         .name(product.getName())
         .price(product.getPrice())
-        .image(product.getImage())
+        .image(product.getImage().getImageUrl())
         .build();
   }
 }

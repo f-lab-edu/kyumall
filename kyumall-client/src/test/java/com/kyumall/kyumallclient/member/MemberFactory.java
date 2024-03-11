@@ -22,4 +22,24 @@ public class MemberFactory {
             .type(memberType)
         .build());
   }
+
+  public Member createClient(String username, String email) {
+    return memberRepository.saveAndFlush(Member.builder()
+        .username(username)
+        .email(email)
+        .password("random_password123!")
+        .status(MemberStatus.INUSE)
+        .type(MemberType.CLIENT)
+        .build());
+  }
+
+  public Member createSeller(String username, String email) {
+    return memberRepository.saveAndFlush(Member.builder()
+        .username(username)
+        .email(email)
+        .password("random_password123!")
+        .status(MemberStatus.INUSE)
+        .type(MemberType.SELLER)
+        .build());
+  }
 }

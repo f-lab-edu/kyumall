@@ -296,7 +296,7 @@ class MemberIntegrationTest extends IntegrationTest {
     assertThat(member.getUsername()).isEqualTo(request.getUsername());
     assertThat(member.getEmail()).isEqualTo(request.getEmail());
     assertThat(member.getStatus()).isEqualTo(MemberStatus.INUSE);
-    assertThat(member.getType()).isEqualTo(MemberType.USER);
+    assertThat(member.getType()).isEqualTo(MemberType.CLIENT);
     // 동의 객체 검증
     List<Agreement> agreements = agreementRepository.findByMember(member);
     assertThat(agreements).hasSize(2);

@@ -27,4 +27,5 @@ public class RecommendationItem extends BaseTimeEntity {
   @JoinColumn
   @ManyToOne(fetch = FetchType.LAZY)
   private Product product;
+  private Integer sortOrder;
 }
