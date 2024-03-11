@@ -20,7 +20,7 @@ public class BannerDto {
         .id(banner.getId())
         .name(banner.getName())
         .url(banner.getUrl())
-        .imageUrl(banner.getImage().getImageUrl())
+        .imageUrl(banner.getImageName())
         .sortOrder(banner.getSortOrder())
         .build();
   }

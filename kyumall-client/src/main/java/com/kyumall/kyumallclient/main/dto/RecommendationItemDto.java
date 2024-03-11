@@ -16,7 +16,7 @@ public class RecommendationItemDto {
     return RecommendationItemDto.builder()
         .itemName(recommendationItem.getProduct().getName())
         .price(recommendationItem.getProduct().getPrice())
-        .imageUrl(recommendationItem.getProduct().getImage().getImageUrl())
+        .imageUrl(recommendationItem.getProduct().getImage())
         .build();
   }
 }

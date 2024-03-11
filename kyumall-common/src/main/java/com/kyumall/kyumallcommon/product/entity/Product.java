@@ -30,8 +30,9 @@ public class Product extends BaseTimeEntity {
   private Member seller;
   private String name;
   private Integer price;
-  @JoinColumn
-  @ManyToOne(fetch = FetchType.LAZY)
-  private Image image;
+//  @JoinColumn
+//  @ManyToOne(fetch = FetchType.LAZY)
+//  private Image image;
+  private String image;
   private String detail;
 }
