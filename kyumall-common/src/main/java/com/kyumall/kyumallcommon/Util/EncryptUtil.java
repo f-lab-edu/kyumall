@@ -12,6 +12,7 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
 public class EncryptUtil {
+  public static String ENCRYPT_ALGORITHM = "AES";
   public static SecretKey generateKey(String algorithm) throws NoSuchAlgorithmException {
     KeyGenerator keyGenerator = KeyGenerator.getInstance(algorithm);
     keyGenerator.init(128);

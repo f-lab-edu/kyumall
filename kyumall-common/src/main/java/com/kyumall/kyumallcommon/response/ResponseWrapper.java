@@ -7,7 +7,8 @@ import com.kyumall.kyumallcommon.exception.KyumallException;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import org.springframework.http.HttpStatus;
+import org.apache.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -27,7 +28,7 @@ public class ResponseWrapper<T> {
     this.result = result;
   }
 
-  public ResponseWrapper(String code, String message) {
+  public ResponseWrapper(String code, String message, int statusCode) {
     this.code = code;
     this.message = message;
   }
@@ -35,7 +36,7 @@ public class ResponseWrapper<T> {
   /**
    * 성공(200) 응답, 반환 결과가 없을 경우
    */
-  @ResponseStatus(HttpStatus.OK)
+  @ResponseStatus(org.springframework.http.HttpStatus.OK)
   public static ResponseWrapper<Void> ok() {
     return new ResponseWrapper<>("0", null, null);
   }
@@ -44,28 +45,32 @@ public class ResponseWrapper<T> {
    * 성공(200) 응답, 반환결과가 있을 경우
    * @param result 반환 결과
    */
-  @ResponseStatus(HttpStatus.OK)
+  @ResponseStatus(org.springframework.http.HttpStatus.OK)
   public static <T> ResponseWrapper<T> ok(T result) {
     return new ResponseWrapper<>("0", null, result);
   }
 
-  private static ResponseWrapper<Void> from(ErrorCode errorCode) {
-    return new ResponseWrapper<>(errorCode.getCode(), errorCode.getMessage(), null);
-  }
-
- public static ResponseWrapper<Void> fail(KyumallException kyumallException) {
+ public static ResponseEntity<ResponseWrapper<Void>> fail(KyumallException kyumallException) {
     return ResponseWrapper.from(kyumallException.getErrorCode());
  }
 
-  public static ResponseWrapper<Void> fail() {
+  public static ResponseEntity<ResponseWrapper<Void>> fail() {
     return ResponseWrapper.from(INTERNAL_SERVER_ERROR);
   }
 
-  public static ResponseWrapper<List<BindingError>> fail(BindingResult bindingResult) {
-    return new ResponseWrapper<>(METHOD_ARGS_INVALID.getCode(), METHOD_ARGS_INVALID.getMessage()
-        , bindingResult.getFieldErrors().stream()
-                    .map(BindingError::from)
-                    .toList());
+  public static ResponseEntity<ResponseWrapper<List<BindingError>>> fail(BindingResult bindingResult) {
+    return ResponseEntity
+        .status(HttpStatus.SC_BAD_REQUEST)
+        .body(new ResponseWrapper<>(METHOD_ARGS_INVALID.getCode(), METHOD_ARGS_INVALID.getMessage()
+            , bindingResult.getFieldErrors().stream()
+            .map(BindingError::from)
+            .toList()));
+  }
+
+  private static ResponseEntity<ResponseWrapper<Void>> from(ErrorCode errorCode) {
+    return ResponseEntity
+        .status(errorCode.getHttpStatus())
+        .body(new ResponseWrapper<>(errorCode.getCode(), errorCode.getMessage(), null));
   }
 
   @Getter @AllArgsConstructor

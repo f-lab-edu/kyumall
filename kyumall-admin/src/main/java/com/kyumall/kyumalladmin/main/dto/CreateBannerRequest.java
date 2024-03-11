@@ -19,15 +19,15 @@ public class CreateBannerRequest {
   private String name;
   @NotEmpty
   private String url;
-  @NotNull
-  private Long imageId;
+  @NotEmpty
+  private String encryptedImageName;
 
-  public Banner toEntity(BannerGroup bannerGroup, Image image) {
+  public Banner toEntity(BannerGroup bannerGroup, String imageName) {
     return Banner.builder()
         .bannerGroup(bannerGroup)
         .name(name)
         .url(url)
-        .image(image)
+        .imageName(imageName)
         .build();
   }
 }
