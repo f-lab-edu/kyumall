@@ -19,6 +19,7 @@ dependencies {
     runtimeOnly 'mysql:mysql-connector-java:8.0.28'
     // test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation "io.rest-assured:rest-assured"
     // aws
     implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
     // swagger
