@@ -18,6 +18,7 @@ public enum ErrorCode {
   AUTH_USER_NOT_FOUND("1007", "회원 정보가 존재하지 않습니다.", HttpStatus.SC_FORBIDDEN),
   AUTH_PASSWORD_NOT_MATCHED("1008", "비밀번호가 일치하지 않습니다.", HttpStatus.SC_FORBIDDEN),
   AUTH_INPUT_TYPE_NOT_MATCHED("1009", "인증정보 입력값 타입이 맞지 않습니다.", HttpStatus.SC_INTERNAL_SERVER_ERROR),
+  FAIL_TO_CONVERT_STRING_TYPE_KEY_TO_KEY("1010", "문자열 타입의 key를 Key타입으로 변경하는데 실패했습니다.", HttpStatus.SC_INTERNAL_SERVER_ERROR),
 
 
   // 회원파트 에러 2000 ~ 2999
