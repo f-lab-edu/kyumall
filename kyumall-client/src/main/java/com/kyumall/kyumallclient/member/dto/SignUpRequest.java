@@ -31,11 +31,11 @@ public class SignUpRequest {
   @Schema(description = "동의한 약관 ID", example = "[1, 2]")
   private List<Long> agreedTermIds;
 
-  public Member toEntity() {
+  public Member toEntity(String encodedPassword) {
     return Member.builder()
         .username(username)
         .email(email)
-        .password(password)
+        .password(encodedPassword)
         .type(MemberType.CLIENT)
         .status(MemberStatus.INUSE)
         .build();

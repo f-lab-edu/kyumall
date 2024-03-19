@@ -1,5 +1,6 @@
 package com.kyumall.kyumallclient.member;
 
+import com.kyumall.kyumallcommon.auth.authentication.passwword.PasswordService;
 import com.kyumall.kyumallcommon.exception.ErrorCode;
 import com.kyumall.kyumallcommon.exception.KyumallException;
 import com.kyumall.kyumallclient.member.dto.FindUsernameResponse;
@@ -47,6 +48,7 @@ public class MemberService {
   private final MemberRepository memberRepository;
   private final TermRepository termRepository;
   private final AgreementRepository agreementRepository;
+  private final PasswordService passwordService;
   @Value("${encrypt.key}")
   private String encryptKey;
 
@@ -130,7 +132,8 @@ public class MemberService {
   @Transactional
   public void signUp(SignUpRequest request) {
     // 회원 저장
-    Member member = memberRepository.save(request.toEntity());
+    String encryptedPassword = passwordService.encrypt(request.getPassword());
+    Member member = memberRepository.save(request.toEntity(encryptedPassword));
 
     // 약관 동의 내역 저장
     saveAgreementsOfTerms(request, member);
