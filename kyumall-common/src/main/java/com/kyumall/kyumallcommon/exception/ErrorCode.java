@@ -15,6 +15,9 @@ public enum ErrorCode {
   FAIL_TO_IMAGE_UPLOAD("1004", "이미지 업로드에 실패했습니다.", HttpStatus.SC_INTERNAL_SERVER_ERROR),
   TEMP_IMAGE_ID_NOT_EXISTS("1005", "임시 이미지가 존재하지 않습니다.", HttpStatus.SC_BAD_REQUEST),
   TEMP_IMAGE_ID_PARTIALLY_NOT_EXISTS("1006", "해당 임시 이미지가 일부 존재하지 않습니다.", HttpStatus.SC_BAD_REQUEST),
+  AUTH_USER_NOT_FOUND("1007", "회원 정보가 존재하지 않습니다.", HttpStatus.SC_FORBIDDEN),
+  AUTH_PASSWORD_NOT_MATCHED("1008", "비밀번호가 일치하지 않습니다.", HttpStatus.SC_FORBIDDEN),
+  AUTH_INPUT_TYPE_NOT_MATCHED("1009", "인증정보 입력값 타입이 맞지 않습니다.", HttpStatus.SC_INTERNAL_SERVER_ERROR),
 
 
   // 회원파트 에러 2000 ~ 2999
