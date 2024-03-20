@@ -1,6 +1,9 @@
 package com.kyumall.kyumallcommon.auth;
 
 import com.kyumall.kyumallcommon.Util.EncryptUtil;
+import com.kyumall.kyumallcommon.exception.ErrorCode;
+import com.kyumall.kyumallcommon.exception.KyumallException;
+import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import jakarta.servlet.http.HttpServletRequest;
@@ -40,23 +43,40 @@ public class JwtProvider {
   }
 
   public String resolveToken(HttpServletRequest request) {
-    return request.getHeader("Authorization");
+    String bearerToken = request.getHeader("Authorization");
+    if (bearerToken == null) {
+      return null;
+    }
+    if (!bearerToken.startsWith("Bearer ")) {
+      throw new KyumallException(ErrorCode.INVALID_TOKEN_FORMAT);
+    }
+    return bearerToken.trim().substring(7);
   }
 
-  public boolean validateToken(String accessToken) {
-    if (accessToken == null) {
+  public boolean validateClaim(JwtParser jwtParser, String token) {
+    if (token == null) {
       return false;
     }
-
     try {
-      return Jwts.parser()
-          .verifyWith(EncryptUtil.convertPublicKeyInStringToKey(PUBLIC_KEY, algorithm.getFamilyName()))
-          .build()
-          .parseSignedClaims(accessToken)
+      return jwtParser.parseSignedClaims(token)
           .getPayload().getExpiration().after(new Date());
     }
     catch (Exception e) {
       return false;
     }
+  }
+
+  public String getUsername(JwtParser jwtParser, String token) {
+    return jwtParser.parseSignedClaims(token).getPayload().getSubject();
+  }
+
+  public JwtParser getJwtParser(String token) {
+    if (token == null) {
+      throw new KyumallException(ErrorCode.INVALID_TOKEN);
+    }
+    return Jwts.parser()
+        .verifyWith(
+            EncryptUtil.convertPublicKeyInStringToKey(PUBLIC_KEY, algorithm.getFamilyName()))
+        .build();
   }
 }
