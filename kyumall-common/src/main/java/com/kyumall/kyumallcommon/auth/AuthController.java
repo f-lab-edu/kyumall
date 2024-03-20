@@ -1,10 +1,13 @@
 package com.kyumall.kyumallcommon.auth;
 
+import com.kyumall.kyumallcommon.auth.authentication.AuthenticatedUser;
+import com.kyumall.kyumallcommon.auth.authentication.UserContext;
 import com.kyumall.kyumallcommon.auth.dto.LoginRequest;
 import com.kyumall.kyumallcommon.response.ResponseWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,5 +27,11 @@ public class AuthController {
     headers.add("Authorization", "Bearer " + token);
 
     return ResponseWrapper.ok(headers);
+  }
+
+  @GetMapping("/auth-by-token")
+  public ResponseWrapper<AuthenticatedUser> authByToken() {
+    AuthenticatedUser authenticatedUser = UserContext.getUser();
+    return ResponseWrapper.ok(authenticatedUser);
   }
 }
