@@ -1,8 +1,10 @@
 package com.kyumall.kyumallcommon.auth;
 
+import com.kyumall.kyumallcommon.auth.argumentResolver.LoginUser;
 import com.kyumall.kyumallcommon.auth.authentication.AuthenticatedUser;
 import com.kyumall.kyumallcommon.auth.authentication.UserContext;
 import com.kyumall.kyumallcommon.auth.dto.LoginRequest;
+import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.response.ResponseWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -30,8 +32,7 @@ public class AuthController {
   }
 
   @GetMapping("/auth-by-token")
-  public ResponseWrapper<AuthenticatedUser> authByToken() {
-    AuthenticatedUser authenticatedUser = UserContext.getUser();
+  public ResponseWrapper<AuthenticatedUser> authByToken(@LoginUser AuthenticatedUser authenticatedUser) {
     return ResponseWrapper.ok(authenticatedUser);
   }
 }
