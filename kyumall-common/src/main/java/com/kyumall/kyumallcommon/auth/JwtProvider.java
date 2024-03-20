@@ -36,7 +36,6 @@ public class JwtProvider {
         .compact();
   }
 
-
   private Date getExpireDate() {
     Date now = new Date();
     return new Date(now.getTime() + EXPIRE_TIME);

@@ -34,25 +34,29 @@ public class AuthenticateFilter extends OncePerRequestFilter {
     log.debug("-----AuthenticateFilter-----");
 
     try {
-      String token = jwtProvider.resolveToken(request);
-      processToken(token);
-    } catch (KyumallException e) {
-      ErrorCode errorCode = e.getErrorCode();
-      response.setStatus(errorCode.getHttpStatus());
-      response.setContentType("application/json");
-      response.setCharacterEncoding("UTF-8");
-
-      try(PrintWriter writer = response.getWriter()) {
-        writer.write(objectMapper.writeValueAsString(new ResponseWrapper<>(errorCode.getCode(), errorCode.getMessage(), null) ));
-      } catch (IOException ioException) {
-        throw new RuntimeException(ioException);
+      try {
+        String token = jwtProvider.resolveToken(request);
+        processToken(token);
+      } catch (KyumallException e) {
+        handleExceptionInFilter(response, e);
       }
-//      try (PrintWriter writer = response.getWriter()) { //Request processing failed: java.lang.IllegalStateException: getWriter() has already been called for this response
-//        writer.write(errorCode.getMessage());
-//        writer.flush(); // 데이터를 작성기에 쓰고, 작성기를 비웁니다.
-//      }
+      doFilter(request, response, filterChain);
+    } finally {
+      UserContext.clear();
     }
-    doFilter(request, response, filterChain);
+  }
+
+  private void handleExceptionInFilter(HttpServletResponse response, KyumallException e) {
+    ErrorCode errorCode = e.getErrorCode();
+    response.setStatus(errorCode.getHttpStatus());
+    response.setContentType("application/json");
+    response.setCharacterEncoding("UTF-8");
+
+    try(PrintWriter writer = response.getWriter()) {
+      writer.write(objectMapper.writeValueAsString(new ResponseWrapper<>(errorCode.getCode(), errorCode.getMessage(), null) ));
+    } catch (IOException ioException) {
+      throw new RuntimeException(ioException);
+    }
   }
 
   private void processToken(String token) {

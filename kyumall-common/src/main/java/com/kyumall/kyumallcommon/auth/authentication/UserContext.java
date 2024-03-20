@@ -13,4 +13,8 @@ public class UserContext {
   public static AuthenticatedUser getUser() {
     return authThreadLocal.get();
   }
+
+  public static void clear() {
+    authThreadLocal.remove();
+  }
 }
