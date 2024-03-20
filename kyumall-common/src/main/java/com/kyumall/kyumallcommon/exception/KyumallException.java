@@ -22,6 +22,11 @@ public class KyumallException extends RuntimeException {
     this.errorCode = errorCode;
   }
 
+  public KyumallException(ErrorCode errorCode, Throwable throwable) {
+    super(errorCode.getMessage(), throwable);
+    this.errorCode = errorCode;
+  }
+
   public KyumallException(ErrorCode errorCode, Map<String, Object> parameters) {
     super(errorCode.getMessage());
     this.errorCode = errorCode;

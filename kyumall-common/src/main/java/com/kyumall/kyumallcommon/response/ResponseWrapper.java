@@ -9,6 +9,7 @@ import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.apache.http.HttpStatus;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
@@ -52,6 +53,10 @@ public class ResponseWrapper<T> {
   @ResponseStatus(org.springframework.http.HttpStatus.OK)
   public static <T> ResponseWrapper<T> ok(T result) {
     return new ResponseWrapper<>("0", null, result);
+  }
+
+  public static ResponseEntity<ResponseWrapper<Void>> ok(HttpHeaders headers) {
+    return ResponseEntity.ok().headers(headers).build();
   }
 
  public static ResponseEntity<ResponseWrapper<Void>> fail(KyumallException kyumallException) {
