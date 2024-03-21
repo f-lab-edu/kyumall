@@ -6,6 +6,7 @@ import com.kyumall.kyumallclient.IntegrationTest;
 import com.kyumall.kyumallclient.member.MemberFactory;
 import com.kyumall.kyumallclient.product.dto.CategoryDto;
 import com.kyumall.kyumallclient.product.dto.CreateProductRequest;
+import com.kyumall.kyumallclient.product.dto.ProductDetailDto;
 import com.kyumall.kyumallclient.product.dto.ProductSimpleDto;
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.member.vo.MemberType;
@@ -21,6 +22,7 @@ import io.restassured.response.Response;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.http.HttpStatus;
+import org.assertj.core.api.Condition;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -210,6 +212,47 @@ class ProductIntegrationTest extends IntegrationTest {
     assertThat(productList).extracting("name").contains(apple.getName());
   }
 
+  @Test
+  @DisplayName("상품 상세 조회에 성공합니다.")
+  void getProduct_success() {
+    // given
+    // when
+    ExtractableResponse<Response> response = RestAssured.given().log().all()
+        .pathParam("id", apple.getId())
+        .when().get("/products/{id}")
+        .then().log().all()
+        .extract();
+
+    // then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
+    ProductDetailDto productDetailDto= response.body().jsonPath().getObject("result", ProductDetailDto.class);
+    assertThat(productDetailDto.getId()).isEqualTo(apple.getId());
+    assertThat(productDetailDto.getSellerUsername()).isEqualTo(apple.getSeller().getUsername());
+    assertThat(productDetailDto.getProductName()).isEqualTo(apple.getName());
+    assertThat(productDetailDto.getPrice()).isEqualTo(apple.getPrice());
+    assertThat(productDetailDto.getImage()).satisfiesAnyOf(
+        dto -> assertThat(dto).isNull(),
+        dto -> assertThat(dto).endsWith(apple.getImage())
+    );
+    assertThat(productDetailDto.getDetail()).endsWith(apple.getDetail());
+  }
+
+  @Test
+  @DisplayName("상품ID에 해당하는 상품이 존재하지 않아 상폼 상세 조회에 실패합니다.")
+  void getProduct_fail_because_product_not_exists() {
+    // given
+    Long notExistsId = 9999L;
+    // when
+    ExtractableResponse<Response> response = RestAssured.given().log().all()
+        .pathParam("id", notExistsId)
+        .when().get("/products/{id}")
+        .then().log().all()
+        .extract();
+
+    // then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_BAD_REQUEST);
+  }
+
   private Product createProductForTest(CreateProductRequest request) {
     Integer newProductId = requestCreateProduct(request).body().jsonPath().get("result.id");
     return findProductById(newProductId.longValue());
@@ -227,7 +270,7 @@ class ProductIntegrationTest extends IntegrationTest {
   }
 
   private Product findProductById(Long productId) {
-    return productRepository.findById(productId)
+    return productRepository.findWithFetchById(productId)
         .orElseThrow(() -> new RuntimeException());
   }
 }
