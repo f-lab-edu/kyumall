@@ -7,3 +7,5 @@ TRUNCATE TABLE term_detail;
 TRUNCATE TABLE agreement;
 TRUNCATE TABLE category;
 TRUNCATE TABLE product;
+TRUNCATE TABLE cart;
+TRUNCATE TABLE cart_item;

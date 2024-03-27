@@ -22,7 +22,6 @@ import io.restassured.response.Response;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.http.HttpStatus;
-import org.assertj.core.api.Condition;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
