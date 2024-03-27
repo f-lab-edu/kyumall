@@ -6,7 +6,6 @@ import com.kyumall.kyumallcommon.exception.KyumallException;
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.member.repository.MemberRepository;
 import com.kyumall.kyumallcommon.product.entity.Cart;
-import com.kyumall.kyumallcommon.product.entity.CartItem;
 import com.kyumall.kyumallcommon.product.entity.Product;
 import com.kyumall.kyumallcommon.product.repository.CartItemRepository;
 import com.kyumall.kyumallcommon.product.repository.CartRepository;
@@ -55,9 +54,10 @@ public class CartService {
   }
 
   @Transactional
-  public void deleteCartItem(Long memberId, Long cartItemId) {
+  public void deleteCartItem(Long memberId, List<Long> cartItemIds) {
     Member member = findMemberWithCart(memberId);
-    member.getCart().deleteCartItem(cartItemId);
+
+    member.getCart().deleteCartItems(cartItemIds);
   }
 
   public List<CartItemsDto> getCartItems(Long memberId) {

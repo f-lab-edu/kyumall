@@ -31,10 +31,10 @@ public class CartController {
     return ResponseWrapper.ok(cartService.getCartItems(authenticatedUser.getMemberId()));
   }
 
-  @DeleteMapping("/cartItems/{id}")
+  @DeleteMapping("/cartItems")
   public ResponseWrapper<Void> addCartItem(@LoginUser AuthenticatedUser authenticatedUser,
-      @PathVariable Long id) {
-    cartService.deleteCartItem(authenticatedUser.getMemberId(), id);
+      @RequestBody List<Long> cartItemsIds) {
+    cartService.deleteCartItem(authenticatedUser.getMemberId(), cartItemsIds);
     return ResponseWrapper.ok();
   }
 }

@@ -48,6 +48,10 @@ public class Cart {
         product.getId()));
   }
 
+  public void deleteCartItems(List<Long> cartItemIds) {
+    cartItemIds.forEach(this::deleteCartItem);
+  }
+
   public void deleteCartItem(Long cartItemId) {
     cartItems.removeIf(cartItem -> cartItem.getId().equals(cartItemId));
   }

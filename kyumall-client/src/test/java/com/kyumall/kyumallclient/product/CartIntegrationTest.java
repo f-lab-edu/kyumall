@@ -100,23 +100,42 @@ class CartIntegrationTest extends IntegrationTest {
   }
 
   @Test
-  @DisplayName("카트에서 상품 제거를 성공합니다.")
+  @DisplayName("카트에서 상품 하나 제거를 성공합니다.")
   void deleteCartItem_success() {
     // given
     addCartItemForGiven(testMember1.getUsername(), apple.getId(), 1);
+    addCartItemForGiven(testMember1.getUsername(), banana.getId(), 1);
     List<CartItemsDto> cartItems = requestGetCartItemsAndGetDto(testMember1.getUsername());
     RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(),
         password);
-    Long deleteId = cartItems.get(0).getCartItemId();
-
+    List<Long> IdsToDelete = List.of(cartItems.get(0).getCartItemId());
 
     // when
-    ExtractableResponse<Response> response = RestAssured.given().log().all().spec(spec)
-        .contentType(ContentType.JSON)
-        .pathParam("id", deleteId)
-        .when().delete("/carts/cartItems/{id}")
-        .then().log().all()
-        .extract();
+    ExtractableResponse<Response> response = requestDeleteCartItems(spec, IdsToDelete);
+
+    // then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
+    Member member = memberRepository.findWithCartById(testMember1.getId())
+        .orElseThrow(() -> new RuntimeException("test fail"));
+    List<CartItem> actualCartItems = member.getCart().getCartItems();
+    assertThat(actualCartItems).hasSize(1);
+    assertThat(actualCartItems.get(0).getProduct().getId()).isEqualTo(banana.getId());
+  }
+
+  @Test
+  @DisplayName("카트에서 상품 두개 제거를 성공합니다.")
+  void deleteCartItem_two_items_success() {
+    // given
+    addCartItemForGiven(testMember1.getUsername(), apple.getId(), 1);
+    addCartItemForGiven(testMember1.getUsername(), banana.getId(), 1);
+    List<CartItemsDto> cartItems = requestGetCartItemsAndGetDto(testMember1.getUsername());
+    RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(),
+        password);
+    List<Long> IdsToDelete = List.of(
+        cartItems.get(0).getCartItemId(), cartItems.get(1).getCartItemId());
+
+    // when
+    ExtractableResponse<Response> response = requestDeleteCartItems(spec, IdsToDelete);
 
     // then
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
@@ -124,6 +143,16 @@ class CartIntegrationTest extends IntegrationTest {
         .orElseThrow(() -> new RuntimeException("test fail"));
     List<CartItem> actualCartItems = member.getCart().getCartItems();
     assertThat(actualCartItems).isEmpty();
+  }
+
+  private static ExtractableResponse<Response> requestDeleteCartItems(RequestSpecification spec,
+      List<Long> IdsToDelete) {
+    return RestAssured.given().log().all().spec(spec)
+        .contentType(ContentType.JSON)
+        .body(IdsToDelete)
+        .when().delete("/carts/cartItems")
+        .then().log().all()
+        .extract();
   }
 
   private static void addCartItemForGiven(String username, Long productId, int count) {
