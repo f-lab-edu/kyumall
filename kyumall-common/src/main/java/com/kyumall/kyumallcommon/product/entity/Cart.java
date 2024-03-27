@@ -11,6 +11,7 @@ import jakarta.persistence.OneToOne;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -46,6 +47,10 @@ public class Cart {
   public boolean existsInCart(Product product) {
     return cartItems.stream().anyMatch(cartItem -> Objects.equals(cartItem.getProduct().getId(),
         product.getId()));
+  }
+
+  public Optional<CartItem> getCartItemByProduct(Product product) {
+    return cartItems.stream().filter(cartItem -> cartItem.getId().equals(product.getId())).findAny();
   }
 
   public void deleteCartItems(List<Long> cartItemIds) {

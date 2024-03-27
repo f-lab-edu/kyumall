@@ -68,6 +68,28 @@ class CartIntegrationTest extends IntegrationTest {
   }
 
   @Test
+  @DisplayName("카트에 중복된 상품 추가시, 수량이 늘어납니다.")
+  void addCartItem_duplicate_item_success() {
+    // given
+    RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(),
+        password);
+    AddCartItemRequest request = AddCartItemRequest.builder()
+        .productId(apple.getId())
+        .count(1)
+        .build();
+    requestAddCartItem(request, spec);
+
+    // when
+    ExtractableResponse<Response> response = requestAddCartItem(request, spec);
+    // then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
+    List<CartItem> cartItems = findMemberWithCart(testMember1.getId()).getCart().getCartItems();
+    assertThat(cartItems).hasSize(1);
+    assertThat(cartItems.get(0).getProduct().getId()).isEqualTo(apple.getId());
+    assertThat(cartItems.get(0).getCount()).isEqualTo(2);
+  }
+
+  @Test
   @DisplayName("카트에 담긴 상품을 조회합니다.")
   void getCartItems_success() {
     // given
@@ -115,8 +137,7 @@ class CartIntegrationTest extends IntegrationTest {
 
     // then
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
-    Member member = memberRepository.findWithCartById(testMember1.getId())
-        .orElseThrow(() -> new RuntimeException("test fail"));
+    Member member = findMemberWithCart(testMember1.getId());
     List<CartItem> actualCartItems = member.getCart().getCartItems();
     assertThat(actualCartItems).hasSize(1);
     assertThat(actualCartItems.get(0).getProduct().getId()).isEqualTo(banana.getId());
@@ -139,10 +160,14 @@ class CartIntegrationTest extends IntegrationTest {
 
     // then
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
-    Member member = memberRepository.findWithCartById(testMember1.getId())
-        .orElseThrow(() -> new RuntimeException("test fail"));
+    Member member = findMemberWithCart(testMember1.getId());
     List<CartItem> actualCartItems = member.getCart().getCartItems();
     assertThat(actualCartItems).isEmpty();
+  }
+
+  private Member findMemberWithCart(Long memberId) {
+    return memberRepository.findWithCartById(memberId)
+        .orElseThrow(() -> new RuntimeException("test fail"));
   }
 
   private static ExtractableResponse<Response> requestDeleteCartItems(RequestSpecification spec,
