@@ -12,12 +12,14 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor @Builder
 public class AuthenticatedUser {
+  private Long memberId;
   private String username;
   private String email;
   private MemberType memberType;
 
   public static AuthenticatedUser from(Member member) {
     return AuthenticatedUser.builder()
+        .memberId(member.getId())
         .username(member.getUsername())
         .email(member.getEmail())
         .memberType(member.getType())

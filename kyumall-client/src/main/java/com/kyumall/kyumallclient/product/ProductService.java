@@ -1,5 +1,6 @@
 package com.kyumall.kyumallclient.product;
 
+import com.kyumall.kyumallclient.product.dto.ProductDetailDto;
 import com.kyumall.kyumallcommon.exception.ErrorCode;
 import com.kyumall.kyumallcommon.exception.KyumallException;
 import com.kyumall.kyumallclient.product.dto.CreateProductRequest;
@@ -8,7 +9,6 @@ import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.member.repository.MemberRepository;
 import com.kyumall.kyumallcommon.product.entity.Category;
 import com.kyumall.kyumallcommon.product.entity.Product;
-import com.kyumall.kyumallcommon.product.repository.CategoryRepository;
 import com.kyumall.kyumallcommon.product.repository.ProductRepository;
 import java.util.ArrayList;
 import java.util.List;
@@ -85,5 +85,10 @@ public class ProductService {
       List<Category> subCategories = categoryMap.getOrDefault(category.getId(), new ArrayList<>());
       recursiveSetSubCategories(subCategories, categoryMap, allSubCategories);
     });
+  }
+
+  public ProductDetailDto getProduct(Long id) {
+    return ProductDetailDto.from(productRepository.findWithSellerById(id)
+        .orElseThrow(() -> new KyumallException(ErrorCode.PRODUCT_NOT_EXISTS)));
   }
 }

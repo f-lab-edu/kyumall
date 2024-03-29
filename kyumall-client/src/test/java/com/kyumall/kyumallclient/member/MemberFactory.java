@@ -1,5 +1,6 @@
 package com.kyumall.kyumallclient.member;
 
+import com.kyumall.kyumallcommon.auth.authentication.passwword.PasswordService;
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.member.repository.MemberRepository;
 import com.kyumall.kyumallcommon.member.vo.MemberStatus;
@@ -12,22 +13,34 @@ public class MemberFactory {
 
   @Autowired
   MemberRepository memberRepository;
+  @Autowired
+  PasswordService passwordService;
 
   public Member createMember(String username, String email, String password, MemberType memberType) {
     return memberRepository.saveAndFlush(Member.builder()
             .username(username)
             .email(email)
-            .password(password)
+            .password(passwordService.encrypt(password))
             .status(MemberStatus.INUSE)
             .type(memberType)
         .build());
   }
 
-  public Member createClient(String username, String email) {
+  public Member createClient(String username, String email, String password) {
     return memberRepository.saveAndFlush(Member.builder()
         .username(username)
         .email(email)
-        .password("random_password123!")
+        .password(passwordService.encrypt("random_password123!"))
+        .status(MemberStatus.INUSE)
+        .type(MemberType.CLIENT)
+        .build());
+  }
+
+  public Member createClient(String username, String password) {
+    return memberRepository.saveAndFlush(Member.builder()
+        .username(username)
+        .email("testEmail@example.com")
+        .password(passwordService.encrypt(password))
         .status(MemberStatus.INUSE)
         .type(MemberType.CLIENT)
         .build());
@@ -37,7 +50,7 @@ public class MemberFactory {
     return memberRepository.saveAndFlush(Member.builder()
         .username(username)
         .email(email)
-        .password("random_password123!")
+        .password(passwordService.encrypt("random_password123!"))
         .status(MemberStatus.INUSE)
         .type(MemberType.SELLER)
         .build());
