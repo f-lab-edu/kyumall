@@ -15,7 +15,12 @@ public enum ErrorCode {
   FAIL_TO_IMAGE_UPLOAD("1004", "이미지 업로드에 실패했습니다.", HttpStatus.SC_INTERNAL_SERVER_ERROR),
   TEMP_IMAGE_ID_NOT_EXISTS("1005", "임시 이미지가 존재하지 않습니다.", HttpStatus.SC_BAD_REQUEST),
   TEMP_IMAGE_ID_PARTIALLY_NOT_EXISTS("1006", "해당 임시 이미지가 일부 존재하지 않습니다.", HttpStatus.SC_BAD_REQUEST),
-
+  AUTH_USER_NOT_FOUND("1007", "회원 정보가 존재하지 않습니다.", HttpStatus.SC_FORBIDDEN),
+  AUTH_PASSWORD_NOT_MATCHED("1008", "비밀번호가 일치하지 않습니다.", HttpStatus.SC_FORBIDDEN),
+  AUTH_INPUT_TYPE_NOT_MATCHED("1009", "인증정보 입력값 타입이 맞지 않습니다.", HttpStatus.SC_INTERNAL_SERVER_ERROR),
+  FAIL_TO_CONVERT_STRING_TYPE_KEY_TO_KEY("1010", "문자열 타입의 key를 Key타입으로 변경하는데 실패했습니다.", HttpStatus.SC_INTERNAL_SERVER_ERROR),
+  INVALID_TOKEN_FORMAT("1011", "토큰 형식이 올바르지 않습니다.", HttpStatus.SC_FORBIDDEN),
+  INVALID_TOKEN("1012", "유효하지 않은 토크입니다.", HttpStatus.SC_FORBIDDEN),
 
   // 회원파트 에러 2000 ~ 2999
   VERIFICATION_MAIL_CAN_SEND_IN_TERM("2000", "본인인증 메일은 3분 간격으로 전송 가능합니다.", HttpStatus.SC_BAD_REQUEST),
