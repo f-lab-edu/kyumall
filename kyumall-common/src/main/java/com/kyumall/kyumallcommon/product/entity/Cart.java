@@ -61,4 +61,8 @@ public class Cart {
   public void deleteCartItem(Long cartItemId) {
     cartItems.removeIf(cartItem -> cartItem.getId().equals(cartItemId));
   }
+
+  public Optional<CartItem> getCartItem(Long cartItemId) {
+    return cartItems.stream().filter(cartItem -> cartItem.getId().equals(cartItemId)).findAny();
+  }
 }

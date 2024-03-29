@@ -165,6 +165,52 @@ class CartIntegrationTest extends IntegrationTest {
     assertThat(actualCartItems).isEmpty();
   }
 
+  @Test
+  @DisplayName("카트에 담긴 상품의 갯수를 수정합니다.")
+  void adjustCartItemCount_success() {
+    // given
+    addCartItemForGiven(testMember1.getUsername(), apple.getId(), 1);
+    List<CartItemsDto> cartItems = requestGetCartItemsAndGetDto(testMember1.getUsername());
+    RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(),
+        password);
+    CartItemsDto cartItemsToAdjust = cartItems.get(0);
+    int countToAdjust = 3;
+
+    ExtractableResponse<Response> response = RestAssured.given().log().all().spec(spec)
+        .pathParam("id", cartItemsToAdjust.getCartItemId())
+        .queryParam("count", countToAdjust)
+        .when().put("/carts/cartItems/{id}/adjust-count")
+        .then().log().all()
+        .extract();
+
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
+    Member memberWithCart = findMemberWithCart(testMember1.getId());
+    CartItem cartItem = memberWithCart.getCart().getCartItem(cartItemsToAdjust.getCartItemId())
+            .orElseThrow(() -> new RuntimeException("test fail"));
+    assertThat(cartItem.getCount()).isEqualTo(countToAdjust);
+  }
+
+  @Test
+  @DisplayName("카트에 담긴 상품의 갯수를 수정합니다.")
+  void adjustCartItemCount_fail_because_of_minus_count() {
+    // given
+    addCartItemForGiven(testMember1.getUsername(), apple.getId(), 1);
+    List<CartItemsDto> cartItems = requestGetCartItemsAndGetDto(testMember1.getUsername());
+    RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(),
+        password);
+    CartItemsDto cartItemsToAdjust = cartItems.get(0);
+    int countToAdjust = -1;
+
+    ExtractableResponse<Response> response = RestAssured.given().log().all().spec(spec)
+        .pathParam("id", cartItemsToAdjust.getCartItemId())
+        .queryParam("count", countToAdjust)
+        .when().put("/carts/cartItems/{id}/adjust-count")
+        .then().log().all()
+        .extract();
+
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_BAD_REQUEST);
+  }
+
   private Member findMemberWithCart(Long memberId) {
     return memberRepository.findWithCartById(memberId)
         .orElseThrow(() -> new RuntimeException("test fail"));

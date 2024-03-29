@@ -38,6 +38,8 @@ public enum ErrorCode {
   CATEGORY_NOT_EXISTS("3000", "카테고리가 존재하지 않습니다.", HttpStatus.SC_BAD_REQUEST),
   PRODUCT_NOT_EXISTS("3001", "상품이 존재하지 않습니다.", HttpStatus.SC_BAD_REQUEST),
   ITEM_ALREADY_EXISTS_IN_CART("3002", "상품이 이미 장바구니에 있습니다.", HttpStatus.SC_BAD_REQUEST),
+  CART_ITEM_NOT_EXISTS("3003", "장바구니에 상품이 존재하지 않습니다.", HttpStatus.SC_BAD_REQUEST),
+  ITEM_COUNT_MUST_BIGGER_THAN_ZERO("3004", "상품의 갯수는 0 이상이어야합니다.", HttpStatus.SC_BAD_REQUEST),
 
   // 메인 파트 에러 (4000 ~ 4999)
   BANNER_GROUP_NOT_FOUND("4000", "배너 그룹을 찾을 수 없습니다.", HttpStatus.SC_BAD_REQUEST);

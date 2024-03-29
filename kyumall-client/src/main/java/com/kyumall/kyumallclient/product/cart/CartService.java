@@ -70,4 +70,16 @@ public class CartService {
     return member.getCart().getCartItems()
         .stream().map(CartItemsDto::from).collect(Collectors.toList());
   }
+
+  @Transactional
+  public void adjustCount(Long memberId, Long id, Integer count) {
+    if (count <= 0) {
+      throw new KyumallException(ErrorCode.ITEM_COUNT_MUST_BIGGER_THAN_ZERO);
+    }
+
+    Member member = findMemberWithCart(memberId);
+    CartItem cartItem = member.getCart().getCartItem(id)
+        .orElseThrow(() -> new KyumallException(ErrorCode.CART_ITEM_NOT_EXISTS));
+    cartItem.updateCount(count);
+  }
 }

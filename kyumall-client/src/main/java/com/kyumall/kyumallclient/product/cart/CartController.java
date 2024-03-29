@@ -10,8 +10,10 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RequiredArgsConstructor
@@ -35,6 +37,13 @@ public class CartController {
   public ResponseWrapper<Void> addCartItem(@LoginUser AuthenticatedUser authenticatedUser,
       @RequestBody List<Long> cartItemsIds) {
     cartService.deleteCartItem(authenticatedUser.getMemberId(), cartItemsIds);
+    return ResponseWrapper.ok();
+  }
+
+  @PutMapping("/cartItems/{id}/adjust-count")
+  public ResponseWrapper<Void> adjustCartItemCount(@LoginUser AuthenticatedUser authenticatedUser,
+      @PathVariable Long id, @RequestParam Integer count) {
+    cartService.adjustCount(authenticatedUser.getMemberId(), id ,count);
     return ResponseWrapper.ok();
   }
 }
