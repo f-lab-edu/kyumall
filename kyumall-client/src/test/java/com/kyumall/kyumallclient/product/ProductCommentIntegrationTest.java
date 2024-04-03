@@ -7,6 +7,7 @@ import com.kyumall.kyumallclient.IntegrationTest;
 import com.kyumall.kyumallclient.member.MemberFactory;
 import com.kyumall.kyumallclient.product.comment.dto.CreateCommentRequest;
 import com.kyumall.kyumallclient.product.comment.dto.ProductCommentDto;
+import com.kyumall.kyumallclient.product.comment.dto.UpdateCommentRequest;
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.product.entity.Category;
 import com.kyumall.kyumallcommon.product.entity.Product;
@@ -37,6 +38,7 @@ class ProductCommentIntegrationTest extends IntegrationTest {
   Product banana;
   private static final String password = "test1234";
   Member testMember1;
+  Member testMember2;
 
   @BeforeEach
   void dataInit() {
@@ -46,6 +48,7 @@ class ProductCommentIntegrationTest extends IntegrationTest {
     banana = productFactory.createProduct("바나나", 1000);
     // 회원
     testMember1 = memberFactory.createClient("test01", password);
+    testMember2 = memberFactory.createClient("test02", password);
   }
 
   @Test
@@ -62,8 +65,7 @@ class ProductCommentIntegrationTest extends IntegrationTest {
     // then
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
     Long createdId = response.body().jsonPath().getLong("result.id");
-    ProductComment createdEntity = productCommentRepository.findById(createdId)
-        .orElseThrow(() -> new RuntimeException("test fail"));
+    ProductComment createdEntity = findComment(createdId);
     assertThat(createdEntity.getMember().getId()).isEqualTo(testMember1.getId());
     assertThat(createdEntity.getProduct().getId()).isEqualTo(apple.getId());
     assertThat(createdEntity.getContent()).isEqualTo(comment);
@@ -136,6 +138,75 @@ class ProductCommentIntegrationTest extends IntegrationTest {
 
     boolean isLastPage = response.body().jsonPath().getBoolean("result.last");
     assertThat(isLastPage).isTrue();  // 마지막 페이지
+  }
+
+  @Test
+  @DisplayName("상품의 댓글을 수정합니다.")
+  void updateComment_success() {
+    // given
+    RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(),
+        password);
+    Long commentId = requestCreateCommentForGiven(apple.getId(), "첫 댓글입니다.", spec);
+    UpdateCommentRequest request = new UpdateCommentRequest("수정된 댓글 입니다.");
+
+    // when
+    ExtractableResponse<Response> response = requestUpdateComment(spec, apple.getId() ,commentId, request);
+
+    // then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
+    ProductComment updateComment = findComment(commentId);
+    assertThat(updateComment.getContent()).isEqualTo(request.getComment());
+  }
+
+  @Test
+  @DisplayName("상품 댓글의 작성자가 아니라서 수정에 실패합니다.")
+  void updateComment_fail_because_not_writer() {
+    // given
+    RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(),
+        password);
+    Long commentId = requestCreateCommentForGiven(apple.getId(), "첫 댓글입니다.", spec);
+    UpdateCommentRequest request = new UpdateCommentRequest("수정된 댓글 입니다.");
+    RequestSpecification otherUserSpec = AuthTestUtil.requestLoginAndGetSpec(testMember2.getUsername(),
+        password);
+
+    // when
+    ExtractableResponse<Response> response = requestUpdateComment(otherUserSpec, apple.getId() ,commentId, request);
+
+    // then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_FORBIDDEN);
+  }
+
+  @Test
+  @DisplayName("상품 댓글과 상품의 ID가 맞지않아 수정에 실패합니다.")
+  void updateComment_fail_because_product_not_match() {
+    // given
+    RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(),
+        password);
+    Long commentId = requestCreateCommentForGiven(apple.getId(), "첫 댓글입니다.", spec);
+    UpdateCommentRequest request = new UpdateCommentRequest("수정된 댓글 입니다.");
+
+    // when
+    ExtractableResponse<Response> response = requestUpdateComment(spec, banana.getId() ,commentId, request);
+
+    // then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_BAD_REQUEST);
+  }
+
+  public ExtractableResponse<Response> requestUpdateComment(RequestSpecification spec, Long productId ,Long commentId,
+      UpdateCommentRequest request) {
+    return RestAssured.given().log().all().spec(spec)
+        .pathParam("id", productId)
+        .pathParam("commentId", commentId)
+        .contentType(ContentType.JSON)
+        .body(request)
+        .when().put("/products/{id}/comments/{commentId}")
+        .then().log().all()
+        .extract();
+  }
+
+  private ProductComment findComment(Long commentId) {
+    return productCommentRepository.findById(commentId)
+        .orElseThrow(() -> new RuntimeException("test fail"));
   }
 
   public static Long requestCreateCommentForGiven(

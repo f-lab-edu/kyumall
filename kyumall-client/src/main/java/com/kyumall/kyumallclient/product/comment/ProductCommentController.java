@@ -2,11 +2,11 @@ package com.kyumall.kyumallclient.product.comment;
 
 import com.kyumall.kyumallclient.product.comment.dto.CreateCommentRequest;
 import com.kyumall.kyumallclient.product.comment.dto.ProductCommentDto;
+import com.kyumall.kyumallclient.product.comment.dto.UpdateCommentRequest;
 import com.kyumall.kyumallcommon.auth.argumentResolver.LoginUser;
 import com.kyumall.kyumallcommon.auth.authentication.AuthenticatedUser;
 import com.kyumall.kyumallcommon.dto.CreatedIdDto;
 import com.kyumall.kyumallcommon.response.ResponseWrapper;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -15,6 +15,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -40,4 +41,15 @@ public class ProductCommentController {
       @PageableDefault(size = 10) Pageable pageable) {
     return ResponseWrapper.ok(productCommentService.getComments(id, pageable));
   }
+
+  // 댓글 수정
+  @PutMapping("/{commentId}")
+  public ResponseWrapper<Void> updateComment(@PathVariable Long id,
+      @PathVariable Long commentId, @LoginUser AuthenticatedUser authenticatedUser,
+      @RequestBody UpdateCommentRequest request) {
+    productCommentService.updateComment(id, commentId, authenticatedUser.getMemberId(), request);
+    return ResponseWrapper.ok();
+  }
+
+  // 댓글 삭제
 }
