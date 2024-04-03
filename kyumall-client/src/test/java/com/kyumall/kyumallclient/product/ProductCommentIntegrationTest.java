@@ -20,6 +20,7 @@ import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -190,6 +191,32 @@ class ProductCommentIntegrationTest extends IntegrationTest {
 
     // then
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_BAD_REQUEST);
+  }
+
+  @Test
+  @DisplayName("상품 댓글 삭제에 성공합니다.")
+  void deleteComment_success() {
+    // given
+    RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(),
+        password);
+    Long commentId = requestCreateCommentForGiven(apple.getId(), "첫 댓글입니다.", spec);
+
+    // when
+    ExtractableResponse<Response> response = requestDeleteComment(spec, apple.getId() ,commentId);
+
+    // then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
+    Optional<ProductComment> optionalComment = productCommentRepository.findById(commentId);
+    assertThat(optionalComment.isEmpty()).isTrue();
+  }
+
+  public ExtractableResponse<Response> requestDeleteComment(RequestSpecification spec, Long productId ,Long commentId) {
+    return RestAssured.given().log().all().spec(spec)
+        .pathParam("id", productId)
+        .pathParam("commentId", commentId)
+        .when().delete("/products/{id}/comments/{commentId}")
+        .then().log().all()
+        .extract();
   }
 
   public ExtractableResponse<Response> requestUpdateComment(RequestSpecification spec, Long productId ,Long commentId,

@@ -44,14 +44,26 @@ public class ProductCommentService {
   public void updateComment(Long productId, Long commentId, Long memberId,
       UpdateCommentRequest request) {
     ProductComment comment = findComment(commentId);
+    validateUpdateComment(productId, memberId, comment);
+
+    comment.updateComment(request.getComment());
+  }
+
+  // 삭제
+  public void deleteComment(Long productId, Long commentId, Long memberId) {
+    ProductComment comment = findComment(commentId);
+    validateUpdateComment(productId, memberId, comment);
+
+    productCommentRepository.deleteById(comment.getId());
+  }
+
+  private static void validateUpdateComment(Long productId, Long memberId, ProductComment comment) {
     if (!comment.getMember().getId().equals(memberId)) {
       throw new KyumallException(ErrorCode.COMMENT_UPDATE_FORBIDDEN);
     }
     if (!comment.getProduct().getId().equals(productId)) {
       throw new KyumallException(ErrorCode.COMMENT_AND_PRODUCT_NOT_MATCHED);
     }
-
-    comment.updateComment(request.getComment());
   }
 
   private ProductComment findComment(Long commentId) {

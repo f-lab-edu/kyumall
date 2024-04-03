@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -52,4 +53,10 @@ public class ProductCommentController {
   }
 
   // 댓글 삭제
+  @DeleteMapping("/{commentId}")
+  public ResponseWrapper<Void> deleteComment(@PathVariable Long id,
+      @PathVariable Long commentId, @LoginUser AuthenticatedUser authenticatedUser) {
+    productCommentService.deleteComment(id, commentId, authenticatedUser.getMemberId());
+    return ResponseWrapper.ok();
+  }
 }
