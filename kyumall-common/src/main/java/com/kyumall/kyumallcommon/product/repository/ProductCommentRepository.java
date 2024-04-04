@@ -2,6 +2,7 @@ package com.kyumall.kyumallcommon.product.repository;
 
 import com.kyumall.kyumallcommon.product.entity.Product;
 import com.kyumall.kyumallcommon.product.entity.ProductComment;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -15,4 +16,6 @@ public interface ProductCommentRepository extends JpaRepository<ProductComment, 
 
   @EntityGraph(attributePaths = {"member"})
   Slice<ProductComment> findByProductOrderByCreatedAt(Product product, Pageable pageable);
+
+  List<ProductComment> findByParentComment(ProductComment productComment);
 }

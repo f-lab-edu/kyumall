@@ -106,6 +106,20 @@ public class ProductCommentService {
     productCommentRatingRepository.save(rating);
   }
 
+  // 대댓글 생성
+  public Long createCommentReply(Long productId, Long commentId, Long memberId, CreateCommentRequest request) {
+    Member member = findMember(memberId);
+    ProductComment comment = findComment(commentId);
+    if (!comment.getProduct().getId().equals(productId)) {
+      throw new KyumallException(ErrorCode.COMMENT_AND_PRODUCT_NOT_MATCHED);
+    }
+    return productCommentRepository.save(ProductComment.builder()
+        .member(member)
+        .parentComment(comment)
+        .content(request.getComment())
+        .build()).getId();
+  }
+
   private static void validateUpdateComment(Long productId, Long memberId, ProductComment comment) {
     if (!comment.getMember().getId().equals(memberId)) {
       throw new KyumallException(ErrorCode.COMMENT_UPDATE_FORBIDDEN);

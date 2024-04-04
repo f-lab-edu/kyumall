@@ -70,5 +70,15 @@ public class ProductCommentController {
     return ResponseWrapper.ok();
   }
 
-  // 대댓글
+  // 대댓글 추가
+  @PostMapping("/{commentId}/reply")
+  public ResponseWrapper<CreatedIdDto> createCommentReply(
+                            @PathVariable Long id,
+                            @PathVariable Long commentId,
+                            @LoginUser AuthenticatedUser authenticatedUser,
+                            @Validated @RequestBody CreateCommentRequest createCommentRequest) {
+    return ResponseWrapper.ok(CreatedIdDto.of(
+        productCommentService.createCommentReply(id, commentId ,authenticatedUser.getMemberId(), createCommentRequest)));
+  }
+
 }

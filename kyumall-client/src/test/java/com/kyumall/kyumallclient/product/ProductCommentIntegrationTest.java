@@ -258,6 +258,37 @@ class ProductCommentIntegrationTest extends IntegrationTest {
     assertThat(rating.getRatingType()).isEqualTo(ratingType);
   }
 
+  @Test
+  @DisplayName("상품의 댓글에 대댓글 생성을 성공합니다.")
+  void createCommentReply_success() {
+    // given
+    RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(), password);
+    Long commentId = requestCreateCommentForGiven(apple.getId(), "첫 댓글입니다.", testMember1.getUsername());
+    CreateCommentRequest request = new CreateCommentRequest("대댓글 입니다.");
+
+    // when
+    ExtractableResponse<Response> response = requestCreateCommentReply(spec, apple.getId() ,commentId, request);
+
+    // then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
+    ProductComment comment = findComment(commentId);
+    List<ProductComment> reply = productCommentRepository.findByParentComment(comment);
+    assertThat(reply).hasSize(1);
+    assertThat(reply.get(0).getContent()).isEqualTo(request.getComment());
+  }
+
+  public ExtractableResponse<Response> requestCreateCommentReply(RequestSpecification spec, Long productId ,
+      Long commentId, CreateCommentRequest request) {
+    return RestAssured.given().log().all().spec(spec)
+        .pathParam("id", productId)
+        .pathParam("commentId", commentId)
+        .contentType(ContentType.JSON)
+        .body(request)
+        .when().post("/products/{id}/comments/{commentId}/reply")
+        .then().log().all()
+        .extract();
+  }
+
   private ProductCommentRating findCommentRating(Long commentId, Long memberId) {
     return productCommentRatingRepository.findByProductComment_IdAndMember_Id(
         commentId, memberId).orElseThrow(() -> new RuntimeException("test fail"));
@@ -278,7 +309,7 @@ class ProductCommentIntegrationTest extends IntegrationTest {
     return RestAssured.given().log().all().spec(spec)
         .pathParam("id", productId)
         .pathParam("commentId", commentId)
-        .when().delete("/products/{id}/comments/{commentId}")
+        .when().delete("/products/{id}/comments/{commentId}/reply")
         .then().log().all()
         .extract();
   }
