@@ -3,10 +3,12 @@ package com.kyumall.kyumallclient.product.comment;
 import com.kyumall.kyumallclient.product.comment.dto.CreateCommentRequest;
 import com.kyumall.kyumallclient.product.comment.dto.ProductCommentDto;
 import com.kyumall.kyumallclient.product.comment.dto.UpdateCommentRequest;
+import com.kyumall.kyumallcommon.auth.authentication.AuthenticatedUser;
 import com.kyumall.kyumallcommon.exception.ErrorCode;
 import com.kyumall.kyumallcommon.exception.KyumallException;
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.member.repository.MemberRepository;
+import com.kyumall.kyumallcommon.product.dto.ProductCommentCountDto;
 import com.kyumall.kyumallcommon.product.entity.Product;
 import com.kyumall.kyumallcommon.product.entity.ProductComment;
 import com.kyumall.kyumallcommon.product.entity.ProductCommentRating;
@@ -14,6 +16,9 @@ import com.kyumall.kyumallcommon.product.repository.ProductCommentRatingReposito
 import com.kyumall.kyumallcommon.product.repository.ProductCommentRepository;
 import com.kyumall.kyumallcommon.product.repository.ProductRepository;
 import com.kyumall.kyumallcommon.product.vo.RatingType;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -38,9 +43,32 @@ public class ProductCommentService {
         .build()).getId();
   }
 
-  public Slice<ProductCommentDto> getComments(Long productId, Pageable pageable) {
+  public Slice<ProductCommentDto> getComments(Long productId, Pageable pageable,
+      AuthenticatedUser authenticatedUser) {
     Product product = findProductById(productId);
-    return productCommentRepository.findByProductOrderByCreatedAt(product, pageable).map(ProductCommentDto::from);
+    // 상품 댓글 조회
+    Slice<ProductCommentDto> commentDtos = productCommentRepository.findByProductOrderByCreatedAt(product,
+        pageable).map(ProductCommentDto::from);
+
+    // 댓글 좋아요, 싫어요 수 조회
+    List<Long> commentIds = commentDtos.stream().map(ProductCommentDto::getId).toList();
+    List<ProductCommentCountDto> ratingCounts = findCommentRatings(authenticatedUser, commentIds);
+
+    // 조회한 좋아요, 싫어요 수 세팅
+    commentDtos.forEach(commentDto -> {
+      ProductCommentCountDto countDto = ratingCounts.stream()
+          .filter(ratingCount -> ratingCount.getProductCommentId().equals(commentDto.getId()))
+          .findFirst()
+          .orElseGet(ProductCommentCountDto::createZeroCount);
+      commentDto.setRatingCount(countDto);
+    });
+
+    return commentDtos;
+  }
+
+  private List<ProductCommentCountDto> findCommentRatings(AuthenticatedUser authenticatedUser, List<Long> commentIds) {
+    Long memberId = (authenticatedUser == null) ? 0 : authenticatedUser.getMemberId();
+    return productCommentRatingRepository.findRatingCountInCommentIds(commentIds, memberId);
   }
 
   // 해당 댓글의 작성자만 수정가능

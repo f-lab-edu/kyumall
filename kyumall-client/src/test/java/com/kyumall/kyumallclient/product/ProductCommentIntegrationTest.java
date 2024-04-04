@@ -88,15 +88,12 @@ class ProductCommentIntegrationTest extends IntegrationTest {
         password);
     List<Long> createdIDList = new ArrayList<>();
     for (int i = 0; i < totalSize; i++) {
-      createdIDList.add(requestCreateCommentForGiven(apple.getId(), "test", spec));
+      createdIDList.add(requestCreateCommentForGiven(apple.getId(), "test",
+          testMember1.getUsername()));
     }
 
     // when
-    ExtractableResponse<Response> response = RestAssured.given().log().all().spec(spec)
-        .pathParam("id", apple.getId())
-        .when().get("/products/{id}/comments")
-        .then().log().all()
-        .extract();
+    ExtractableResponse<Response> response = requestGetComments(spec, apple.getId(), 0);
 
     // then
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
@@ -111,6 +108,15 @@ class ProductCommentIntegrationTest extends IntegrationTest {
     assertThat(isLastPage).isFalse();  // 마지막 페이지 아님
   }
 
+  private ExtractableResponse<Response> requestGetComments(RequestSpecification spec, Long productId, int page) {
+    return RestAssured.given().log().all().spec(spec)
+        .pathParam("id", productId)
+        .queryParam("page", page)
+        .when().get("/products/{id}/comments")
+        .then().log().all()
+        .extract();
+  }
+
   @Test
   @DisplayName("상품의 댓글 조회(두번째 페이지)에 성공합니다.")
   void getComments_second_page_success() {
@@ -122,16 +128,11 @@ class ProductCommentIntegrationTest extends IntegrationTest {
         password);
     List<Long> createdIDList = new ArrayList<>();
     for (int i = 0; i < totalSize; i++) {
-      createdIDList.add(requestCreateCommentForGiven(apple.getId(), "test", spec));
+      createdIDList.add(requestCreateCommentForGiven(apple.getId(), "test", testMember1.getUsername()));
     }
 
     // when
-    ExtractableResponse<Response> response = RestAssured.given().log().all().spec(spec)
-        .pathParam("id", apple.getId())
-        .queryParam("page", page)
-        .when().get("/products/{id}/comments")
-        .then().log().all()
-        .extract();
+    ExtractableResponse<Response> response = requestGetComments(spec, apple.getId(), 1);
 
     // then
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
@@ -147,12 +148,36 @@ class ProductCommentIntegrationTest extends IntegrationTest {
   }
 
   @Test
+  @DisplayName("상품의 댓글 목록을 조회합니다.(좋아요 숫자와 함께)")
+  void getComments_with_likeCount_success() {
+    // given
+    // 댓글 추가
+    Long comment1Id = requestCreateCommentForGiven(apple.getId(), "test", testMember1.getUsername());
+    Long comment2Id = requestCreateCommentForGiven(apple.getId(), "test", testMember2.getUsername());
+    // 댓글에 좋아요 추가
+    RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(), password);
+    requestUpdateCommentRating(spec, apple.getId() ,comment1Id, RatingType.LIKE);
+
+    // when
+    ExtractableResponse<Response> response = requestGetComments(spec, apple.getId(), 0);
+
+    // then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
+    List<ProductCommentDto> commentDtoList = response.body().jsonPath()
+        .getList("result.content", ProductCommentDto.class);
+    assertThat(commentDtoList.get(0).getLikeCount()).isEqualTo(1);
+    assertThat(commentDtoList.get(0).getDislikeCount()).isEqualTo(0);
+    assertThat(commentDtoList.get(0).isLikeByCurrentUser()).isTrue();
+    assertThat(commentDtoList.get(0).isDislikeByCurrentUser()).isFalse();
+  }
+
+  @Test
   @DisplayName("상품의 댓글을 수정합니다.")
   void updateComment_success() {
     // given
     RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(),
         password);
-    Long commentId = requestCreateCommentForGiven(apple.getId(), "첫 댓글입니다.", spec);
+    Long commentId = requestCreateCommentForGiven(apple.getId(), "첫 댓글입니다.", testMember1.getUsername());
     UpdateCommentRequest request = new UpdateCommentRequest("수정된 댓글 입니다.");
 
     // when
@@ -170,7 +195,7 @@ class ProductCommentIntegrationTest extends IntegrationTest {
     // given
     RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(),
         password);
-    Long commentId = requestCreateCommentForGiven(apple.getId(), "첫 댓글입니다.", spec);
+    Long commentId = requestCreateCommentForGiven(apple.getId(), "첫 댓글입니다.", testMember1.getUsername());
     UpdateCommentRequest request = new UpdateCommentRequest("수정된 댓글 입니다.");
     RequestSpecification otherUserSpec = AuthTestUtil.requestLoginAndGetSpec(testMember2.getUsername(),
         password);
@@ -188,7 +213,7 @@ class ProductCommentIntegrationTest extends IntegrationTest {
     // given
     RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(),
         password);
-    Long commentId = requestCreateCommentForGiven(apple.getId(), "첫 댓글입니다.", spec);
+    Long commentId = requestCreateCommentForGiven(apple.getId(), "첫 댓글입니다.", testMember1.getUsername());
     UpdateCommentRequest request = new UpdateCommentRequest("수정된 댓글 입니다.");
 
     // when
@@ -204,7 +229,7 @@ class ProductCommentIntegrationTest extends IntegrationTest {
     // given
     RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(),
         password);
-    Long commentId = requestCreateCommentForGiven(apple.getId(), "첫 댓글입니다.", spec);
+    Long commentId = requestCreateCommentForGiven(apple.getId(), "첫 댓글입니다.", testMember1.getUsername());
 
     // when
     ExtractableResponse<Response> response = requestDeleteComment(spec, apple.getId() ,commentId);
@@ -221,7 +246,7 @@ class ProductCommentIntegrationTest extends IntegrationTest {
     // given
     RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(),
         password);
-    Long commentId = requestCreateCommentForGiven(apple.getId(), "첫 댓글입니다.", spec);
+    Long commentId = requestCreateCommentForGiven(apple.getId(), "첫 댓글입니다.", testMember1.getUsername());
     RatingType ratingType = RatingType.LIKE;
 
     // when
@@ -275,8 +300,8 @@ class ProductCommentIntegrationTest extends IntegrationTest {
         .orElseThrow(() -> new RuntimeException("test fail"));
   }
 
-  public static Long requestCreateCommentForGiven(
-      Long productId, String comment, RequestSpecification spec) {
+  public static Long requestCreateCommentForGiven(Long productId, String comment, String username) {
+    RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(username, password);
     ExtractableResponse<Response> response = requestCreateComment(productId, comment, spec);
     return response.body().jsonPath().getLong("result.id");
   }

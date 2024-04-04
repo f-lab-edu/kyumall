@@ -41,8 +41,8 @@ public class ProductCommentController {
   // 상품 ID로 최상위 댓글 조회
   @GetMapping
   public ResponseWrapper<Slice<ProductCommentDto>> getComments(@PathVariable Long id,
-      @PageableDefault(size = 10) Pageable pageable) {
-    return ResponseWrapper.ok(productCommentService.getComments(id, pageable));
+      @PageableDefault(size = 10) Pageable pageable, @LoginUser AuthenticatedUser authenticatedUser) {
+    return ResponseWrapper.ok(productCommentService.getComments(id, pageable, authenticatedUser));
   }
 
   // 댓글 수정

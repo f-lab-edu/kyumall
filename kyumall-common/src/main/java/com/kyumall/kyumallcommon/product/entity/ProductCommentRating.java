@@ -4,6 +4,8 @@ import com.kyumall.kyumallcommon.BaseTimeEntity;
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.product.vo.RatingType;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -31,6 +33,7 @@ public class ProductCommentRating extends BaseTimeEntity {
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "member_id")
   private Member member;
+  @Enumerated(EnumType.STRING)
   private RatingType ratingType;
 
   public void updateRating(RatingType ratingType) {
