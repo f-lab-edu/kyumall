@@ -32,4 +32,8 @@ public class ProductCommentRating extends BaseTimeEntity {
   @JoinColumn(name = "member_id")
   private Member member;
   private RatingType ratingType;
+
+  public void updateRating(RatingType ratingType) {
+    this.ratingType = ratingType;
+  }
 }

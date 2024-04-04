@@ -6,6 +6,7 @@ import com.kyumall.kyumallclient.product.comment.dto.UpdateCommentRequest;
 import com.kyumall.kyumallcommon.auth.argumentResolver.LoginUser;
 import com.kyumall.kyumallcommon.auth.authentication.AuthenticatedUser;
 import com.kyumall.kyumallcommon.dto.CreatedIdDto;
+import com.kyumall.kyumallcommon.product.vo.RatingType;
 import com.kyumall.kyumallcommon.response.ResponseWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RequiredArgsConstructor
@@ -59,4 +61,14 @@ public class ProductCommentController {
     productCommentService.deleteComment(id, commentId, authenticatedUser.getMemberId());
     return ResponseWrapper.ok();
   }
+
+  // 댓글 좋아요/싫어요
+  @PutMapping("/{commentId}/update-rating")
+  public ResponseWrapper<Void> updateCommentRating(@PathVariable Long id, @PathVariable Long commentId,
+      @LoginUser AuthenticatedUser authenticatedUser, @RequestParam RatingType ratingType) {
+    productCommentService.updateCommentRating(id, commentId, authenticatedUser.getMemberId(), ratingType);
+    return ResponseWrapper.ok();
+  }
+
+  // 대댓글
 }

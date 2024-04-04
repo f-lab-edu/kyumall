@@ -12,7 +12,10 @@ import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.product.entity.Category;
 import com.kyumall.kyumallcommon.product.entity.Product;
 import com.kyumall.kyumallcommon.product.entity.ProductComment;
+import com.kyumall.kyumallcommon.product.entity.ProductCommentRating;
+import com.kyumall.kyumallcommon.product.repository.ProductCommentRatingRepository;
 import com.kyumall.kyumallcommon.product.repository.ProductCommentRepository;
+import com.kyumall.kyumallcommon.product.vo.RatingType;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.ExtractableResponse;
@@ -35,6 +38,8 @@ class ProductCommentIntegrationTest extends IntegrationTest {
   ProductFactory productFactory;
   @Autowired
   ProductCommentRepository productCommentRepository;
+  @Autowired
+  ProductCommentRatingRepository productCommentRatingRepository;
   Product apple;
   Product banana;
   private static final String password = "test1234";
@@ -208,6 +213,40 @@ class ProductCommentIntegrationTest extends IntegrationTest {
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
     Optional<ProductComment> optionalComment = productCommentRepository.findById(commentId);
     assertThat(optionalComment.isEmpty()).isTrue();
+  }
+
+  @Test
+  @DisplayName("상품 댓글에 좋아요를 합니다.")
+  void updateCommentRating_good_success() {
+    // given
+    RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(),
+        password);
+    Long commentId = requestCreateCommentForGiven(apple.getId(), "첫 댓글입니다.", spec);
+    RatingType ratingType = RatingType.LIKE;
+
+    // when
+    ExtractableResponse<Response> response = requestUpdateCommentRating(spec, apple.getId() ,commentId, ratingType);
+
+    // then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
+    ProductCommentRating rating = findCommentRating(commentId, testMember1.getId());
+    assertThat(rating.getRatingType()).isEqualTo(ratingType);
+  }
+
+  private ProductCommentRating findCommentRating(Long commentId, Long memberId) {
+    return productCommentRatingRepository.findByProductComment_IdAndMember_Id(
+        commentId, memberId).orElseThrow(() -> new RuntimeException("test fail"));
+  }
+
+  public ExtractableResponse<Response> requestUpdateCommentRating(RequestSpecification spec, Long productId ,
+      Long commentId, RatingType ratingType) {
+    return RestAssured.given().log().all().spec(spec)
+        .pathParam("id", productId)
+        .pathParam("commentId", commentId)
+        .queryParam("ratingType", ratingType)
+        .when().put("/products/{id}/comments/{commentId}/update-rating")
+        .then().log().all()
+        .extract();
   }
 
   public ExtractableResponse<Response> requestDeleteComment(RequestSpecification spec, Long productId ,Long commentId) {

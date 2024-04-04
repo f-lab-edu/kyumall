@@ -9,8 +9,11 @@ import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.member.repository.MemberRepository;
 import com.kyumall.kyumallcommon.product.entity.Product;
 import com.kyumall.kyumallcommon.product.entity.ProductComment;
+import com.kyumall.kyumallcommon.product.entity.ProductCommentRating;
+import com.kyumall.kyumallcommon.product.repository.ProductCommentRatingRepository;
 import com.kyumall.kyumallcommon.product.repository.ProductCommentRepository;
 import com.kyumall.kyumallcommon.product.repository.ProductRepository;
+import com.kyumall.kyumallcommon.product.vo.RatingType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -23,6 +26,7 @@ public class ProductCommentService {
   private final ProductRepository productRepository;
   private final MemberRepository memberRepository;
   private final ProductCommentRepository productCommentRepository;
+  private final ProductCommentRatingRepository productCommentRatingRepository;
 
   public Long createComment(Long productId, Long memberId, CreateCommentRequest request) {
     Product product = findProductById(productId);
@@ -55,6 +59,23 @@ public class ProductCommentService {
     validateUpdateComment(productId, memberId, comment);
 
     productCommentRepository.deleteById(comment.getId());
+  }
+
+  @Transactional
+  public void updateCommentRating(Long productId, Long commentId, Long memberId, RatingType ratingType) {
+    ProductComment comment = findComment(commentId);
+    Member member = findMember(memberId);
+    validateUpdateComment(productId, memberId, comment);
+
+    ProductCommentRating rating = productCommentRatingRepository.findByProductCommentAndMember(comment, member)
+        .orElseGet(() -> ProductCommentRating.builder()
+              .productComment(comment)
+              .member(member)
+              .ratingType(RatingType.NONE)
+              .build()
+        );
+    rating.updateRating(ratingType);
+    productCommentRatingRepository.save(rating);
   }
 
   private static void validateUpdateComment(Long productId, Long memberId, ProductComment comment) {
