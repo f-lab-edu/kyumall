@@ -1,6 +1,6 @@
 package com.kyumall.kyumallclient.product.comment.dto;
 
-import com.kyumall.kyumallcommon.product.dto.ProductCommentCountDto;
+import com.kyumall.kyumallcommon.product.dto.LikeCountDto;
 import com.kyumall.kyumallcommon.product.entity.ProductComment;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
@@ -19,7 +19,7 @@ public class ProductCommentDto {
   private Long dislikeCount;  // 댓글 싫어요 수
   private boolean likeByCurrentUser; // 현재 유저가 좋아요 했는지 여부
   private boolean dislikeByCurrentUser; // 현재 유저가 싫어요 했는지 여부
-  //TODO: 최상위 댓글의 경우 대댓글의 수
+  private Long replyCount;  // 대댓글 수
 
   public static ProductCommentDto from(ProductComment productComment) {
     return ProductCommentDto.builder()
@@ -31,10 +31,14 @@ public class ProductCommentDto {
         .build();
   }
 
-  public void setRatingCount(ProductCommentCountDto countDto) {
+  public void setRatingCount(LikeCountDto countDto) {
     this.likeCount = countDto.getLikeCount();
     this.dislikeCount = countDto.getDislikeCount();
     this.likeByCurrentUser = countDto.isLikeByCurrentUser();
     this.dislikeByCurrentUser = countDto.isDislikeByCurrentUser();
+  }
+
+  public void setReplyCount(Long replyCount) {
+    this.replyCount = replyCount;
   }
 }

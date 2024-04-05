@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.*;
 
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.member.repository.MemberRepository;
-import com.kyumall.kyumallcommon.product.dto.ProductCommentCountDto;
+import com.kyumall.kyumallcommon.product.dto.LikeCountDto;
 import com.kyumall.kyumallcommon.product.entity.Product;
 import com.kyumall.kyumallcommon.product.entity.ProductComment;
 import com.kyumall.kyumallcommon.product.entity.ProductCommentRating;
@@ -87,20 +87,20 @@ class ProductCommentRatingRepositoryTest {
     List<Long> commentIds = List.of(comment1.getId(), comment2.getId());
 
     // when
-    List<ProductCommentCountDto> countDtos = productCommentRatingRepository.findRatingCountInCommentIds(
+    List<LikeCountDto> countDtos = productCommentRatingRepository.findRatingCountInCommentIds(
         commentIds, members.get(0).getId());
 
     // then
     System.out.println(countDtos);
     // 댓글 1
-    ProductCommentCountDto comment1Count = countDtos.stream()
+    LikeCountDto comment1Count = countDtos.stream()
         .filter(countDto -> countDto.getProductCommentId().equals(comment1.getId())).findAny().get();
     assertThat(comment1Count.getLikeCount()).isEqualTo(likeCount);
     assertThat(comment1Count.getDislikeCount()).isEqualTo(totalCount - likeCount);
     assertThat(comment1Count.isLikeByCurrentUser()).isTrue();
     assertThat(comment1Count.isDislikeByCurrentUser()).isFalse();
     // 댓글 2
-    ProductCommentCountDto comment2Count = countDtos.stream()
+    LikeCountDto comment2Count = countDtos.stream()
         .filter(countDto -> countDto.getProductCommentId().equals(comment2.getId())).findAny().get();
     assertThat(comment2Count.getLikeCount()).isEqualTo(likeCount);
     assertThat(comment2Count.getDislikeCount()).isEqualTo(totalCount - likeCount);

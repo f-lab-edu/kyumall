@@ -8,7 +8,8 @@ import com.kyumall.kyumallcommon.exception.ErrorCode;
 import com.kyumall.kyumallcommon.exception.KyumallException;
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.member.repository.MemberRepository;
-import com.kyumall.kyumallcommon.product.dto.ProductCommentCountDto;
+import com.kyumall.kyumallcommon.product.dto.LikeCountDto;
+import com.kyumall.kyumallcommon.product.dto.ReplyCountDto;
 import com.kyumall.kyumallcommon.product.entity.Product;
 import com.kyumall.kyumallcommon.product.entity.ProductComment;
 import com.kyumall.kyumallcommon.product.entity.ProductCommentRating;
@@ -17,8 +18,6 @@ import com.kyumall.kyumallcommon.product.repository.ProductCommentRepository;
 import com.kyumall.kyumallcommon.product.repository.ProductRepository;
 import com.kyumall.kyumallcommon.product.vo.RatingType;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -49,24 +48,36 @@ public class ProductCommentService {
     // 상품 댓글 조회
     Slice<ProductCommentDto> commentDtos = productCommentRepository.findByProductOrderByCreatedAt(product,
         pageable).map(ProductCommentDto::from);
+    // 상품 댓글 ID 만 추출
+    List<Long> commentIds = commentDtos.stream().map(ProductCommentDto::getId).toList();
 
     // 댓글 좋아요, 싫어요 수 조회
-    List<Long> commentIds = commentDtos.stream().map(ProductCommentDto::getId).toList();
-    List<ProductCommentCountDto> ratingCounts = findCommentRatings(authenticatedUser, commentIds);
+    List<LikeCountDto> ratingCounts = findCommentRatings(authenticatedUser, commentIds);
 
-    // 조회한 좋아요, 싫어요 수 세팅
+    // 대댓글 갯수 조회
+    List<ReplyCountDto> replyCounts = productCommentRepository.findReplyCountInCommentId(commentIds);
+
+    // 댓글에 좋아요수, 대댓글수 세팅
     commentDtos.forEach(commentDto -> {
-      ProductCommentCountDto countDto = ratingCounts.stream()
+      // 조회한 좋아요, 싫어요 수 세팅
+      LikeCountDto likeCountDto = ratingCounts.stream()
           .filter(ratingCount -> ratingCount.getProductCommentId().equals(commentDto.getId()))
           .findFirst()
-          .orElseGet(ProductCommentCountDto::createZeroCount);
-      commentDto.setRatingCount(countDto);
+          .orElseGet(LikeCountDto::createZeroCount);
+      commentDto.setRatingCount(likeCountDto);
+
+      // 대댓글수 세팅
+      ReplyCountDto replyCountDto = replyCounts.stream()
+          .filter(replyCount -> replyCount.getParentCommentId().equals(commentDto.getId()))
+          .findFirst()
+          .orElseGet(ReplyCountDto::createZeroCount);
+      commentDto.setReplyCount(replyCountDto.getReplyCount());
     });
 
     return commentDtos;
   }
 
-  private List<ProductCommentCountDto> findCommentRatings(AuthenticatedUser authenticatedUser, List<Long> commentIds) {
+  private List<LikeCountDto> findCommentRatings(AuthenticatedUser authenticatedUser, List<Long> commentIds) {
     Long memberId = (authenticatedUser == null) ? 0 : authenticatedUser.getMemberId();
     return productCommentRatingRepository.findRatingCountInCommentIds(commentIds, memberId);
   }

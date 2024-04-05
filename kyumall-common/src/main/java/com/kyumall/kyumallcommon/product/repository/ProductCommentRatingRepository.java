@@ -1,7 +1,7 @@
 package com.kyumall.kyumallcommon.product.repository;
 
 import com.kyumall.kyumallcommon.member.entity.Member;
-import com.kyumall.kyumallcommon.product.dto.ProductCommentCountDto;
+import com.kyumall.kyumallcommon.product.dto.LikeCountDto;
 import com.kyumall.kyumallcommon.product.entity.ProductComment;
 import com.kyumall.kyumallcommon.product.entity.ProductCommentRating;
 import java.util.List;
@@ -14,7 +14,7 @@ public interface ProductCommentRatingRepository extends JpaRepository<ProductCom
   Optional<ProductCommentRating> findByProductComment_IdAndMember_Id(Long productId, Long memberId);
 
   @Query(
-      "select new com.kyumall.kyumallcommon.product.dto.ProductCommentCountDto"
+      "select new com.kyumall.kyumallcommon.product.dto.LikeCountDto"
           + "(pcr.productComment.id"
           + ", sum(case when pcr.ratingType = com.kyumall.kyumallcommon.product.vo.RatingType.LIKE then 1 else 0 end)"
           + ", sum(case when pcr.ratingType = com.kyumall.kyumallcommon.product.vo.RatingType.DISLIKE then 1 else 0 end)"
@@ -25,5 +25,5 @@ public interface ProductCommentRatingRepository extends JpaRepository<ProductCom
           + " where pcr.productComment.id in :productCommentIds "
           + " group by pcr.productComment.id"
   )
-  List<ProductCommentCountDto> findRatingCountInCommentIds(List<Long> productCommentIds, Long memberId);
+  List<LikeCountDto> findRatingCountInCommentIds(List<Long> productCommentIds, Long memberId);
 }

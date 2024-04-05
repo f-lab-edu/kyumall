@@ -172,6 +172,29 @@ class ProductCommentIntegrationTest extends IntegrationTest {
   }
 
   @Test
+  @DisplayName("상품의 댓글 목록을 조회합니다.(대댓글 갯수와 함께 조회)")
+  void getComments_with_replyCount_success() {
+    // given
+    // 댓글 추가
+    Long comment1Id = requestCreateCommentForGiven(apple.getId(), "test", testMember1.getUsername());
+    Long comment2Id = requestCreateCommentForGiven(apple.getId(), "test", testMember2.getUsername());
+    // 댓글에 대댓글 추가
+    RequestSpecification spec1 = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(), password);
+    RequestSpecification spec2 = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(), password);
+    requestCreateCommentReply(spec1, apple.getId(), comment1Id, new CreateCommentRequest("reply1"));
+    requestCreateCommentReply(spec2, apple.getId(), comment1Id, new CreateCommentRequest("reply1"));
+
+    // when
+    ExtractableResponse<Response> response = requestGetComments(spec1, apple.getId(), 0);
+
+    // then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
+    List<ProductCommentDto> commentDtoList = response.body().jsonPath()
+        .getList("result.content", ProductCommentDto.class);
+    assertThat(commentDtoList.get(0).getReplyCount()).isEqualTo(2);
+  }
+
+  @Test
   @DisplayName("상품의 댓글을 수정합니다.")
   void updateComment_success() {
     // given
@@ -309,7 +332,7 @@ class ProductCommentIntegrationTest extends IntegrationTest {
     return RestAssured.given().log().all().spec(spec)
         .pathParam("id", productId)
         .pathParam("commentId", commentId)
-        .when().delete("/products/{id}/comments/{commentId}/reply")
+        .when().delete("/products/{id}/comments/{commentId}")
         .then().log().all()
         .extract();
   }

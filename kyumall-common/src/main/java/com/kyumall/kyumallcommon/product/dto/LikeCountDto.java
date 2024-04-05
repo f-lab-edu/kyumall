@@ -8,7 +8,7 @@ import lombok.ToString;
 
 @AllArgsConstructor @Builder @NoArgsConstructor
 @Getter @ToString
-public class ProductCommentCountDto {
+public class LikeCountDto {
   private Long productCommentId;
   private Long likeCount;   // 좋아요 수
   private Long dislikeCount;    // 싫어요 수
@@ -16,8 +16,8 @@ public class ProductCommentCountDto {
   private boolean dislikeByCurrentUser;   // 현재 유저가 싫어요 했는지 여부
 
   // 기본값 0으로 채워서 반환
-  public static ProductCommentCountDto createZeroCount() {
-    return ProductCommentCountDto.builder()
+  public static LikeCountDto createZeroCount() {
+    return LikeCountDto.builder()
         .likeCount(0L)
         .dislikeCount(0L)
         .likeByCurrentUser(false)
