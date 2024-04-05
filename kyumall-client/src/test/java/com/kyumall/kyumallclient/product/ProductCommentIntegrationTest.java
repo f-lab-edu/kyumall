@@ -288,10 +288,8 @@ class ProductCommentIntegrationTest extends IntegrationTest {
     RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(), password);
     Long commentId = requestCreateCommentForGiven(apple.getId(), "첫 댓글입니다.", testMember1.getUsername());
     CreateCommentRequest request = new CreateCommentRequest("대댓글 입니다.");
-
     // when
     ExtractableResponse<Response> response = requestCreateCommentReply(spec, apple.getId() ,commentId, request);
-
     // then
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
     ProductComment comment = findComment(commentId);
@@ -299,6 +297,34 @@ class ProductCommentIntegrationTest extends IntegrationTest {
     assertThat(reply).hasSize(1);
     assertThat(reply.get(0).getContent()).isEqualTo(request.getComment());
   }
+
+  @Test
+  @DisplayName("댓글의 대댓글 목록 조회에 성공합니다.")
+  void getCommentReplies_success() {
+    // given
+    RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(), password);
+    Long commentId = requestCreateCommentForGiven(apple.getId(), "첫 댓글입니다.", testMember1.getUsername());
+    requestCreateCommentReply(spec, apple.getId() ,commentId, new CreateCommentRequest("대댓글 입니다."));
+    // when
+    ExtractableResponse<Response> response = requestGetCommentReplies(spec, apple.getId(),
+        commentId, 0);
+    // then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
+    List<ProductCommentDto> commentDtoList = response.body().jsonPath().getList("result.content", ProductCommentDto.class);
+    assertThat(commentDtoList).hasSize(1);
+  }
+
+  public ExtractableResponse<Response> requestGetCommentReplies(RequestSpecification spec, Long productId ,
+      Long commentId, int page) {
+    return RestAssured.given().log().all().spec(spec)
+        .pathParam("id", productId)
+        .pathParam("commentId", commentId)
+        .queryParam("page", page)
+        .when().get("/products/{id}/comments/{commentId}/reply")
+        .then().log().all()
+        .extract();
+  }
+
 
   public ExtractableResponse<Response> requestCreateCommentReply(RequestSpecification spec, Long productId ,
       Long commentId, CreateCommentRequest request) {

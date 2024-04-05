@@ -19,6 +19,9 @@ public interface ProductCommentRepository extends JpaRepository<ProductComment, 
   @EntityGraph(attributePaths = {"member"})
   Slice<ProductComment> findByProductOrderByCreatedAt(Product product, Pageable pageable);
 
+  @EntityGraph(attributePaths = {"member"})
+  Slice<ProductComment> findByParentCommentOrderByCreatedAt(ProductComment comment, Pageable pageable);
+
   List<ProductComment> findByParentComment(ProductComment productComment);
 
   @Query("select new com.kyumall.kyumallcommon.product.dto.ReplyCountDto"

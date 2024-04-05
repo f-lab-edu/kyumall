@@ -49,7 +49,7 @@ public class ProductCommentService {
     Slice<ProductCommentDto> commentDtos = productCommentRepository.findByProductOrderByCreatedAt(product,
         pageable).map(ProductCommentDto::from);
     // 상품 댓글 ID 만 추출
-    List<Long> commentIds = commentDtos.stream().map(ProductCommentDto::getId).toList();
+    List<Long> commentIds = extractCommetIdList(commentDtos);
 
     // 댓글 좋아요, 싫어요 수 조회
     List<LikeCountDto> ratingCounts = findCommentRatings(authenticatedUser, commentIds);
@@ -60,11 +60,7 @@ public class ProductCommentService {
     // 댓글에 좋아요수, 대댓글수 세팅
     commentDtos.forEach(commentDto -> {
       // 조회한 좋아요, 싫어요 수 세팅
-      LikeCountDto likeCountDto = ratingCounts.stream()
-          .filter(ratingCount -> ratingCount.getProductCommentId().equals(commentDto.getId()))
-          .findFirst()
-          .orElseGet(LikeCountDto::createZeroCount);
-      commentDto.setRatingCount(likeCountDto);
+      setLikeCounts(ratingCounts, commentDto);
 
       // 대댓글수 세팅
       ReplyCountDto replyCountDto = replyCounts.stream()
@@ -75,6 +71,18 @@ public class ProductCommentService {
     });
 
     return commentDtos;
+  }
+
+  private static void setLikeCounts(List<LikeCountDto> ratingCounts, ProductCommentDto commentDto) {
+    LikeCountDto likeCountDto = ratingCounts.stream()
+        .filter(ratingCount -> ratingCount.getProductCommentId().equals(commentDto.getId()))
+        .findFirst()
+        .orElseGet(LikeCountDto::createZeroCount);
+    commentDto.setRatingCount(likeCountDto);
+  }
+
+  private static List<Long> extractCommetIdList(Slice<ProductCommentDto> commentDtos) {
+    return commentDtos.stream().map(ProductCommentDto::getId).toList();
   }
 
   private List<LikeCountDto> findCommentRatings(AuthenticatedUser authenticatedUser, List<Long> commentIds) {
@@ -129,6 +137,23 @@ public class ProductCommentService {
         .parentComment(comment)
         .content(request.getComment())
         .build()).getId();
+  }
+
+  // 대댓글 조회
+  public Slice<ProductCommentDto> getCommentReplies(Long productId, Long commentId, AuthenticatedUser authenticatedUser,
+      Pageable pageable) {
+    ProductComment parentComment = findComment(commentId);
+
+    Slice<ProductCommentDto> commentDtos = productCommentRepository.findByParentCommentOrderByCreatedAt(parentComment, pageable)
+        .map(ProductCommentDto::from);
+    // Comment ID 추출
+    List<Long> commentIds = extractCommetIdList(commentDtos);
+    // 댓글 좋아요, 싫어요 수 조회
+    List<LikeCountDto> ratingCounts = findCommentRatings(authenticatedUser, commentIds);
+    // 좋아요수 세팅
+    commentDtos.forEach(commentDto -> setLikeCounts(ratingCounts, commentDto));
+
+    return commentDtos;
   }
 
   private static void validateUpdateComment(Long productId, Long memberId, ProductComment comment) {

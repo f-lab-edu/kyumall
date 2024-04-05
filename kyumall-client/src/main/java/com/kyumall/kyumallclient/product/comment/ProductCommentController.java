@@ -81,4 +81,13 @@ public class ProductCommentController {
         productCommentService.createCommentReply(id, commentId ,authenticatedUser.getMemberId(), createCommentRequest)));
   }
 
+  @GetMapping("/{commentId}/reply")
+  public ResponseWrapper<Slice<ProductCommentDto>> getCommentReplies(
+                        @PathVariable Long id,
+                        @PathVariable Long commentId,
+                        @LoginUser AuthenticatedUser authenticatedUser,
+                        @PageableDefault(size = 10) Pageable pageable) {
+    return ResponseWrapper.ok(productCommentService.getCommentReplies(id, commentId, authenticatedUser, pageable));
+  }
+
 }
