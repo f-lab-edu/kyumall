@@ -29,6 +29,7 @@ public class ProductComment extends BaseTimeEntity {
   private Product product;
   private String content;
   @ManyToOne
+  @JoinColumn(name = "parent_id")
   private ProductComment parentComment;
 
   public void updateComment(String newComment) {
