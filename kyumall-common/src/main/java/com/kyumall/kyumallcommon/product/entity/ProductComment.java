@@ -9,32 +9,30 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import java.util.ArrayList;
-import java.util.List;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Getter
-@NoArgsConstructor @AllArgsConstructor @Builder
+@Builder
+@Getter @AllArgsConstructor @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-public class Product extends BaseTimeEntity {
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class ProductComment extends BaseTimeEntity {
+  @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "category_id")
-  private Category category;
+  @JoinColumn(name = "member_id")
+  private Member member;
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "seller_id")
-  private Member seller;
-  private String name;
-  private Integer price;
-//  @JoinColumn
-//  @ManyToOne(fetch = FetchType.LAZY)
-//  private Image image;
-  private String image;
-  private String detail;
+  @JoinColumn(name = "product_id")
+  private Product product;
+  private String content;
+  @ManyToOne
+  @JoinColumn(name = "parent_id")
+  private ProductComment parentComment;
+
+  public void updateComment(String newComment) {
+    this.content = newComment;
+  }
 }
