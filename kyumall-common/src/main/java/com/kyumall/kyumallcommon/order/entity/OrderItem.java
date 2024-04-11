@@ -24,9 +24,19 @@ public class OrderItem extends BaseTimeEntity {
   private Long id;
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "order_id")
-  private Order order;
+  private Orders orders;
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "product_id")
   private Product product;
+  private Integer count;
   private Integer orderPrice;
+
+  public static OrderItem from(Product product, Orders orders, int count) {
+    return OrderItem.builder()
+        .orders(orders)
+        .product(product)
+        .count(count)
+        .orderPrice(product.getPrice())
+        .build();
+  }
 }

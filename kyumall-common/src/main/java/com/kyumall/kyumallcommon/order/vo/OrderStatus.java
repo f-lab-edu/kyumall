@@ -6,4 +6,7 @@ public enum OrderStatus {
   , DELIVERING    // 배송 중
   , DELIVER_COMPLETE  // 배송 완료
   , PURCHASE_CONFIRM  // 구매 확정
+  // 배송지연
+  // 취소
+  // 환불
 }

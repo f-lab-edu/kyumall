@@ -42,7 +42,10 @@ public enum ErrorCode {
   ITEM_COUNT_MUST_BIGGER_THAN_ZERO("3004", "상품의 갯수는 0 이상이어야합니다.", HttpStatus.SC_BAD_REQUEST),
 
   // 메인 파트 에러 (4000 ~ 4999)
-  BANNER_GROUP_NOT_FOUND("4000", "배너 그룹을 찾을 수 없습니다.", HttpStatus.SC_BAD_REQUEST);
+  BANNER_GROUP_NOT_FOUND("4000", "배너 그룹을 찾을 수 없습니다.", HttpStatus.SC_BAD_REQUEST),
+
+  // 주문 파트 에러 (5000 ~ 5999)
+  ORDER_NOT_EXISTS("5000", "주문 정보를 찾을 수 없습니다.", HttpStatus.SC_BAD_REQUEST);
 
 
   private final String code;
