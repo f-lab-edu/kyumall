@@ -9,6 +9,7 @@ import com.kyumall.kyumallcommon.product.repository.ProductRepository;
 import com.kyumall.kyumallcommon.product.vo.CategoryStatus;
 import com.kyumall.kyumallcommon.upload.entity.Image;
 import com.kyumall.kyumallcommon.upload.repository.ImageRepository;
+import io.restassured.specification.RequestSpecification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -77,6 +78,10 @@ public class ProductFactory {
         .image(createImage().getStoredFileName())
         .detail("detail")
         .build());
+  }
+
+  public void changeStock(Long productId, Long quantity, RequestSpecification spec) {
+    ProductIntegrationTest.requestChangeStock(productId, quantity, spec);
   }
 
   private Image createImage() {

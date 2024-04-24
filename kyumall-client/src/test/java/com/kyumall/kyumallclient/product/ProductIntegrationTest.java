@@ -30,7 +30,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 @DisplayName("상품 통합테스트")
-class ProductIntegrationTest extends IntegrationTest {
+public class ProductIntegrationTest extends IntegrationTest {
   @Autowired
   private MemberFactory memberFactory;
   @Autowired
@@ -262,16 +262,20 @@ class ProductIntegrationTest extends IntegrationTest {
     Long quantity = 100L;
     RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(seller01.getUsername(), pw);
     // when
-    ExtractableResponse<Response> response = RestAssured.given().log().all()
+    ExtractableResponse<Response> response = requestChangeStock(apple.getId(), quantity, spec);
+
+    // then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
+  }
+
+  public static ExtractableResponse<Response> requestChangeStock(Long productId, Long quantity ,RequestSpecification spec) {
+    return RestAssured.given().log().all()
         .spec(spec)
-        .pathParam("id", apple.getId())
+        .pathParam("id", productId)
         .queryParam("quantity", quantity)
         .when().put("/products/{id}/change-stock")
         .then().log().all()
         .extract();
-
-    // then
-    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
   }
 
   private Product createProductForTest(CreateProductRequest request) {

@@ -12,6 +12,8 @@ import com.kyumall.kyumallcommon.order.entity.Orders;
 import com.kyumall.kyumallcommon.order.repository.OrderRepository;
 import com.kyumall.kyumallcommon.order.vo.OrderStatus;
 import com.kyumall.kyumallcommon.product.entity.Product;
+import com.kyumall.kyumallcommon.product.entity.Stock;
+import com.kyumall.kyumallcommon.product.repository.StockRepository;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.ExtractableResponse;
@@ -32,6 +34,9 @@ class OrdersIntegrationTest extends IntegrationTest {
   private ProductFactory productFactory;
   @Autowired
   private OrderRepository orderRepository;
+  @Autowired
+  private StockRepository stockRepository;
+
   Member member01;
   Product apple;
   Product banana;
@@ -53,12 +58,7 @@ class OrdersIntegrationTest extends IntegrationTest {
             new ProductIdAndCount(banana.getId(), 10)))
         .build();
 
-    ExtractableResponse<Response> response = RestAssured.given().log().all().spec(spec)
-        .contentType(ContentType.JSON)
-        .body(request)
-        .when().post("/orders")
-        .then().log().all()
-        .extract();
+    ExtractableResponse<Response> response = requestCreateOrder(spec, request);
 
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
     Orders order = findOrder(response);
@@ -67,6 +67,84 @@ class OrdersIntegrationTest extends IntegrationTest {
     assertThat(order.getOrderItems()).hasSize(2);
     assertThat(order.getOrderItems().get(0).getProduct().getId()).isEqualTo(apple.getId());
     assertThat(order.getOrderItems().get(1).getProduct().getId()).isEqualTo(banana.getId());
+  }
+
+  @Test
+  @DisplayName("주문 결재에 성공합니다.")
+  void payOrder_complete() {
+    RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(member01.getUsername(), pw);
+    // given
+    // 재고 추가
+    Long appleStock = 20L;
+    Long bananaStock = 30L;
+    productFactory.changeStock(apple.getId(), appleStock, spec);
+    productFactory.changeStock(banana.getId(), bananaStock, spec);
+    // 주문 생성
+    Integer appleOrderQuantity = 10;
+    Integer bananaOrderQuantity = 10;
+    CreateOrderRequest createRequest = CreateOrderRequest.builder()
+        .productIdAndCounts(List.of(
+            new ProductIdAndCount(apple.getId(), appleOrderQuantity),
+            new ProductIdAndCount(banana.getId(), bananaOrderQuantity)))
+        .build();
+    Orders createdOrder = findOrder(requestCreateOrder(spec, createRequest));
+
+    // when
+    ExtractableResponse<Response> response = RestAssured.given().log().all().spec(spec)
+        .pathParam("id", createdOrder.getId())
+        .when().post("/orders/{id}/pay")
+        .then().log().all()
+        .extract();
+
+    // then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
+    Orders order = orderRepository.findById(createdOrder.getId()).orElseThrow();
+    assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.PAY_COMPLETE);
+    assertThat(stockRepository.findByProduct(apple).orElseThrow().getQuantity())
+        .isEqualTo(appleStock - appleOrderQuantity);
+    assertThat(stockRepository.findByProduct(banana).orElseThrow().getQuantity())
+        .isEqualTo(bananaStock - bananaOrderQuantity);
+  }
+
+  @Test
+  @DisplayName("재고가 부족하여 주문 결제에 실패합니다.")
+  void payOrder_fail_because_of_insufficient_stock() {
+    RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(member01.getUsername(), pw);
+    // given
+    // 재고 추가
+    Long appleStock = 10L;
+    Long bananaStock = 10L;
+    productFactory.changeStock(apple.getId(), appleStock, spec);
+    productFactory.changeStock(banana.getId(), bananaStock, spec);
+    // 주문 생성
+    Integer appleOrderQuantity = 11;
+    Integer bananaOrderQuantity = 10;
+    CreateOrderRequest createRequest = CreateOrderRequest.builder()
+        .productIdAndCounts(List.of(
+            new ProductIdAndCount(apple.getId(), appleOrderQuantity),
+            new ProductIdAndCount(banana.getId(), bananaOrderQuantity)))
+        .build();
+    Orders createdOrder = findOrder(requestCreateOrder(spec, createRequest));
+
+    // when
+    ExtractableResponse<Response> response = RestAssured.given().log().all().spec(spec)
+        .pathParam("id", createdOrder.getId())
+        .when().post("/orders/{id}/pay")
+        .then().log().all()
+        .extract();
+
+    // then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_BAD_REQUEST);
+  }
+
+  private static ExtractableResponse<Response> requestCreateOrder(RequestSpecification spec,
+      CreateOrderRequest request) {
+    return RestAssured.given().log().all().spec(spec)
+        .contentType(ContentType.JSON)
+        .body(request)
+        .when().post("/orders")
+        .then().log().all()
+        .extract();
   }
 
   private Orders findOrder(ExtractableResponse<Response> response) {
