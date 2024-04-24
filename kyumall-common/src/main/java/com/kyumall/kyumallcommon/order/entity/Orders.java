@@ -53,4 +53,16 @@ public class Orders extends BaseTimeEntity {
           addProduct(product, count);
         });
   }
+
+  public long calculateTotalPrice() {
+    long totalPrice = 0;
+    for (OrderItem orderItem: orderItems) {
+      totalPrice += (orderItem.getOrderPrice() * orderItem.getCount());
+    }
+    return totalPrice;
+  }
+
+  public void payComplete() {
+    this.orderStatus = OrderStatus.PAY_COMPLETE;
+  }
 }

@@ -9,6 +9,7 @@ public interface OrderRepository extends JpaRepository<Orders, Long> {
   @Query("select distinct o "
       + " from Orders o "
       + " join fetch o.orderItems oi "
+      + " join fetch o.buyer "
       + " where o.id = :id")
   Optional<Orders> findWithOrderItemsById(Long id);
 }
