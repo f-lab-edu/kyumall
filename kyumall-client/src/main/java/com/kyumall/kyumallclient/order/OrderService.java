@@ -12,6 +12,7 @@ import com.kyumall.kyumallcommon.product.entity.Product;
 import com.kyumall.kyumallcommon.product.entity.Stock;
 import com.kyumall.kyumallcommon.product.repository.ProductRepository;
 import com.kyumall.kyumallcommon.product.repository.StockRepository;
+import jakarta.persistence.EntityManager;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +29,7 @@ public class OrderService {
   private final OrderRepository orderRepository;
   private final PayService payService;
   private final StockRepository stockRepository;
+  private final EntityManager em;
 
   @Transactional
   public Long createOrder(Long memberId, CreateOrderRequest request) {
@@ -64,6 +66,7 @@ public class OrderService {
     if (!isSuccess) {
       throw new KyumallException(ErrorCode.ORDER_PAY_FAILS);
     }
+    em.clear(); // Stock 데이터를 Pessimistic Write Lock을 걸어 조회하기 위해 영속성 컨텍스트를 비워주기
     // 재고 감소
     decreaseStocks(order, stocks);
     // 결재완료로 상태 변경

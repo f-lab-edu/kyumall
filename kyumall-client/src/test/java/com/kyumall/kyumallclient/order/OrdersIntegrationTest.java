@@ -19,7 +19,11 @@ import io.restassured.http.ContentType;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -90,11 +94,7 @@ class OrdersIntegrationTest extends IntegrationTest {
     Orders createdOrder = findOrder(requestCreateOrder(spec, createRequest));
 
     // when
-    ExtractableResponse<Response> response = RestAssured.given().log().all().spec(spec)
-        .pathParam("id", createdOrder.getId())
-        .when().post("/orders/{id}/pay")
-        .then().log().all()
-        .extract();
+    ExtractableResponse<Response> response = requestPayOrder(spec, createdOrder);
 
     // then
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
@@ -104,6 +104,15 @@ class OrdersIntegrationTest extends IntegrationTest {
         .isEqualTo(appleStock - appleOrderQuantity);
     assertThat(stockRepository.findByProduct(banana).orElseThrow().getQuantity())
         .isEqualTo(bananaStock - bananaOrderQuantity);
+  }
+
+  private static ExtractableResponse<Response> requestPayOrder(RequestSpecification spec,
+      Orders createdOrder) {
+    return RestAssured.given().log().all().spec(spec)
+        .pathParam("id", createdOrder.getId())
+        .when().post("/orders/{id}/pay")
+        .then().log().all()
+        .extract();
   }
 
   @Test
@@ -127,14 +136,49 @@ class OrdersIntegrationTest extends IntegrationTest {
     Orders createdOrder = findOrder(requestCreateOrder(spec, createRequest));
 
     // when
-    ExtractableResponse<Response> response = RestAssured.given().log().all().spec(spec)
-        .pathParam("id", createdOrder.getId())
-        .when().post("/orders/{id}/pay")
-        .then().log().all()
-        .extract();
+    ExtractableResponse<Response> response = requestPayOrder(spec, createdOrder);
 
     // then
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_BAD_REQUEST);
+  }
+
+  @Test
+  @DisplayName("주문 결제 시, 재고 감소 동시성 테스트")
+  void payOrder_concurrency_test() throws InterruptedException {
+    RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(member01.getUsername(), pw);
+    // given
+    // 재고 추가
+    Long appleStock = 100L;
+    productFactory.changeStock(apple.getId(), appleStock, spec);
+    // 주문 다건 생성
+    int orderCount = 100;
+    List<Orders> createOrders = new ArrayList<>();
+    for (int i = 0; i < orderCount; i++) {
+      Integer appleOrderQuantity = 1;
+      CreateOrderRequest createRequest = CreateOrderRequest.builder()
+          .productIdAndCounts(List.of(
+              new ProductIdAndCount(apple.getId(), appleOrderQuantity)))
+          .build();
+      createOrders.add(findOrder(requestCreateOrder(spec, createRequest)));
+    }
+    // when
+    ExecutorService executorService = Executors.newFixedThreadPool(32);
+    CountDownLatch latch = new CountDownLatch(orderCount);
+
+    for (int i = 0; i < orderCount; i++) {
+      final int idx = i;
+      executorService.submit(() -> {
+        try {
+          requestPayOrder(spec, createOrders.get(idx));
+        } finally {
+          latch.countDown();
+        }
+      });
+    }
+    latch.await();
+
+    // then
+    assertThat(stockRepository.findByProduct(apple).orElseThrow().getQuantity()).isEqualTo(0);
   }
 
   private static ExtractableResponse<Response> requestCreateOrder(RequestSpecification spec,
