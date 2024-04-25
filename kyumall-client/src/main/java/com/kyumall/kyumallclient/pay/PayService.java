@@ -12,8 +12,8 @@ public class PayService {
 
   public boolean pay(Long memberId, Long payAmount) {
     PayResponse payResponse = payOpenFeign.pay(memberId, payAmount);
-    log.info(payResponse.getMessage());
-    log.info(payResponse.getResult());
+    log.info("log: " + payResponse.getMessage());
+    log.info("log: " + payResponse.getResult());
     return true;
   }
 }
