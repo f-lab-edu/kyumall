@@ -67,7 +67,9 @@ public class OrderService {
     if (!isSuccess) {
       throw new KyumallException(ErrorCode.ORDER_PAY_FAILS);
     }
-    em.clear(); // Stock 데이터를 Pessimistic Write Lock을 걸어 조회하기 위해 영속성 컨텍스트를 비워주기
+    for (Stock stock: stocks) {
+      em.detach(stock); // Stock 데이터를 Pessimistic Write Lock을 걸어 조회하기 위해 영속성 컨텍스트에서 detach 시키기 (1차 캐시에서 제거)
+    }
     // 재고 감소
     decreaseStocks(order, stocks);
     // 결재완료로 상태 변경
