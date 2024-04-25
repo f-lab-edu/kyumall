@@ -1,10 +1,13 @@
 package com.kyumall.kyumallclient.order;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.BDDMockito.*;
 
 import com.kyumall.kyumallclient.AuthTestUtil;
 import com.kyumall.kyumallclient.IntegrationTest;
 import com.kyumall.kyumallclient.member.MemberFactory;
+import com.kyumall.kyumallclient.pay.PayOpenFeign;
+import com.kyumall.kyumallclient.pay.PayResponse;
 import com.kyumall.kyumallclient.product.ProductFactory;
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.member.vo.MemberType;
@@ -12,7 +15,6 @@ import com.kyumall.kyumallcommon.order.entity.Orders;
 import com.kyumall.kyumallcommon.order.repository.OrderRepository;
 import com.kyumall.kyumallcommon.order.vo.OrderStatus;
 import com.kyumall.kyumallcommon.product.entity.Product;
-import com.kyumall.kyumallcommon.product.entity.Stock;
 import com.kyumall.kyumallcommon.product.repository.StockRepository;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
@@ -29,6 +31,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
 
 class OrdersIntegrationTest extends IntegrationTest {
   private static final String pw = "12341234";
@@ -40,6 +43,8 @@ class OrdersIntegrationTest extends IntegrationTest {
   private OrderRepository orderRepository;
   @Autowired
   private StockRepository stockRepository;
+  @MockBean
+  private PayOpenFeign payOpenFeign;
 
   Member member01;
   Product apple;
@@ -92,6 +97,8 @@ class OrdersIntegrationTest extends IntegrationTest {
             new ProductIdAndCount(banana.getId(), bananaOrderQuantity)))
         .build();
     Orders createdOrder = findOrder(requestCreateOrder(spec, createRequest));
+    // mock
+    given(payOpenFeign.pay(anyLong(), anyLong())).willReturn(new PayResponse("success", "성공"));
 
     // when
     ExtractableResponse<Response> response = requestPayOrder(spec, createdOrder);
@@ -134,6 +141,8 @@ class OrdersIntegrationTest extends IntegrationTest {
             new ProductIdAndCount(banana.getId(), bananaOrderQuantity)))
         .build();
     Orders createdOrder = findOrder(requestCreateOrder(spec, createRequest));
+    // mock
+    given(payOpenFeign.pay(anyLong(), anyLong())).willReturn(new PayResponse("success", "성공"));
 
     // when
     ExtractableResponse<Response> response = requestPayOrder(spec, createdOrder);
@@ -161,6 +170,9 @@ class OrdersIntegrationTest extends IntegrationTest {
           .build();
       createOrders.add(findOrder(requestCreateOrder(spec, createRequest)));
     }
+    // mock
+    given(payOpenFeign.pay(anyLong(), anyLong())).willReturn(new PayResponse("success", "성공"));
+
     // when
     ExecutorService executorService = Executors.newFixedThreadPool(32);
     CountDownLatch latch = new CountDownLatch(orderCount);
