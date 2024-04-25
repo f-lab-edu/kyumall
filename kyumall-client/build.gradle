@@ -5,9 +5,10 @@ dependencies {
     //test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation "io.rest-assured:rest-assured"
-
     // swagger
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
+    // feign
+    api 'org.springframework.cloud:spring-cloud-starter-openfeign'
 
     //app
     api project(':kyumall-common')
@@ -15,4 +16,14 @@ dependencies {
 
 test {
     useJUnitPlatform()
+}
+
+ext {
+    set('springCloudVersion', "2023.0.0")
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
 }
