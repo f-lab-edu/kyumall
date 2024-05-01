@@ -8,6 +8,6 @@ import lombok.NoArgsConstructor;
 
 @Builder
 @Getter @NoArgsConstructor @AllArgsConstructor
-public class CreateOrderRequest {
+public class CreateOrderGroupRequest {
   private List<ProductIdAndCount> productIdAndCounts;
 }

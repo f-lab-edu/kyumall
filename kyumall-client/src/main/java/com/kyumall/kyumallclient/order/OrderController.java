@@ -19,9 +19,9 @@ public class OrderController {
 
   @PostMapping()
   public ResponseWrapper<CreatedIdDto> createOrder(@LoginUser AuthenticatedUser authenticatedUser,
-                          @RequestBody CreateOrderRequest request) {
+                          @RequestBody CreateOrderGroupRequest request) {
     return ResponseWrapper.ok(
-        CreatedIdDto.of(orderService.createOrder(authenticatedUser.getMemberId(), request)));
+        CreatedIdDto.of(orderService.createOrderGroup(authenticatedUser.getMemberId(), request)));
   }
 
   @PostMapping("/{id}/pay")

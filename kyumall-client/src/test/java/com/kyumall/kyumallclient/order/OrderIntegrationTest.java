@@ -11,6 +11,7 @@ import com.kyumall.kyumallclient.pay.PayResponse;
 import com.kyumall.kyumallclient.product.ProductFactory;
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.member.vo.MemberType;
+import com.kyumall.kyumallcommon.order.entity.OrderGroup;
 import com.kyumall.kyumallcommon.order.entity.Orders;
 import com.kyumall.kyumallcommon.order.repository.OrderRepository;
 import com.kyumall.kyumallcommon.order.vo.OrderStatus;
@@ -33,7 +34,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
-class OrdersIntegrationTest extends IntegrationTest {
+class OrderIntegrationTest extends IntegrationTest {
   private static final String pw = "12341234";
   @Autowired
   private MemberFactory memberFactory;
@@ -61,21 +62,27 @@ class OrdersIntegrationTest extends IntegrationTest {
   @DisplayName("주문 생성에 성공합니다.")
   void createTest_success() {
     RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(member01.getUsername(), pw);
-    CreateOrderRequest request = CreateOrderRequest.builder()
+    int count = 10;
+    CreateOrderGroupRequest request = CreateOrderGroupRequest.builder()
         .productIdAndCounts(List.of(
-            new ProductIdAndCount(apple.getId(), 10),
-            new ProductIdAndCount(banana.getId(), 10)))
+            new ProductIdAndCount(apple.getId(), count),
+            new ProductIdAndCount(banana.getId(), count)))
         .build();
 
     ExtractableResponse<Response> response = requestCreateOrder(spec, request);
 
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
-    Orders order = findOrder(response);
-    assertThat(order.getBuyer().getId()).isEqualTo(member01.getId());
-    assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.BEFORE_PAY);
-    assertThat(order.getOrderItems()).hasSize(2);
-    assertThat(order.getOrderItems().get(0).getProduct().getId()).isEqualTo(apple.getId());
-    assertThat(order.getOrderItems().get(1).getProduct().getId()).isEqualTo(banana.getId());
+    OrderGroup orderGroup = findOrderGroup(response);
+    assertThat(orderGroup.getBuyer().getId()).isEqualTo(member01.getId());
+    assertThat(orderGroup.getOrders()).hasSize(2);
+    assertThat(orderGroup.getOrders().get(0).getProduct().getId()).isEqualTo(apple.getId());
+    assertThat(orderGroup.getOrders().get(1).getProduct().getId()).isEqualTo(banana.getId());
+    List<Orders> orders = orderGroup.getOrders();
+    assertThat(orders).hasSize(2);
+    assertThat(orders.get(0).getOrderStatus()).isEqualTo(OrderStatus.BEFORE_PAY);
+    assertThat(orders.get(0).getCount()).isEqualTo(count);
+    assertThat(orders.get(1).getOrderStatus()).isEqualTo(OrderStatus.BEFORE_PAY);
+    assertThat(orders.get(1).getCount()).isEqualTo(count);
   }
 
   @Test
@@ -91,22 +98,24 @@ class OrdersIntegrationTest extends IntegrationTest {
     // 주문 생성
     Integer appleOrderQuantity = 10;
     Integer bananaOrderQuantity = 10;
-    CreateOrderRequest createRequest = CreateOrderRequest.builder()
+    CreateOrderGroupRequest createRequest = CreateOrderGroupRequest.builder()
         .productIdAndCounts(List.of(
             new ProductIdAndCount(apple.getId(), appleOrderQuantity),
             new ProductIdAndCount(banana.getId(), bananaOrderQuantity)))
         .build();
-    Orders createdOrder = findOrder(requestCreateOrder(spec, createRequest));
+    OrderGroup createdOrderGroup = findOrderGroup(requestCreateOrder(spec, createRequest));
     // mock
     given(payOpenFeign.pay(anyLong(), anyLong())).willReturn(new PayResponse("success", "성공"));
 
     // when
-    ExtractableResponse<Response> response = requestPayOrder(spec, createdOrder);
+    ExtractableResponse<Response> response = requestPayOrder(spec, createdOrderGroup);
 
     // then
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
-    Orders order = orderRepository.findById(createdOrder.getId()).orElseThrow();
-    assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.PAY_COMPLETE);
+    OrderGroup orderGroup = findOrderGroup(createdOrderGroup.getId());
+    for (Orders order: orderGroup.getOrders()) {
+      assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.PAY_COMPLETE);
+    }
     assertThat(stockRepository.findByProduct(apple).orElseThrow().getQuantity())
         .isEqualTo(appleStock - appleOrderQuantity);
     assertThat(stockRepository.findByProduct(banana).orElseThrow().getQuantity())
@@ -114,9 +123,9 @@ class OrdersIntegrationTest extends IntegrationTest {
   }
 
   private static ExtractableResponse<Response> requestPayOrder(RequestSpecification spec,
-      Orders createdOrder) {
+      OrderGroup createdOrderGroup) {
     return RestAssured.given().log().all().spec(spec)
-        .pathParam("id", createdOrder.getId())
+        .pathParam("id", createdOrderGroup.getId())
         .when().post("/orders/{id}/pay")
         .then().log().all()
         .extract();
@@ -135,17 +144,17 @@ class OrdersIntegrationTest extends IntegrationTest {
     // 주문 생성
     Integer appleOrderQuantity = 11;
     Integer bananaOrderQuantity = 10;
-    CreateOrderRequest createRequest = CreateOrderRequest.builder()
+    CreateOrderGroupRequest createRequest = CreateOrderGroupRequest.builder()
         .productIdAndCounts(List.of(
             new ProductIdAndCount(apple.getId(), appleOrderQuantity),
             new ProductIdAndCount(banana.getId(), bananaOrderQuantity)))
         .build();
-    Orders createdOrder = findOrder(requestCreateOrder(spec, createRequest));
+    OrderGroup createdOrderGroup = findOrderGroup(requestCreateOrder(spec, createRequest));
     // mock
     given(payOpenFeign.pay(anyLong(), anyLong())).willReturn(new PayResponse("success", "성공"));
 
     // when
-    ExtractableResponse<Response> response = requestPayOrder(spec, createdOrder);
+    ExtractableResponse<Response> response = requestPayOrder(spec, createdOrderGroup);
 
     // then
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_BAD_REQUEST);
@@ -161,14 +170,14 @@ class OrdersIntegrationTest extends IntegrationTest {
     productFactory.changeStock(apple.getId(), appleStock, spec);
     // 주문 다건 생성
     int orderCount = 100;
-    List<Orders> createOrders = new ArrayList<>();
+    List<OrderGroup> createOrderGroups = new ArrayList<>();
     for (int i = 0; i < orderCount; i++) {
       Integer appleOrderQuantity = 1;
-      CreateOrderRequest createRequest = CreateOrderRequest.builder()
+      CreateOrderGroupRequest createRequest = CreateOrderGroupRequest.builder()
           .productIdAndCounts(List.of(
               new ProductIdAndCount(apple.getId(), appleOrderQuantity)))
           .build();
-      createOrders.add(findOrder(requestCreateOrder(spec, createRequest)));
+      createOrderGroups.add(findOrderGroup(requestCreateOrder(spec, createRequest)));
     }
     // mock
     given(payOpenFeign.pay(anyLong(), anyLong())).willReturn(new PayResponse("success", "성공"));
@@ -181,7 +190,7 @@ class OrdersIntegrationTest extends IntegrationTest {
       final int idx = i;
       executorService.submit(() -> {
         try {
-          requestPayOrder(spec, createOrders.get(idx));
+          requestPayOrder(spec, createOrderGroups.get(idx));
         } finally {
           latch.countDown();
         }
@@ -194,7 +203,7 @@ class OrdersIntegrationTest extends IntegrationTest {
   }
 
   private static ExtractableResponse<Response> requestCreateOrder(RequestSpecification spec,
-      CreateOrderRequest request) {
+      CreateOrderGroupRequest request) {
     return RestAssured.given().log().all().spec(spec)
         .contentType(ContentType.JSON)
         .body(request)
@@ -203,8 +212,12 @@ class OrdersIntegrationTest extends IntegrationTest {
         .extract();
   }
 
-  private Orders findOrder(ExtractableResponse<Response> response) {
-    return orderRepository.findWithOrderItemsById(response.body().jsonPath().getLong("result.id"))
+  private OrderGroup findOrderGroup(ExtractableResponse<Response> response) {
+    return findOrderGroup(response.body().jsonPath().getLong("result.id"));
+  }
+
+  private OrderGroup findOrderGroup(Long id) {
+    return orderRepository.findWithOrdersById(id)
         .orElseThrow(() -> new RuntimeException("test fail"));
   }
 }
