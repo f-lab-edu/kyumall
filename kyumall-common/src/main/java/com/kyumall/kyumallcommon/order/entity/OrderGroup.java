@@ -36,16 +36,16 @@ public class OrderGroup extends BaseTimeEntity {
   @OneToMany(mappedBy = "orderGroup", fetch = FetchType.LAZY,cascade = CascadeType.ALL, orphanRemoval = true)
   private List<Orders> orders = new ArrayList<>();
 
-  public void addProduct(Product product, int count) {
+  public void addOrder(Product product, int count) {
     orders.add(Orders.from(product, this, count));
   }
 
-  public void addProducts(List<Product> products, List<Integer> counts) {
+  public void addOrders(List<Product> products, List<Integer> counts) {
     IntStream.range(0, products.size())
         .forEach(index -> {
           Product product = products.get(index);
           Integer count = counts.get(index);
-          addProduct(product, count);
+          addOrder(product, count);
         });
   }
 

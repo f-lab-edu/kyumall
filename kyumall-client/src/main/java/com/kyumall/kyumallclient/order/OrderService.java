@@ -44,7 +44,7 @@ public class OrderService {
         .buyer(member)
         .orderDatetime(LocalDateTime.now())
         .build();
-    orderGroup.addProducts(products, counts);
+    orderGroup.addOrders(products, counts);
     return orderRepository.save(orderGroup).getId();
   }
 
