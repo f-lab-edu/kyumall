@@ -8,6 +8,7 @@ import com.kyumall.kyumallclient.pay.PayService;
 import com.kyumall.kyumallcommon.order.entity.OrderGroup;
 import com.kyumall.kyumallcommon.order.entity.Orders;
 import com.kyumall.kyumallcommon.order.repository.OrderRepository;
+import com.kyumall.kyumallcommon.order.vo.OrderNumberGenerator;
 import com.kyumall.kyumallcommon.product.entity.Product;
 import com.kyumall.kyumallcommon.product.entity.Stock;
 import com.kyumall.kyumallcommon.product.repository.ProductRepository;
@@ -30,6 +31,7 @@ public class OrderService {
   private final PayService payService;
   private final StockRepository stockRepository;
   private final EntityManager em;
+  private final OrderNumberGenerator orderNumberGenerator;
 
   @Transactional
   public Long createOrderGroup(Long memberId, CreateOrderGroupRequest request) {
@@ -41,6 +43,7 @@ public class OrderService {
         .map(ProductIdAndCount::getCount).toList();
 
     OrderGroup orderGroup = OrderGroup.builder()
+        .orderNumber(orderNumberGenerator.generate())
         .buyer(member)
         .orderDatetime(LocalDateTime.now())
         .build();

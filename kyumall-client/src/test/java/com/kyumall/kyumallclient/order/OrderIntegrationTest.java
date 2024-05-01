@@ -77,6 +77,7 @@ class OrderIntegrationTest extends IntegrationTest {
     assertThat(orderGroup.getOrders()).hasSize(2);
     assertThat(orderGroup.getOrders().get(0).getProduct().getId()).isEqualTo(apple.getId());
     assertThat(orderGroup.getOrders().get(1).getProduct().getId()).isEqualTo(banana.getId());
+    assertThat(orderGroup.getOrderNumber()).isNotEmpty();
     List<Orders> orders = orderGroup.getOrders();
     assertThat(orders).hasSize(2);
     assertThat(orders.get(0).getOrderStatus()).isEqualTo(OrderStatus.BEFORE_PAY);
