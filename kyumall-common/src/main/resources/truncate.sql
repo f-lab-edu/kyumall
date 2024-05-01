@@ -9,5 +9,8 @@ TRUNCATE TABLE category;
 TRUNCATE TABLE product;
 TRUNCATE TABLE cart;
 TRUNCATE TABLE cart_item;
+TRUNCATE TABLE orders;
+TRUNCATE TABLE order_item;
+TRUNCATE TABLE stock;
 TRUNCATE TABLE product_comment;
 TRUNCATE TABLE product_comment_rating;

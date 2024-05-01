@@ -2,6 +2,7 @@ package com.kyumall.kyumallclient.product;
 
 import static org.assertj.core.api.Assertions.*;
 
+import com.kyumall.kyumallclient.AuthTestUtil;
 import com.kyumall.kyumallclient.IntegrationTest;
 import com.kyumall.kyumallclient.member.MemberFactory;
 import com.kyumall.kyumallclient.product.dto.CategoryDto;
@@ -19,6 +20,7 @@ import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
+import io.restassured.specification.RequestSpecification;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.http.HttpStatus;
@@ -28,7 +30,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 @DisplayName("상품 통합테스트")
-class ProductIntegrationTest extends IntegrationTest {
+public class ProductIntegrationTest extends IntegrationTest {
   @Autowired
   private MemberFactory memberFactory;
   @Autowired
@@ -37,6 +39,7 @@ class ProductIntegrationTest extends IntegrationTest {
   private ProductRepository productRepository;
 
   Member seller01;
+  String pw = "password";
   Category food;
   Category fruit;
   Category meet;
@@ -47,7 +50,7 @@ class ProductIntegrationTest extends IntegrationTest {
 
   @BeforeEach
   void initData() {
-    seller01 = memberFactory.createMember("user01", "email@example.com", "password", MemberType.SELLER);
+    seller01 = memberFactory.createMember("user01", "email@example.com", pw, MemberType.SELLER);
     food = saveCategory("식품", null);
     fruit = saveCategory("과일", food);
     meet = saveCategory("육류", food);
@@ -250,6 +253,29 @@ class ProductIntegrationTest extends IntegrationTest {
 
     // then
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_BAD_REQUEST);
+  }
+
+  @Test
+  @DisplayName("상품ID에 해당하는 재고를 변경합니다.")
+  void updateStock_success() {
+    // given
+    Long quantity = 100L;
+    RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(seller01.getUsername(), pw);
+    // when
+    ExtractableResponse<Response> response = requestChangeStock(apple.getId(), quantity, spec);
+
+    // then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
+  }
+
+  public static ExtractableResponse<Response> requestChangeStock(Long productId, Long quantity ,RequestSpecification spec) {
+    return RestAssured.given().log().all()
+        .spec(spec)
+        .pathParam("id", productId)
+        .queryParam("quantity", quantity)
+        .when().put("/products/{id}/change-stock")
+        .then().log().all()
+        .extract();
   }
 
   private Product createProductForTest(CreateProductRequest request) {

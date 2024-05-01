@@ -40,12 +40,18 @@ public enum ErrorCode {
   ITEM_ALREADY_EXISTS_IN_CART("3002", "상품이 이미 장바구니에 있습니다.", HttpStatus.SC_BAD_REQUEST),
   CART_ITEM_NOT_EXISTS("3003", "장바구니에 상품이 존재하지 않습니다.", HttpStatus.SC_BAD_REQUEST),
   ITEM_COUNT_MUST_BIGGER_THAN_ZERO("3004", "상품의 갯수는 0 이상이어야합니다.", HttpStatus.SC_BAD_REQUEST),
+  STOCK_NOT_EXISTS("3005", "재고 정보가 존재하지 않습니다.", HttpStatus.SC_BAD_REQUEST),
   COMMENT_NOT_EXISTS("3005", "댓글이 존재하지 않습니다.", HttpStatus.SC_BAD_REQUEST),
   COMMENT_AND_PRODUCT_NOT_MATCHED("3006", "댓글과 상품이 일치하지 않습니다.", HttpStatus.SC_BAD_REQUEST),
   COMMENT_UPDATE_FORBIDDEN("3007", "댓글 수정에 대한 권한 이없습니다.", HttpStatus.SC_FORBIDDEN),
 
   // 메인 파트 에러 (4000 ~ 4999)
-  BANNER_GROUP_NOT_FOUND("4000", "배너 그룹을 찾을 수 없습니다.", HttpStatus.SC_BAD_REQUEST);
+  BANNER_GROUP_NOT_FOUND("4000", "배너 그룹을 찾을 수 없습니다.", HttpStatus.SC_BAD_REQUEST),
+
+  // 주문 파트 에러 (5000 ~ 5999)
+  ORDER_NOT_EXISTS("5000", "주문 정보를 찾을 수 없습니다.", HttpStatus.SC_BAD_REQUEST),
+  ORDER_PAY_FAILS("5001", "주문 결제에 실패했습니다.", HttpStatus.SC_INTERNAL_SERVER_ERROR),
+  STOCK_IS_INSUFFICIENT("5002", "재고량이 불충분합니다.", HttpStatus.SC_BAD_REQUEST);
 
 
   private final String code;
