@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class PayController {
   private final PayService payService;
   @PostMapping
-  public void pay(@RequestParam Long memberId, @RequestParam Long payAmount) {
-    payService.pay(1L, 1000L);
+  public void pay(@RequestParam Long memberId, @RequestParam Long payAmount, @RequestParam String mockResult) {
+    payService.pay(1L, 1000L, mockResult);
   }
 }

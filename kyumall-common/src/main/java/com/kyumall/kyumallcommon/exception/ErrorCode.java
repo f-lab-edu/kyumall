@@ -51,7 +51,8 @@ public enum ErrorCode {
   // 주문 파트 에러 (5000 ~ 5999)
   ORDER_NOT_EXISTS("5000", "주문 정보를 찾을 수 없습니다.", HttpStatus.SC_BAD_REQUEST),
   ORDER_PAY_FAILS("5001", "주문 결제에 실패했습니다.", HttpStatus.SC_INTERNAL_SERVER_ERROR),
-  STOCK_IS_INSUFFICIENT("5002", "재고량이 불충분합니다.", HttpStatus.SC_BAD_REQUEST);
+  STOCK_IS_INSUFFICIENT("5002", "재고량이 불충분합니다.", HttpStatus.SC_BAD_REQUEST),
+  FAIL_PAY_BECAUSE_LACK_AMOUNT("5003", "잔액 부족으로 결제에 실패했습니다.", HttpStatus.SC_BAD_REQUEST);
 
 
   private final String code;

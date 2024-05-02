@@ -106,7 +106,7 @@ class OrderIntegrationTest extends IntegrationTest {
         .build();
     OrderGroup createdOrderGroup = findOrderGroup(requestCreateOrder(spec, createRequest));
     // mock
-    given(payOpenFeign.pay(anyLong(), anyLong())).willReturn(new PayResponse("success", "성공"));
+    given(payOpenFeign.pay(anyLong(), anyLong(), any())).willReturn(new PayResponse("success", "성공"));
 
     // when
     ExtractableResponse<Response> response = requestPayOrder(spec, createdOrderGroup);
@@ -152,7 +152,7 @@ class OrderIntegrationTest extends IntegrationTest {
         .build();
     OrderGroup createdOrderGroup = findOrderGroup(requestCreateOrder(spec, createRequest));
     // mock
-    given(payOpenFeign.pay(anyLong(), anyLong())).willReturn(new PayResponse("success", "성공"));
+    given(payOpenFeign.pay(anyLong(), anyLong(), any())).willReturn(new PayResponse("success", "성공"));
 
     // when
     ExtractableResponse<Response> response = requestPayOrder(spec, createdOrderGroup);
@@ -181,7 +181,7 @@ class OrderIntegrationTest extends IntegrationTest {
       createOrderGroups.add(findOrderGroup(requestCreateOrder(spec, createRequest)));
     }
     // mock
-    given(payOpenFeign.pay(anyLong(), anyLong())).willReturn(new PayResponse("success", "성공"));
+    given(payOpenFeign.pay(anyLong(), anyLong(), any())).willReturn(new PayResponse("success", "성공"));
 
     // when
     ExecutorService executorService = Executors.newFixedThreadPool(32);

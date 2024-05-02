@@ -64,10 +64,7 @@ public class OrderService {
     // 재고 체크
     validateStockQuantity(order, stocks);
     // 결재
-    boolean isSuccess = payService.pay(order.getBuyer().getId(), order.calculateTotalPrice());
-    if (!isSuccess) {
-      throw new KyumallException(ErrorCode.ORDER_PAY_FAILS);
-    }
+    payService.pay(order.getBuyer().getId(), order.calculateTotalPrice(), "ok");
     for (Stock stock: stocks) {
       em.detach(stock); // Stock 데이터를 Pessimistic Write Lock을 걸어 조회하기 위해 영속성 컨텍스트에서 detach 시키기 (1차 캐시에서 제거)
     }
