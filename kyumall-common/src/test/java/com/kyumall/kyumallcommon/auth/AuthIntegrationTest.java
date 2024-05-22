@@ -3,7 +3,7 @@ package com.kyumall.kyumallcommon.auth;
 import static org.assertj.core.api.Assertions.*;
 
 import com.kyumall.kyumallcommon.IntegrationTest;
-import com.kyumall.kyumallcommon.MemberFactory;
+import com.kyumall.kyumallcommon.factory.MemberFactory;
 import com.kyumall.kyumallcommon.auth.dto.LoginRequest;
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.member.vo.MemberType;

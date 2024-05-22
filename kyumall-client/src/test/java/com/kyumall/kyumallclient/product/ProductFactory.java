@@ -1,6 +1,7 @@
 package com.kyumall.kyumallclient.product;
 
-import com.kyumall.kyumallclient.member.MemberFactory;
+//import com.kyumall.kyumallclient.member.MemberFactory;
+import com.kyumall.kyumallcommon.factory.MemberFactory;
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.product.entity.Category;
 import com.kyumall.kyumallcommon.product.entity.Product;

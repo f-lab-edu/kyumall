@@ -4,9 +4,9 @@ import static org.assertj.core.api.Assertions.*;
 
 import com.kyumall.kyumallclient.AuthTestUtil;
 import com.kyumall.kyumallclient.IntegrationTest;
-import com.kyumall.kyumallclient.member.MemberFactory;
 import com.kyumall.kyumallclient.product.cart.AddCartItemRequest;
 import com.kyumall.kyumallclient.product.cart.dto.CartItemsDto;
+import com.kyumall.kyumallcommon.factory.MemberFactory;
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.member.repository.MemberRepository;
 import com.kyumall.kyumallcommon.product.entity.CartItem;

@@ -4,10 +4,10 @@ import static org.assertj.core.api.Assertions.*;
 
 import com.kyumall.kyumallclient.AuthTestUtil;
 import com.kyumall.kyumallclient.IntegrationTest;
-import com.kyumall.kyumallclient.member.MemberFactory;
 import com.kyumall.kyumallclient.product.comment.dto.CreateCommentRequest;
 import com.kyumall.kyumallclient.product.comment.dto.ProductCommentDto;
 import com.kyumall.kyumallclient.product.comment.dto.UpdateCommentRequest;
+import com.kyumall.kyumallcommon.factory.MemberFactory;
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.product.entity.Category;
 import com.kyumall.kyumallcommon.product.entity.Product;

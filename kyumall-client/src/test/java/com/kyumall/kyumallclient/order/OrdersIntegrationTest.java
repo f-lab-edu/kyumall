@@ -5,7 +5,7 @@ import static org.mockito.BDDMockito.*;
 
 import com.kyumall.kyumallclient.AuthTestUtil;
 import com.kyumall.kyumallclient.IntegrationTest;
-import com.kyumall.kyumallclient.member.MemberFactory;
+import com.kyumall.kyumallcommon.factory.MemberFactory;
 import com.kyumall.kyumallclient.pay.PayOpenFeign;
 import com.kyumall.kyumallclient.pay.PayResponse;
 import com.kyumall.kyumallclient.product.ProductFactory;
