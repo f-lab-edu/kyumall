@@ -1,7 +1,5 @@
-package com.kyumall.kyumallclient.product;
+package com.kyumall.kyumallcommon.factory;
 
-//import com.kyumall.kyumallclient.member.MemberFactory;
-import com.kyumall.kyumallcommon.factory.MemberFactory;
 import com.kyumall.kyumallcommon.fixture.member.MemberFixture;
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.product.entity.Category;
@@ -11,7 +9,6 @@ import com.kyumall.kyumallcommon.product.repository.ProductRepository;
 import com.kyumall.kyumallcommon.product.vo.CategoryStatus;
 import com.kyumall.kyumallcommon.upload.entity.Image;
 import com.kyumall.kyumallcommon.upload.repository.ImageRepository;
-import io.restassured.specification.RequestSpecification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -82,15 +79,10 @@ public class ProductFactory {
         .build());
   }
 
-  public void changeStock(Long productId, Long quantity, RequestSpecification spec) {
-    ProductIntegrationTest.requestChangeStock(productId, quantity, spec);
-  }
-
   private Image createImage() {
     return imageRepository.save(Image.builder()
             .storedFileName("test.png")
             .storedFileName("ddd-ddd-ddd")
         .build());
   }
-
 }

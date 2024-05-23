@@ -7,6 +7,7 @@ import com.kyumall.kyumallclient.IntegrationTest;
 import com.kyumall.kyumallclient.product.cart.AddCartItemRequest;
 import com.kyumall.kyumallclient.product.cart.dto.CartItemsDto;
 import com.kyumall.kyumallcommon.factory.MemberFactory;
+import com.kyumall.kyumallcommon.factory.ProductFactory;
 import com.kyumall.kyumallcommon.fixture.member.MemberFixture;
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.member.repository.MemberRepository;

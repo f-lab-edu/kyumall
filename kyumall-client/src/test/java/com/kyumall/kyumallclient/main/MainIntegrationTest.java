@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.*;
 import com.kyumall.kyumallclient.IntegrationTest;
 import com.kyumall.kyumallclient.main.dto.BannerDto;
 import com.kyumall.kyumallclient.main.dto.RecommendationDto;
-import com.kyumall.kyumallclient.product.ProductFactory;
+import com.kyumall.kyumallcommon.factory.ProductFactory;
 import com.kyumall.kyumallcommon.main.entity.Banner;
 import com.kyumall.kyumallcommon.main.entity.BannerGroup;
 import com.kyumall.kyumallcommon.main.entity.Recommendation;

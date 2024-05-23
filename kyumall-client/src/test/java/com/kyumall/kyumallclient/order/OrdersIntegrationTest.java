@@ -5,10 +5,11 @@ import static org.mockito.BDDMockito.*;
 
 import com.kyumall.kyumallclient.AuthTestUtil;
 import com.kyumall.kyumallclient.IntegrationTest;
+import com.kyumall.kyumallclient.product.ProductIntegrationTest;
 import com.kyumall.kyumallcommon.factory.MemberFactory;
 import com.kyumall.kyumallclient.pay.PayOpenFeign;
 import com.kyumall.kyumallclient.pay.PayResponse;
-import com.kyumall.kyumallclient.product.ProductFactory;
+import com.kyumall.kyumallcommon.factory.ProductFactory;
 import com.kyumall.kyumallcommon.fixture.member.MemberFixture;
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.order.entity.Orders;
@@ -86,8 +87,8 @@ class OrdersIntegrationTest extends IntegrationTest {
     // 재고 추가
     Long appleStock = 20L;
     Long bananaStock = 30L;
-    productFactory.changeStock(apple.getId(), appleStock, spec);
-    productFactory.changeStock(banana.getId(), bananaStock, spec);
+    ProductIntegrationTest.requestChangeStock(apple.getId(), appleStock, spec);
+    ProductIntegrationTest.requestChangeStock(banana.getId(), bananaStock, spec);
     // 주문 생성
     Integer appleOrderQuantity = 10;
     Integer bananaOrderQuantity = 10;
@@ -130,8 +131,8 @@ class OrdersIntegrationTest extends IntegrationTest {
     // 재고 추가
     Long appleStock = 10L;
     Long bananaStock = 10L;
-    productFactory.changeStock(apple.getId(), appleStock, spec);
-    productFactory.changeStock(banana.getId(), bananaStock, spec);
+    ProductIntegrationTest.requestChangeStock(apple.getId(), appleStock, spec);
+    ProductIntegrationTest.requestChangeStock(banana.getId(), bananaStock, spec);
     // 주문 생성
     Integer appleOrderQuantity = 11;
     Integer bananaOrderQuantity = 10;
@@ -158,7 +159,7 @@ class OrdersIntegrationTest extends IntegrationTest {
     // given
     // 재고 추가
     Long appleStock = 100L;
-    productFactory.changeStock(apple.getId(), appleStock, spec);
+    ProductIntegrationTest.requestChangeStock(apple.getId(), appleStock, spec);
     // 주문 다건 생성
     int orderCount = 100;
     List<Orders> createOrders = new ArrayList<>();
