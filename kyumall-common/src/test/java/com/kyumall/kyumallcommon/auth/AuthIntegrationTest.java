@@ -5,8 +5,7 @@ import static org.assertj.core.api.Assertions.*;
 import com.kyumall.kyumallcommon.IntegrationTest;
 import com.kyumall.kyumallcommon.factory.MemberFactory;
 import com.kyumall.kyumallcommon.auth.dto.LoginRequest;
-import com.kyumall.kyumallcommon.member.entity.Member;
-import com.kyumall.kyumallcommon.member.vo.MemberType;
+import com.kyumall.kyumallcommon.fixture.member.MemberFixture;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.ExtractableResponse;
@@ -25,14 +24,11 @@ class AuthIntegrationTest extends IntegrationTest {
   @DisplayName("로그인에 성공합니다.")
   void login_success() {
     // given
-    String username = "test01";
-    String password = "12341234";
-    Member member = memberFactory.createMember(username, "test@example.com", password,
-        MemberType.CLIENT);
+    memberFactory.createMember(MemberFixture.KIM);
 
     // when
     ExtractableResponse<Response> response = requestLogin(
-        new LoginRequest(username, password));
+        new LoginRequest(MemberFixture.KIM.getUsername(), MemberFixture.password));
 
     // then
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
@@ -43,11 +39,8 @@ class AuthIntegrationTest extends IntegrationTest {
   @DisplayName("토큰이 있는 경우 필터에서 토큰으로 인증에 성공합니다.")
   void authenticate_by_token_success() {
     // given
-    String username = "test01";
-    String email ="test@example.com";
-    String password = "12341234";
-    memberFactory.createMember("test01", email, password, MemberType.CLIENT);
-    String token = requestLoginAndGetToken(new LoginRequest(username, password));
+    memberFactory.createMember(MemberFixture.KIM);
+    String token = requestLoginAndGetToken(new LoginRequest(MemberFixture.KIM.getUsername(), MemberFixture.password));
     // when
     ExtractableResponse<Response> response = RestAssured.given().log().all()
         .header("Authorization", token)
@@ -56,8 +49,8 @@ class AuthIntegrationTest extends IntegrationTest {
         .extract();
     // then
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
-    assertThat((String) response.body().jsonPath().get("result.username")).isEqualTo(username);
-    assertThat((String) response.body().jsonPath().get("result.email")).isEqualTo(email);
+    assertThat((String) response.body().jsonPath().get("result.username")).isEqualTo(MemberFixture.KIM.getUsername());
+    assertThat((String) response.body().jsonPath().get("result.email")).isEqualTo(MemberFixture.KIM.getEmail());
   }
 
   @Test
@@ -77,11 +70,8 @@ class AuthIntegrationTest extends IntegrationTest {
   @DisplayName("Authorization 헤더의 토큰이 유효하지 않을 경우 에러를 반환합니다.")
   void authenticate_by_token_token_fail_because() {
     // given
-    String username = "test01";
-    String email ="test@example.com";
-    String password = "12341234";
-    memberFactory.createMember("test01", email, password, MemberType.CLIENT);
-    String token = requestLoginAndGetToken(new LoginRequest(username, password));
+    memberFactory.createMember(MemberFixture.KIM);
+    String token = requestLoginAndGetToken(new LoginRequest(MemberFixture.KIM.getUsername(), MemberFixture.password));
     String invalidToken = "aefawef";
     // when
     ExtractableResponse<Response> response = RestAssured.given().log().all()

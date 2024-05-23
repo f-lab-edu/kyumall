@@ -8,6 +8,7 @@ import com.kyumall.kyumallclient.product.comment.dto.CreateCommentRequest;
 import com.kyumall.kyumallclient.product.comment.dto.ProductCommentDto;
 import com.kyumall.kyumallclient.product.comment.dto.UpdateCommentRequest;
 import com.kyumall.kyumallcommon.factory.MemberFactory;
+import com.kyumall.kyumallcommon.fixture.member.MemberFixture;
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.product.entity.Category;
 import com.kyumall.kyumallcommon.product.entity.Product;
@@ -42,7 +43,7 @@ class ProductCommentIntegrationTest extends IntegrationTest {
   ProductCommentRatingRepository productCommentRatingRepository;
   Product apple;
   Product banana;
-  private static final String password = "test1234";
+  private static final String password = MemberFixture.password;
   Member testMember1;
   Member testMember2;
 
@@ -53,8 +54,8 @@ class ProductCommentIntegrationTest extends IntegrationTest {
     apple = productFactory.createProduct("꿀사과", 1000);
     banana = productFactory.createProduct("바나나", 1000);
     // 회원
-    testMember1 = memberFactory.createClient("test01", password);
-    testMember2 = memberFactory.createClient("test02", password);
+    testMember1 = memberFactory.createMember(MemberFixture.KIM);
+    testMember2 = memberFactory.createMember(MemberFixture.PARK);
   }
 
   @Test

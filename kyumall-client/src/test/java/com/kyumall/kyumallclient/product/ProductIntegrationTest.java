@@ -9,8 +9,8 @@ import com.kyumall.kyumallclient.product.dto.CreateProductRequest;
 import com.kyumall.kyumallclient.product.dto.ProductDetailDto;
 import com.kyumall.kyumallclient.product.dto.ProductSimpleDto;
 import com.kyumall.kyumallcommon.factory.MemberFactory;
+import com.kyumall.kyumallcommon.fixture.member.MemberFixture;
 import com.kyumall.kyumallcommon.member.entity.Member;
-import com.kyumall.kyumallcommon.member.vo.MemberType;
 import com.kyumall.kyumallcommon.product.entity.Category;
 import com.kyumall.kyumallcommon.product.entity.Product;
 import com.kyumall.kyumallcommon.product.repository.CategoryRepository;
@@ -38,8 +38,7 @@ public class ProductIntegrationTest extends IntegrationTest {
   @Autowired
   private ProductRepository productRepository;
 
-  Member seller01;
-  String pw = "password";
+  Member sellerLee;
   Category food;
   Category fruit;
   Category meet;
@@ -50,14 +49,14 @@ public class ProductIntegrationTest extends IntegrationTest {
 
   @BeforeEach
   void initData() {
-    seller01 = memberFactory.createMember("user01", "email@example.com", pw, MemberType.SELLER);
+    sellerLee = memberFactory.createMember(MemberFixture.LEE);
     food = saveCategory("식품", null);
     fruit = saveCategory("과일", food);
     meet = saveCategory("육류", food);
     Category appleAndPear = saveCategory("사과/배", fruit);
-    apple = createProductForTest(new CreateProductRequest("얼음골사과", appleAndPear.getId(), seller01.getUsername() ,40000,
+    apple = createProductForTest(new CreateProductRequest("얼음골사과", appleAndPear.getId(), sellerLee.getUsername() ,40000,
         "<h1>맛있는 사과</h1>"));
-    beef = createProductForTest(new CreateProductRequest("소고기", meet.getId(), seller01.getUsername() ,50000,
+    beef = createProductForTest(new CreateProductRequest("소고기", meet.getId(), sellerLee.getUsername() ,50000,
         "<h1>맛있는 소고기</h1>"));
     allProducts.add(apple);
     allProducts.add(beef);
@@ -78,7 +77,7 @@ public class ProductIntegrationTest extends IntegrationTest {
     CreateProductRequest request = CreateProductRequest.builder()
         .productName("얼음골 사과")
         .categoryId(fruit.getId())
-        .sellerUsername(seller01.getUsername())
+        .sellerUsername(sellerLee.getUsername())
         .price(30000)
         .detail("사과입니다.").build();
     // when
@@ -91,7 +90,7 @@ public class ProductIntegrationTest extends IntegrationTest {
     Product savedProduct = findProductById(createdId.longValue());
     assertThat(savedProduct.getName()).isEqualTo(request.getProductName());
     assertThat(savedProduct.getCategory().getId()).isEqualTo(request.getCategoryId());
-    assertThat(savedProduct.getSeller().getId()).isEqualTo(seller01.getId());
+    assertThat(savedProduct.getSeller().getId()).isEqualTo(sellerLee.getId());
     assertThat(savedProduct.getPrice()).isEqualTo(request.getPrice());
     assertThat(savedProduct.getDetail()).isEqualTo(request.getDetail());
   }
@@ -260,7 +259,7 @@ public class ProductIntegrationTest extends IntegrationTest {
   void updateStock_success() {
     // given
     Long quantity = 100L;
-    RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(seller01.getUsername(), pw);
+    RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(sellerLee.getUsername(), MemberFixture.password);
     // when
     ExtractableResponse<Response> response = requestChangeStock(apple.getId(), quantity, spec);
 

@@ -2,6 +2,7 @@ package com.kyumall.kyumallclient.product;
 
 //import com.kyumall.kyumallclient.member.MemberFactory;
 import com.kyumall.kyumallcommon.factory.MemberFactory;
+import com.kyumall.kyumallcommon.fixture.member.MemberFixture;
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.product.entity.Category;
 import com.kyumall.kyumallcommon.product.entity.Product;
@@ -62,7 +63,7 @@ public class ProductFactory {
   public Product createProduct(Category category, String name, Integer price) {
     return productRepository.save(Product.builder()
         .category(category)
-        .seller(memberFactory.createSeller("testSeller", "testSeller@email.com"))
+        .seller(memberFactory.createMember(MemberFixture.LEE))
         .name(name)
         .price(price)
         .image(createImage().getStoredFileName())
@@ -73,7 +74,7 @@ public class ProductFactory {
   public Product createProduct(String name, Integer price) {
     return productRepository.save(Product.builder()
         .category(createCategory("test"))
-        .seller(memberFactory.createSeller("testSeller", "testSeller@email.com"))
+        .seller(memberFactory.createMember(MemberFixture.LEE))
         .name(name)
         .price(price)
         .image(createImage().getStoredFileName())

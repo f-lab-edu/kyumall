@@ -9,8 +9,8 @@ import com.kyumall.kyumallcommon.factory.MemberFactory;
 import com.kyumall.kyumallclient.pay.PayOpenFeign;
 import com.kyumall.kyumallclient.pay.PayResponse;
 import com.kyumall.kyumallclient.product.ProductFactory;
+import com.kyumall.kyumallcommon.fixture.member.MemberFixture;
 import com.kyumall.kyumallcommon.member.entity.Member;
-import com.kyumall.kyumallcommon.member.vo.MemberType;
 import com.kyumall.kyumallcommon.order.entity.Orders;
 import com.kyumall.kyumallcommon.order.repository.OrderRepository;
 import com.kyumall.kyumallcommon.order.vo.OrderStatus;
@@ -34,7 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
 class OrdersIntegrationTest extends IntegrationTest {
-  private static final String pw = "12341234";
+  private static final String pw = MemberFixture.password;
   @Autowired
   private MemberFactory memberFactory;
   @Autowired
@@ -52,7 +52,7 @@ class OrdersIntegrationTest extends IntegrationTest {
 
   @BeforeEach
   void dataInit() {
-    member01 = memberFactory.createMember("test01", "test01@example.com", pw, MemberType.CLIENT);
+    member01 = memberFactory.createMember(MemberFixture.KIM);
     apple = productFactory.createProduct("apple", 10000);
     banana = productFactory.createProduct("banana", 20000);
   }

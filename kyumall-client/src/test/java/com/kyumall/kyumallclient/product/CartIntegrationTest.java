@@ -7,6 +7,7 @@ import com.kyumall.kyumallclient.IntegrationTest;
 import com.kyumall.kyumallclient.product.cart.AddCartItemRequest;
 import com.kyumall.kyumallclient.product.cart.dto.CartItemsDto;
 import com.kyumall.kyumallcommon.factory.MemberFactory;
+import com.kyumall.kyumallcommon.fixture.member.MemberFixture;
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.member.repository.MemberRepository;
 import com.kyumall.kyumallcommon.product.entity.CartItem;
@@ -37,7 +38,7 @@ class CartIntegrationTest extends IntegrationTest {
 
   Product apple;
   Product banana;
-  private static final String password = "test1234";
+  private static final String password = MemberFixture.password;
   Member testMember1;
 
   @BeforeEach
@@ -47,7 +48,7 @@ class CartIntegrationTest extends IntegrationTest {
     apple = productFactory.createProduct("꿀사과", 1000);
     banana = productFactory.createProduct("바나나", 1000);
     // 회원
-    testMember1 = memberFactory.createClient("test01", password);
+    testMember1 = memberFactory.createMember(MemberFixture.KIM);
   }
 
   @Test
