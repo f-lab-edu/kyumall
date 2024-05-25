@@ -14,3 +14,5 @@ TRUNCATE TABLE order_item;
 TRUNCATE TABLE stock;
 TRUNCATE TABLE product_comment;
 TRUNCATE TABLE product_comment_rating;
+
+SET FOREIGN_KEY_CHECKS = 1;

@@ -5,7 +5,10 @@ import static org.assertj.core.api.Assertions.*;
 import com.kyumall.kyumallclient.IntegrationTest;
 import com.kyumall.kyumallclient.main.dto.BannerDto;
 import com.kyumall.kyumallclient.main.dto.RecommendationDto;
+import com.kyumall.kyumallcommon.factory.MemberFactory;
 import com.kyumall.kyumallcommon.factory.ProductFactory;
+import com.kyumall.kyumallcommon.fixture.member.MemberFixture;
+import com.kyumall.kyumallcommon.fixture.product.ProductFixture;
 import com.kyumall.kyumallcommon.main.entity.Banner;
 import com.kyumall.kyumallcommon.main.entity.BannerGroup;
 import com.kyumall.kyumallcommon.main.entity.Recommendation;
@@ -14,6 +17,7 @@ import com.kyumall.kyumallcommon.main.repository.BannerGroupRepository;
 import com.kyumall.kyumallcommon.main.repository.BannerRepository;
 import com.kyumall.kyumallcommon.main.repository.RecommendationItemRepository;
 import com.kyumall.kyumallcommon.main.repository.RecommendationRepository;
+import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.upload.entity.Image;
 import com.kyumall.kyumallcommon.upload.repository.ImageRepository;
 import io.restassured.RestAssured;
@@ -40,8 +44,11 @@ class MainIntegrationTest extends IntegrationTest {
   @Autowired
   ImageRepository imageRepository;
   @Autowired
+  MemberFactory memberFactory;
+  @Autowired
   ProductFactory productFactory;
 
+  Member seller;
   String[] comparedBannerDtoFieldNames = new String[] {"id", "name", "url", "sortOrder"};
   String[] comparedRecommendationDtoFieldNames = new String[] {"title", "displayText"};
   String[] comparedRecommendationItemDtoFieldNames = new String[] {"itemName", "price"};
@@ -58,6 +65,7 @@ class MainIntegrationTest extends IntegrationTest {
   @Transactional
   @BeforeEach
   void initData() {
+    seller = memberFactory.createMember(MemberFixture.LEE);
     Image testImage1 = imageRepository.save(Image.builder()
         .originalFileName("test image1.png")
         .storedFileName("aaa-bbb-ccc").build());
@@ -93,12 +101,12 @@ class MainIntegrationTest extends IntegrationTest {
         .inUse(true).build());
     recommendationItem1 = recommendationItemRepository.save(RecommendationItem.builder()
             .recommendation(recommendation1)
-            .product(productFactory.createProduct("얼음골 사과", 30000))
+            .product(productFactory.createProduct(ProductFixture.APPLE, seller))
             .sortOrder(1)
         .build());
     recommendationItem2 = recommendationItemRepository.save(RecommendationItem.builder()
         .recommendation(recommendation1)
-        .product(productFactory.createProduct("과자 선물 세트", 30000))
+        .product(productFactory.createProduct(ProductFixture.BEEF, seller))
         .sortOrder(2)
         .build());
     // 추천2
@@ -109,12 +117,12 @@ class MainIntegrationTest extends IntegrationTest {
         .inUse(true).build());
     recommendationItem3 = recommendationItemRepository.save(RecommendationItem.builder()
         .recommendation(recommendation2)
-        .product(productFactory.createProduct("스판 카고 팬츠", 30000))
+        .product(productFactory.createProduct(ProductFixture.JEANS, seller))
         .sortOrder(1)
         .build());
     recommendationItem4 = recommendationItemRepository.save(RecommendationItem.builder()
         .recommendation(recommendation2)
-        .product(productFactory.createProduct("스웨터", 30000))
+        .product(productFactory.createProduct(ProductFixture.SWEATER, seller))
         .sortOrder(2)
         .build());
   }

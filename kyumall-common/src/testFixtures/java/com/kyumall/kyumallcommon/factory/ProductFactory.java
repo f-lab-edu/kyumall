@@ -53,17 +53,6 @@ public class ProductFactory {
     return productRepository.saveAndFlush(productFixture.toEntity(seller, category));
   }
 
-  public Product createProduct(String name, Integer price) {
-    return productRepository.save(Product.builder()
-        .category(createCategory("test"))
-        .seller(memberFactory.createMember(MemberFixture.LEE))
-        .name(name)
-        .price(price)
-        .image(createImage().getStoredFileName())
-        .detail("detail")
-        .build());
-  }
-
   private Image createImage() {
     return imageRepository.save(Image.builder()
             .storedFileName("test.png")

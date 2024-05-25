@@ -12,6 +12,9 @@ public enum CategoryFixture {
   FRUIT(2L, "과일", FOOD.toEntity()),
   MEET(3L, "육류", FOOD.toEntity()),
   APPLE_PEAR(4L ,"사과/배", FRUIT.toEntity()),
+
+  FASHION(5L, "패션", null),
+  CLOTHES(6L, "의류", FASHION.toEntity())
   ;
 
   private final Long id;

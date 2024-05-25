@@ -11,6 +11,7 @@ import com.kyumall.kyumallclient.pay.PayOpenFeign;
 import com.kyumall.kyumallclient.pay.PayResponse;
 import com.kyumall.kyumallcommon.factory.ProductFactory;
 import com.kyumall.kyumallcommon.fixture.member.MemberFixture;
+import com.kyumall.kyumallcommon.fixture.product.ProductFixture;
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.order.entity.Orders;
 import com.kyumall.kyumallcommon.order.repository.OrderRepository;
@@ -47,25 +48,25 @@ class OrdersIntegrationTest extends IntegrationTest {
   @MockBean
   private PayOpenFeign payOpenFeign;
 
+  Member seller;
   Member member01;
-  Product apple;
-  Product banana;
 
   @BeforeEach
   void dataInit() {
+    seller = memberFactory.createMember(MemberFixture.LEE);
     member01 = memberFactory.createMember(MemberFixture.KIM);
-    apple = productFactory.createProduct("apple", 10000);
-    banana = productFactory.createProduct("banana", 20000);
   }
 
   @Test
   @DisplayName("주문 생성에 성공합니다.")
   void createTest_success() {
+    Product apple = productFactory.createProduct(ProductFixture.APPLE, seller);
+    Product beef = productFactory.createProduct(ProductFixture.BEEF, seller);
     RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(member01.getUsername(), pw);
     CreateOrderRequest request = CreateOrderRequest.builder()
         .productIdAndCounts(List.of(
             new ProductIdAndCount(apple.getId(), 10),
-            new ProductIdAndCount(banana.getId(), 10)))
+            new ProductIdAndCount(beef.getId(), 10)))
         .build();
 
     ExtractableResponse<Response> response = requestCreateOrder(spec, request);
@@ -76,7 +77,7 @@ class OrdersIntegrationTest extends IntegrationTest {
     assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.BEFORE_PAY);
     assertThat(order.getOrderItems()).hasSize(2);
     assertThat(order.getOrderItems().get(0).getProduct().getId()).isEqualTo(apple.getId());
-    assertThat(order.getOrderItems().get(1).getProduct().getId()).isEqualTo(banana.getId());
+    assertThat(order.getOrderItems().get(1).getProduct().getId()).isEqualTo(beef.getId());
   }
 
   @Test
@@ -84,18 +85,20 @@ class OrdersIntegrationTest extends IntegrationTest {
   void payOrder_complete() {
     RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(member01.getUsername(), pw);
     // given
+    Product apple = productFactory.createProduct(ProductFixture.APPLE, seller);
+    Product beef = productFactory.createProduct(ProductFixture.BEEF, seller);
     // 재고 추가
     Long appleStock = 20L;
-    Long bananaStock = 30L;
+    Long beefStock = 30L;
     ProductIntegrationTest.requestChangeStock(apple.getId(), appleStock, spec);
-    ProductIntegrationTest.requestChangeStock(banana.getId(), bananaStock, spec);
+    ProductIntegrationTest.requestChangeStock(beef.getId(), beefStock, spec);
     // 주문 생성
     Integer appleOrderQuantity = 10;
-    Integer bananaOrderQuantity = 10;
+    Integer beefOrderQuantity = 10;
     CreateOrderRequest createRequest = CreateOrderRequest.builder()
         .productIdAndCounts(List.of(
             new ProductIdAndCount(apple.getId(), appleOrderQuantity),
-            new ProductIdAndCount(banana.getId(), bananaOrderQuantity)))
+            new ProductIdAndCount(beef.getId(), beefOrderQuantity)))
         .build();
     Orders createdOrder = findOrder(requestCreateOrder(spec, createRequest));
     // mock
@@ -110,8 +113,8 @@ class OrdersIntegrationTest extends IntegrationTest {
     assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.PAY_COMPLETE);
     assertThat(stockRepository.findByProduct(apple).orElseThrow().getQuantity())
         .isEqualTo(appleStock - appleOrderQuantity);
-    assertThat(stockRepository.findByProduct(banana).orElseThrow().getQuantity())
-        .isEqualTo(bananaStock - bananaOrderQuantity);
+    assertThat(stockRepository.findByProduct(beef).orElseThrow().getQuantity())
+        .isEqualTo(beefStock - beefOrderQuantity);
   }
 
   private static ExtractableResponse<Response> requestPayOrder(RequestSpecification spec,
@@ -128,18 +131,20 @@ class OrdersIntegrationTest extends IntegrationTest {
   void payOrder_fail_because_of_insufficient_stock() {
     RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(member01.getUsername(), pw);
     // given
+    Product apple = productFactory.createProduct(ProductFixture.APPLE, seller);
+    Product beef = productFactory.createProduct(ProductFixture.BEEF, seller);
     // 재고 추가
     Long appleStock = 10L;
     Long bananaStock = 10L;
     ProductIntegrationTest.requestChangeStock(apple.getId(), appleStock, spec);
-    ProductIntegrationTest.requestChangeStock(banana.getId(), bananaStock, spec);
+    ProductIntegrationTest.requestChangeStock(beef.getId(), bananaStock, spec);
     // 주문 생성
     Integer appleOrderQuantity = 11;
     Integer bananaOrderQuantity = 10;
     CreateOrderRequest createRequest = CreateOrderRequest.builder()
         .productIdAndCounts(List.of(
             new ProductIdAndCount(apple.getId(), appleOrderQuantity),
-            new ProductIdAndCount(banana.getId(), bananaOrderQuantity)))
+            new ProductIdAndCount(beef.getId(), bananaOrderQuantity)))
         .build();
     Orders createdOrder = findOrder(requestCreateOrder(spec, createRequest));
     // mock
@@ -157,6 +162,7 @@ class OrdersIntegrationTest extends IntegrationTest {
   void payOrder_concurrency_test() throws InterruptedException {
     RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(member01.getUsername(), pw);
     // given
+    Product apple = productFactory.createProduct(ProductFixture.APPLE, seller);
     // 재고 추가
     Long appleStock = 100L;
     ProductIntegrationTest.requestChangeStock(apple.getId(), appleStock, spec);
