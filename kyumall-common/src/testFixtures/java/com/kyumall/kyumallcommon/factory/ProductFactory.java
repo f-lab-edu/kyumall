@@ -1,6 +1,8 @@
 package com.kyumall.kyumallcommon.factory;
 
 import com.kyumall.kyumallcommon.fixture.member.MemberFixture;
+import com.kyumall.kyumallcommon.fixture.product.CategoryFixture;
+import com.kyumall.kyumallcommon.fixture.product.ProductFixture;
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.product.entity.Category;
 import com.kyumall.kyumallcommon.product.entity.Product;
@@ -23,20 +25,8 @@ public class ProductFactory {
   @Autowired
   private ImageRepository imageRepository;
 
-  public Category createCategory(String name, Category parent, CategoryStatus status) {
-    return categoryRepository.save(Category.builder()
-            .name(name)
-            .parent(parent)
-            .status(status)
-        .build());
-  }
-
-  public Category createCategory(String name, Category parent) {
-    return categoryRepository.save(Category.builder()
-        .name(name)
-        .parent(parent)
-        .status(CategoryStatus.INUSE)
-        .build());
+  public Category saveCategory(Category category) {
+    return categoryRepository.save(category);
   }
 
   public Category createCategory(String name) {
@@ -46,26 +36,21 @@ public class ProductFactory {
         .build());
   }
 
-  public Product createProduct(Category category, Member seller, String name, Integer price, Image image, String detail) {
-    return productRepository.save(Product.builder()
-            .category(category)
-            .seller(seller)
-            .name(name)
-            .price(price)
-            .image(image.getStoredFileName())
-            .detail(detail)
-        .build());
+  public Category createCategory(CategoryFixture categoryFixture) {
+    return saveCategoryRecursive(categoryFixture.toEntity());
   }
 
-  public Product createProduct(Category category, String name, Integer price) {
-    return productRepository.save(Product.builder()
-        .category(category)
-        .seller(memberFactory.createMember(MemberFixture.LEE))
-        .name(name)
-        .price(price)
-        .image(createImage().getStoredFileName())
-        .detail("detail")
-        .build());
+  private Category saveCategoryRecursive(Category category) {
+    Category parentCategory = null;
+    if (category.getParent() != null) {   // 부모 객체가 존재하면
+      parentCategory = saveCategoryRecursive(category.getParent()); // 재귀 호출 (최상위 부모 객체 부터 저장)
+    }
+    return categoryRepository.saveAndFlush(category);
+  }
+
+  public Product createProduct(ProductFixture productFixture, Member seller) {
+    Category category = saveCategoryRecursive(productFixture.getCategory());
+    return productRepository.saveAndFlush(productFixture.toEntity(seller, category));
   }
 
   public Product createProduct(String name, Integer price) {

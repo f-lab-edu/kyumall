@@ -3,6 +3,7 @@ package com.kyumall.kyumallcommon.product.repository;
 import com.kyumall.kyumallcommon.product.entity.Category;
 import com.kyumall.kyumallcommon.product.vo.CategoryStatus;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -11,6 +12,8 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
 
   @EntityGraph(attributePaths = {"parent"})
   List<Category> findAllByStatus(CategoryStatus status);
+
+  Optional<Category> findByName(String name);
 
   @Query(
       value = "WITH RECURSIVE cte AS ("

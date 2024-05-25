@@ -29,9 +29,11 @@ public class Category extends BaseTimeEntity {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
   private String name;
+
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "parent_id")
   private Category parent;
+
   @Enumerated(value = EnumType.STRING)
   private CategoryStatus status;
   @OneToMany(mappedBy = "category")
