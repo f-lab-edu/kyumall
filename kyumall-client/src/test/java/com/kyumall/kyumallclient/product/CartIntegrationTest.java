@@ -44,8 +44,6 @@ class CartIntegrationTest extends IntegrationTest {
 
   @BeforeEach
   void dataInit() {
-    // 물품
-    Category testCategory = productFactory.createCategory("testCategory");
     // 회원
     testMember1 = memberFactory.createMember(MemberFixture.KIM);
   }

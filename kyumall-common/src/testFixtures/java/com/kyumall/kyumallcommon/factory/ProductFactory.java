@@ -20,24 +20,14 @@ public class ProductFactory {
   ProductRepository productRepository;
   @Autowired
   CategoryRepository categoryRepository;
-  @Autowired
-  MemberFactory memberFactory;
-  @Autowired
-  private ImageRepository imageRepository;
-
-  public Category saveCategory(Category category) {
-    return categoryRepository.save(category);
-  }
-
-  public Category createCategory(String name) {
-    return categoryRepository.save(Category.builder()
-        .name(name)
-        .status(CategoryStatus.INUSE)
-        .build());
-  }
 
   public Category createCategory(CategoryFixture categoryFixture) {
     return saveCategoryRecursive(categoryFixture.toEntity());
+  }
+
+  public Product createProduct(ProductFixture productFixture, Member seller) {
+    Category category = saveCategoryRecursive(productFixture.getCategory());
+    return productRepository.saveAndFlush(productFixture.toEntity(seller, category));
   }
 
   private Category saveCategoryRecursive(Category category) {
@@ -46,17 +36,5 @@ public class ProductFactory {
       parentCategory = saveCategoryRecursive(category.getParent()); // 재귀 호출 (최상위 부모 객체 부터 저장)
     }
     return categoryRepository.saveAndFlush(category);
-  }
-
-  public Product createProduct(ProductFixture productFixture, Member seller) {
-    Category category = saveCategoryRecursive(productFixture.getCategory());
-    return productRepository.saveAndFlush(productFixture.toEntity(seller, category));
-  }
-
-  private Image createImage() {
-    return imageRepository.save(Image.builder()
-            .storedFileName("test.png")
-            .storedFileName("ddd-ddd-ddd")
-        .build());
   }
 }
