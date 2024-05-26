@@ -140,7 +140,7 @@ public class MemberService {
   }
 
   private void saveAgreementsOfTerms(SignUpRequest request, Member member) {
-    List<Term> terms = termRepository.findAllByStatus(TermStatus.INUSE);
+    List<Term> terms = termRepository.findAllByStatusOrderByOrdering(TermStatus.INUSE);
 
     List<Agreement> agreementsToSave = new ArrayList<>();
 
@@ -171,7 +171,7 @@ public class MemberService {
    * 현재 '사용중' 상태인 모든 약관을 조회합니다.
    */
   public List<TermDto> getSignUpTerms() {
-    List<Term> terms = termRepository.findAllByStatus(TermStatus.INUSE);
+    List<Term> terms = termRepository.findAllByStatusOrderByOrdering(TermStatus.INUSE);
 
     List<TermDto> termDtos = new ArrayList<>();
     for (Term term: terms) {
