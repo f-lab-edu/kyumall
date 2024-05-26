@@ -12,6 +12,7 @@ dependencies {
 
     //app
     api project(':kyumall-common')
+    testImplementation(testFixtures(project(':kyumall-common')))
 }
 
 test {

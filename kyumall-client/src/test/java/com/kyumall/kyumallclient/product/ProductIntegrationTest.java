@@ -4,13 +4,16 @@ import static org.assertj.core.api.Assertions.*;
 
 import com.kyumall.kyumallclient.AuthTestUtil;
 import com.kyumall.kyumallclient.IntegrationTest;
-import com.kyumall.kyumallclient.member.MemberFactory;
 import com.kyumall.kyumallclient.product.dto.CategoryDto;
 import com.kyumall.kyumallclient.product.dto.CreateProductRequest;
 import com.kyumall.kyumallclient.product.dto.ProductDetailDto;
 import com.kyumall.kyumallclient.product.dto.ProductSimpleDto;
+import com.kyumall.kyumallcommon.factory.MemberFactory;
+import com.kyumall.kyumallcommon.factory.ProductFactory;
+import com.kyumall.kyumallcommon.fixture.member.MemberFixture;
+import com.kyumall.kyumallcommon.fixture.product.CategoryFixture;
+import com.kyumall.kyumallcommon.fixture.product.ProductFixture;
 import com.kyumall.kyumallcommon.member.entity.Member;
-import com.kyumall.kyumallcommon.member.vo.MemberType;
 import com.kyumall.kyumallcommon.product.entity.Category;
 import com.kyumall.kyumallcommon.product.entity.Product;
 import com.kyumall.kyumallcommon.product.repository.CategoryRepository;
@@ -34,33 +37,19 @@ public class ProductIntegrationTest extends IntegrationTest {
   @Autowired
   private MemberFactory memberFactory;
   @Autowired
+  private ProductFactory productFactory;
+  @Autowired
   private CategoryRepository categoryRepository;
   @Autowired
   private ProductRepository productRepository;
 
-  Member seller01;
-  String pw = "password";
-  Category food;
-  Category fruit;
-  Category meet;
-  Product apple;
-  Product beef;
-  List<Product> allProducts = new ArrayList<>();
+  Member seller;
+
   String[] comparedProductSimpleDtoFieldNames = new String[] {"name", "price", "image"};
 
   @BeforeEach
-  void initData() {
-    seller01 = memberFactory.createMember("user01", "email@example.com", pw, MemberType.SELLER);
-    food = saveCategory("식품", null);
-    fruit = saveCategory("과일", food);
-    meet = saveCategory("육류", food);
-    Category appleAndPear = saveCategory("사과/배", fruit);
-    apple = createProductForTest(new CreateProductRequest("얼음골사과", appleAndPear.getId(), seller01.getUsername() ,40000,
-        "<h1>맛있는 사과</h1>"));
-    beef = createProductForTest(new CreateProductRequest("소고기", meet.getId(), seller01.getUsername() ,50000,
-        "<h1>맛있는 소고기</h1>"));
-    allProducts.add(apple);
-    allProducts.add(beef);
+  void initData() { // 현재 테스트에 밀접한 연관이 없고, 공유되어도 문제될 것 없는 데이터만 BeforeEach 에서 생성
+    seller = memberFactory.createMember(MemberFixture.LEE);
   }
 
   private Category saveCategory(String name, Category parent) {
@@ -75,10 +64,11 @@ public class ProductIntegrationTest extends IntegrationTest {
   @DisplayName("상품 생성에 성공합니다.")
   void createProduct_success() {
     // given
+    Category fruit = productFactory.createCategory(CategoryFixture.FRUIT);
     CreateProductRequest request = CreateProductRequest.builder()
         .productName("얼음골 사과")
         .categoryId(fruit.getId())
-        .sellerUsername(seller01.getUsername())
+        .sellerUsername(seller.getUsername())
         .price(30000)
         .detail("사과입니다.").build();
     // when
@@ -91,7 +81,7 @@ public class ProductIntegrationTest extends IntegrationTest {
     Product savedProduct = findProductById(createdId.longValue());
     assertThat(savedProduct.getName()).isEqualTo(request.getProductName());
     assertThat(savedProduct.getCategory().getId()).isEqualTo(request.getCategoryId());
-    assertThat(savedProduct.getSeller().getId()).isEqualTo(seller01.getId());
+    assertThat(savedProduct.getSeller().getId()).isEqualTo(seller.getId());
     assertThat(savedProduct.getPrice()).isEqualTo(request.getPrice());
     assertThat(savedProduct.getDetail()).isEqualTo(request.getDetail());
   }
@@ -100,6 +90,9 @@ public class ProductIntegrationTest extends IntegrationTest {
   @DisplayName("상품리스트 조회에 성공합니다.")
   void getAllProducts_success() {
     //given
+    List<Product> products = new ArrayList<>();
+    products.add(productFactory.createProduct(ProductFixture.APPLE, seller));
+    products.add(productFactory.createProduct(ProductFixture.BEEF, seller));
     //when
     ExtractableResponse<Response> response = RestAssured.given().log().all()
         .when().get("/products")
@@ -114,7 +107,7 @@ public class ProductIntegrationTest extends IntegrationTest {
     List<ProductSimpleDto> result = response.body().jsonPath().getList("result.content", ProductSimpleDto.class);
     assertThat(result).hasSize(2);
     for (ProductSimpleDto dto: result) {
-      assertThat(dto).usingRecursiveComparison().comparingOnlyFields("name", "price", "image").isIn(allProducts);
+      assertThat(dto).usingRecursiveComparison().comparingOnlyFields("name", "price", "image").isIn(products);
     }
   }
 
@@ -133,14 +126,11 @@ public class ProductIntegrationTest extends IntegrationTest {
 
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
     List<CategoryDto> categories = response.body().jsonPath().getList("result", CategoryDto.class);
-    assertThat(categories).hasSize(2);
-    assertThat(categories.get(0).getName()).isEqualTo("식품");
-    assertThat(categories.get(0).getSubCategories().get(0).getName()).isEqualTo("과일");
-    assertThat(categories.get(0).getSubCategories().get(1).getName()).isEqualTo("육류");
-    assertThat(categories.get(1).getName()).isEqualTo("생활용품");
-    assertThat(categories.get(1).getSubCategories().get(0).getName()).isEqualTo("화장지");
-    assertThat(categories.get(1).getSubCategories().get(0).getSubCategories().get(0).getName()).isEqualTo("물티슈");
-    assertThat(categories.get(1).getSubCategories().get(0).getSubCategories().get(1).getName()).isEqualTo("키친타올");
+    assertThat(categories).hasSize(1);
+    assertThat(categories.get(0).getName()).isEqualTo("생활용품");
+    assertThat(categories.get(0).getSubCategories().get(0).getName()).isEqualTo("화장지");
+    assertThat(categories.get(0).getSubCategories().get(0).getSubCategories().get(0).getName()).isEqualTo("물티슈");
+    assertThat(categories.get(0).getSubCategories().get(0).getSubCategories().get(1).getName()).isEqualTo("키친타올");
   }
 
   @Test
@@ -164,20 +154,19 @@ public class ProductIntegrationTest extends IntegrationTest {
 
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
     List<CategoryDto> categories = response.body().jsonPath().getList("result", CategoryDto.class);
-    assertThat(categories).hasSize(2);
-    assertThat(categories.get(0).getName()).isEqualTo("식품");
-    assertThat(categories.get(0).getSubCategories().get(0).getName()).isEqualTo("과일");
-    assertThat(categories.get(0).getSubCategories().get(1).getName()).isEqualTo("육류");
-    assertThat(categories.get(1).getName()).isEqualTo("생활용품");
-    assertThat(categories.get(1).getSubCategories().get(0).getName()).isEqualTo("화장지");
-    assertThat(categories.get(1).getSubCategories().get(0).getSubCategories().get(0).getName()).isEqualTo("물티슈");
-    assertThat(categories.get(1).getSubCategories().get(0).getSubCategories().get(1).getName()).isEqualTo("키친타올");
+    assertThat(categories).hasSize(1);
+    assertThat(categories.get(0).getName()).isEqualTo("생활용품");
+    assertThat(categories.get(0).getSubCategories().get(0).getName()).isEqualTo("화장지");
+    assertThat(categories.get(0).getSubCategories().get(0).getSubCategories().get(0).getName()).isEqualTo("물티슈");
+    assertThat(categories.get(0).getSubCategories().get(0).getSubCategories().get(1).getName()).isEqualTo("키친타올");
   }
 
   @Test
   @DisplayName("카테고리에 해당하는 물품을 조회합니다.")
   void getProductsInCategory_success() {
-    Long categoryId = food.getId();
+    productFactory.createProduct(ProductFixture.APPLE, seller);
+    productFactory.createProduct(ProductFixture.BEEF, seller);
+    Long categoryId = CategoryFixture.FOOD.getId();
 
     ExtractableResponse<Response> response = RestAssured.given().log().all()
         .pathParam("categoryId", categoryId)
@@ -187,20 +176,22 @@ public class ProductIntegrationTest extends IntegrationTest {
 
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
     List<ProductSimpleDto> productList = response.jsonPath().getList("result.content", ProductSimpleDto.class);
-    assertThat(productList).extracting("name").contains(beef.getName());
-    assertThat(productList).extracting("name").contains(apple.getName());
+    assertThat(productList).extracting("id").contains(ProductFixture.BEEF.getId());
+    assertThat(productList).extracting("id").contains(ProductFixture.APPLE.getId());
   }
 
   @Test
   @DisplayName("카테고리에 해당하는 물품을 조회합니다. (캐시에서 조회합니다)")
   void getProductsInCategory_fromCache_success() {
+    productFactory.createProduct(ProductFixture.APPLE, seller);
+    productFactory.createProduct(ProductFixture.BEEF, seller);
+    Long categoryId = CategoryFixture.FOOD.getId();
     // 전체 카테고리 조회 호출하여 전체 카테고리 캐시 시키기
     RestAssured.given().log().all()
         .when().get("/categories")
         .then().log().all()
         .extract();
 
-    Long categoryId = food.getId();
 
     ExtractableResponse<Response> response = RestAssured.given().log().all()
         .pathParam("categoryId", categoryId)
@@ -210,17 +201,18 @@ public class ProductIntegrationTest extends IntegrationTest {
 
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
     List<ProductSimpleDto> productList = response.jsonPath().getList("result.content", ProductSimpleDto.class);
-    assertThat(productList).extracting("name").contains(beef.getName());
-    assertThat(productList).extracting("name").contains(apple.getName());
+    assertThat(productList).extracting("id").contains(ProductFixture.BEEF.getId());
+    assertThat(productList).extracting("id").contains(ProductFixture.APPLE.getId());
   }
 
   @Test
   @DisplayName("상품 상세 조회에 성공합니다.")
   void getProduct_success() {
     // given
+    Product apple = productFactory.createProduct(ProductFixture.APPLE, seller);
     // when
     ExtractableResponse<Response> response = RestAssured.given().log().all()
-        .pathParam("id", apple.getId())
+        .pathParam("id", ProductFixture.APPLE.getId())
         .when().get("/products/{id}")
         .then().log().all()
         .extract();
@@ -229,7 +221,7 @@ public class ProductIntegrationTest extends IntegrationTest {
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
     ProductDetailDto productDetailDto= response.body().jsonPath().getObject("result", ProductDetailDto.class);
     assertThat(productDetailDto.getId()).isEqualTo(apple.getId());
-    assertThat(productDetailDto.getSellerUsername()).isEqualTo(apple.getSeller().getUsername());
+    assertThat(productDetailDto.getSellerUsername()).isEqualTo(seller.getUsername());
     assertThat(productDetailDto.getProductName()).isEqualTo(apple.getName());
     assertThat(productDetailDto.getPrice()).isEqualTo(apple.getPrice());
     assertThat(productDetailDto.getImage()).satisfiesAnyOf(
@@ -259,8 +251,9 @@ public class ProductIntegrationTest extends IntegrationTest {
   @DisplayName("상품ID에 해당하는 재고를 변경합니다.")
   void updateStock_success() {
     // given
+    Product apple = productFactory.createProduct(ProductFixture.APPLE, seller);
     Long quantity = 100L;
-    RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(seller01.getUsername(), pw);
+    RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(seller.getUsername(), MemberFixture.password);
     // when
     ExtractableResponse<Response> response = requestChangeStock(apple.getId(), quantity, spec);
 

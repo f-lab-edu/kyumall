@@ -4,10 +4,13 @@ import static org.assertj.core.api.Assertions.*;
 
 import com.kyumall.kyumallclient.AuthTestUtil;
 import com.kyumall.kyumallclient.IntegrationTest;
-import com.kyumall.kyumallclient.member.MemberFactory;
 import com.kyumall.kyumallclient.product.comment.dto.CreateCommentRequest;
 import com.kyumall.kyumallclient.product.comment.dto.ProductCommentDto;
 import com.kyumall.kyumallclient.product.comment.dto.UpdateCommentRequest;
+import com.kyumall.kyumallcommon.factory.MemberFactory;
+import com.kyumall.kyumallcommon.factory.ProductFactory;
+import com.kyumall.kyumallcommon.fixture.member.MemberFixture;
+import com.kyumall.kyumallcommon.fixture.product.ProductFixture;
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.product.entity.Category;
 import com.kyumall.kyumallcommon.product.entity.Product;
@@ -40,27 +43,24 @@ class ProductCommentIntegrationTest extends IntegrationTest {
   ProductCommentRepository productCommentRepository;
   @Autowired
   ProductCommentRatingRepository productCommentRatingRepository;
-  Product apple;
-  Product banana;
-  private static final String password = "test1234";
+  private static final String password = MemberFixture.password;
   Member testMember1;
   Member testMember2;
+  Member seller;
 
   @BeforeEach
   void dataInit() {
-    // 물품
-    Category testCategory = productFactory.createCategory("testCategory");
-    apple = productFactory.createProduct("꿀사과", 1000);
-    banana = productFactory.createProduct("바나나", 1000);
+    seller = memberFactory.createMember(MemberFixture.LEE);
     // 회원
-    testMember1 = memberFactory.createClient("test01", password);
-    testMember2 = memberFactory.createClient("test02", password);
+    testMember1 = memberFactory.createMember(MemberFixture.KIM);
+    testMember2 = memberFactory.createMember(MemberFixture.PARK);
   }
 
   @Test
   @DisplayName("상품 댓글 생성에 성공합니다.")
   void createProductComment_success() {
     // given
+    Product apple = productFactory.createProduct(ProductFixture.APPLE, seller);
     RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(),
         password);
     String comment = "상품에 대한 댓글입니다.";
@@ -82,6 +82,7 @@ class ProductCommentIntegrationTest extends IntegrationTest {
   @DisplayName("상품의 댓글 조회(첫번째 페이지) 성공합니다.")
   void getComments_first_page_success() {
     // given
+    Product apple = productFactory.createProduct(ProductFixture.APPLE, seller);
     int batchSize = 10;
     int totalSize = 12;
     RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(),
@@ -121,6 +122,7 @@ class ProductCommentIntegrationTest extends IntegrationTest {
   @DisplayName("상품의 댓글 조회(두번째 페이지)에 성공합니다.")
   void getComments_second_page_success() {
     // given
+    Product apple = productFactory.createProduct(ProductFixture.APPLE, seller);
     int batchSize = 10;
     int page = 1; // 두번째 페이지
     int totalSize = 12; // 총 데이터 양
@@ -151,6 +153,7 @@ class ProductCommentIntegrationTest extends IntegrationTest {
   @DisplayName("상품의 댓글 목록을 조회합니다.(좋아요 숫자와 함께)")
   void getComments_with_likeCount_success() {
     // given
+    Product apple = productFactory.createProduct(ProductFixture.APPLE, seller);
     // 댓글 추가
     Long comment1Id = requestCreateCommentForGiven(apple.getId(), "test", testMember1.getUsername());
     Long comment2Id = requestCreateCommentForGiven(apple.getId(), "test", testMember2.getUsername());
@@ -175,6 +178,7 @@ class ProductCommentIntegrationTest extends IntegrationTest {
   @DisplayName("상품의 댓글 목록을 조회합니다.(대댓글 갯수와 함께 조회)")
   void getComments_with_replyCount_success() {
     // given
+    Product apple = productFactory.createProduct(ProductFixture.APPLE, seller);
     // 댓글 추가
     Long comment1Id = requestCreateCommentForGiven(apple.getId(), "test", testMember1.getUsername());
     Long comment2Id = requestCreateCommentForGiven(apple.getId(), "test", testMember2.getUsername());
@@ -198,6 +202,7 @@ class ProductCommentIntegrationTest extends IntegrationTest {
   @DisplayName("상품의 댓글을 수정합니다.")
   void updateComment_success() {
     // given
+    Product apple = productFactory.createProduct(ProductFixture.APPLE, seller);
     RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(),
         password);
     Long commentId = requestCreateCommentForGiven(apple.getId(), "첫 댓글입니다.", testMember1.getUsername());
@@ -216,6 +221,7 @@ class ProductCommentIntegrationTest extends IntegrationTest {
   @DisplayName("상품 댓글의 작성자가 아니라서 수정에 실패합니다.")
   void updateComment_fail_because_not_writer() {
     // given
+    Product apple = productFactory.createProduct(ProductFixture.APPLE, seller);
     RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(),
         password);
     Long commentId = requestCreateCommentForGiven(apple.getId(), "첫 댓글입니다.", testMember1.getUsername());
@@ -234,13 +240,15 @@ class ProductCommentIntegrationTest extends IntegrationTest {
   @DisplayName("상품 댓글과 상품의 ID가 맞지않아 수정에 실패합니다.")
   void updateComment_fail_because_product_not_match() {
     // given
+    Product apple = productFactory.createProduct(ProductFixture.APPLE, seller);
+    Product beef = productFactory.createProduct(ProductFixture.BEEF, seller);
     RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(),
         password);
     Long commentId = requestCreateCommentForGiven(apple.getId(), "첫 댓글입니다.", testMember1.getUsername());
     UpdateCommentRequest request = new UpdateCommentRequest("수정된 댓글 입니다.");
 
     // when
-    ExtractableResponse<Response> response = requestUpdateComment(spec, banana.getId() ,commentId, request);
+    ExtractableResponse<Response> response = requestUpdateComment(spec, beef.getId() ,commentId, request);
 
     // then
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_BAD_REQUEST);
@@ -250,6 +258,7 @@ class ProductCommentIntegrationTest extends IntegrationTest {
   @DisplayName("상품 댓글 삭제에 성공합니다.")
   void deleteComment_success() {
     // given
+    Product apple = productFactory.createProduct(ProductFixture.APPLE, seller);
     RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(),
         password);
     Long commentId = requestCreateCommentForGiven(apple.getId(), "첫 댓글입니다.", testMember1.getUsername());
@@ -267,6 +276,7 @@ class ProductCommentIntegrationTest extends IntegrationTest {
   @DisplayName("상품 댓글에 좋아요를 합니다.")
   void updateCommentRating_good_success() {
     // given
+    Product apple = productFactory.createProduct(ProductFixture.APPLE, seller);
     RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(),
         password);
     Long commentId = requestCreateCommentForGiven(apple.getId(), "첫 댓글입니다.", testMember1.getUsername());
@@ -285,6 +295,7 @@ class ProductCommentIntegrationTest extends IntegrationTest {
   @DisplayName("상품의 댓글에 대댓글 생성을 성공합니다.")
   void createCommentReply_success() {
     // given
+    Product apple = productFactory.createProduct(ProductFixture.APPLE, seller);
     RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(), password);
     Long commentId = requestCreateCommentForGiven(apple.getId(), "첫 댓글입니다.", testMember1.getUsername());
     CreateCommentRequest request = new CreateCommentRequest("대댓글 입니다.");
@@ -302,6 +313,7 @@ class ProductCommentIntegrationTest extends IntegrationTest {
   @DisplayName("댓글의 대댓글 목록 조회에 성공합니다.")
   void getCommentReplies_success() {
     // given
+    Product apple = productFactory.createProduct(ProductFixture.APPLE, seller);
     RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(), password);
     Long commentId = requestCreateCommentForGiven(apple.getId(), "첫 댓글입니다.", testMember1.getUsername());
     requestCreateCommentReply(spec, apple.getId() ,commentId, new CreateCommentRequest("대댓글 입니다."));
