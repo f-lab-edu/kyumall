@@ -32,7 +32,6 @@ import java.util.Objects;
 import javax.crypto.SecretKey;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,8 +48,6 @@ public class MemberService {
   private final TermRepository termRepository;
   private final AgreementRepository agreementRepository;
   private final PasswordService passwordService;
-  @Value("${encrypt.key}")
-  private String encryptKey;
 
   /**
    * 본인 인증 메일을 발송합니다.
