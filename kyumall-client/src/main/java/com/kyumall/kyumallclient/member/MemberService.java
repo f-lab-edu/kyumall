@@ -32,7 +32,6 @@ import java.util.Objects;
 import javax.crypto.SecretKey;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,32 +48,21 @@ public class MemberService {
   private final TermRepository termRepository;
   private final AgreementRepository agreementRepository;
   private final PasswordService passwordService;
-  @Value("${encrypt.key}")
-  private String encryptKey;
 
   /**
    * 본인 인증 메일을 발송합니다.
    * 메일 발송 후 발송 내용을 저장합니다.
    * 이미 발송된 메일이 있는 경우, 재발송 가능한지 체크 후 발송합니다.
-   * @throws IllegalStateException 메일 전송 이력이 있고 메일 쿨타임이 지나지 않은 경우
    * @param email
-   * @return verification 객체의 ID를 암호화 한 값
+   * @return 생성된 verification 객체의 id 값
    */
   @Transactional
-  public String sendVerificationEmail(String email, SecretKey secretKey) {
+  public Long sendVerificationEmail(String email, SecretKey secretKey) {
     verificationRepository.findUnverifiedByContact(email)
             .ifPresent(this::processWhenUnverifiedInfoExists);
 
     mailService.sendMail(email);
-    Verification verification = verificationRepository.save(
-        Verification.of(email, randomCodeGenerator, clock));
-    try {
-      return EncryptUtil.encrypt(ID_ENCRYPTION_ALGORITHM,
-          String.valueOf(verification.getId()), secretKey);
-    } catch (Exception e) {
-      log.error(e.toString());
-      throw new KyumallException(ErrorCode.FAIL_TO_ENCRYPT);
-    }
+    return verificationRepository.save(Verification.of(email, randomCodeGenerator, clock)).getId();
   }
 
   /**
@@ -140,7 +128,7 @@ public class MemberService {
   }
 
   private void saveAgreementsOfTerms(SignUpRequest request, Member member) {
-    List<Term> terms = termRepository.findAllByStatus(TermStatus.INUSE);
+    List<Term> terms = termRepository.findAllByStatusOrderByOrdering(TermStatus.INUSE);
 
     List<Agreement> agreementsToSave = new ArrayList<>();
 
@@ -168,10 +156,11 @@ public class MemberService {
   }
 
   /**
-   * 현재 '사용중' 상태인 모든 약관을 조회합니다.
+   * 현재 '사용중' 인 약관 중, 가장 최신 버전의 약관 상세를 조회합니다.
+   * @return 약관 리스트
    */
   public List<TermDto> getSignUpTerms() {
-    List<Term> terms = termRepository.findAllByStatus(TermStatus.INUSE);
+    List<Term> terms = termRepository.findAllByStatusOrderByOrdering(TermStatus.INUSE);
 
     List<TermDto> termDtos = new ArrayList<>();
     for (Term term: terms) {
