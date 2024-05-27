@@ -384,7 +384,7 @@ class MemberIntegrationTest extends IntegrationTest {
 
     // then
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
-    String username =  response.body().jsonPath().get("result.key");
+    String username =  response.body().jsonPath().get("result.username");
     assertThat(username).isEqualTo(member.getUsername());
   }
 

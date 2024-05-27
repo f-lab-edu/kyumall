@@ -53,7 +53,6 @@ public class MemberService {
    * 본인 인증 메일을 발송합니다.
    * 메일 발송 후 발송 내용을 저장합니다.
    * 이미 발송된 메일이 있는 경우, 재발송 가능한지 체크 후 발송합니다.
-   * @throws IllegalStateException 메일 전송 이력이 있고 메일 쿨타임이 지나지 않은 경우
    * @param email
    * @return verification 객체의 ID를 암호화 한 값
    */
@@ -165,7 +164,8 @@ public class MemberService {
   }
 
   /**
-   * 현재 '사용중' 상태인 모든 약관을 조회합니다.
+   * 현재 '사용중' 인 약관 중, 가장 최신 버전의 약관 상세를 조회합니다.
+   * @return 약관 리스트
    */
   public List<TermDto> getSignUpTerms() {
     List<Term> terms = termRepository.findAllByStatusOrderByOrdering(TermStatus.INUSE);
