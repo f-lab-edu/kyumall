@@ -54,23 +54,15 @@ public class MemberService {
    * 메일 발송 후 발송 내용을 저장합니다.
    * 이미 발송된 메일이 있는 경우, 재발송 가능한지 체크 후 발송합니다.
    * @param email
-   * @return verification 객체의 ID를 암호화 한 값
+   * @return 생성된 verification 객체의 id 값
    */
   @Transactional
-  public String sendVerificationEmail(String email, SecretKey secretKey) {
+  public Long sendVerificationEmail(String email, SecretKey secretKey) {
     verificationRepository.findUnverifiedByContact(email)
             .ifPresent(this::processWhenUnverifiedInfoExists);
 
     mailService.sendMail(email);
-    Verification verification = verificationRepository.save(
-        Verification.of(email, randomCodeGenerator, clock));
-    try {
-      return EncryptUtil.encrypt(ID_ENCRYPTION_ALGORITHM,
-          String.valueOf(verification.getId()), secretKey);
-    } catch (Exception e) {
-      log.error(e.toString());
-      throw new KyumallException(ErrorCode.FAIL_TO_ENCRYPT);
-    }
+    return verificationRepository.save(Verification.of(email, randomCodeGenerator, clock)).getId();
   }
 
   /**

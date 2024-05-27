@@ -56,7 +56,7 @@ public class MemberController {
   /**
    * 본인확인 메일을 전송합니다.
    * @param email
-   * @return
+   * @return 생성된 키 값을 암호화 하여 반환합니다.
    */
   @Operation(summary = "본인 확인 메일 전송", description = "이메일 주소로 본인인증 코드를 전송합니다.")
   @ApiResponses(value = {
@@ -66,7 +66,14 @@ public class MemberController {
   @PostMapping("/send-verification-mail")
   public ResponseWrapper<SendVerificationEmailResponse> sendVerificationMail(@NotEmpty @Parameter(description = "인증하려는 이메일", required = true, example = "example@example.com") @RequestParam String email) {
     SecretKey secretKey = EncryptUtil.decodeStringToKey(encryptKey, ID_ENCRYPTION_ALGORITHM);
-    return ResponseWrapper.ok(SendVerificationEmailResponse.of(memberService.sendVerificationEmail(email, secretKey)));
+    Long newId = memberService.sendVerificationEmail(email, secretKey);
+    try {
+      return ResponseWrapper.ok(SendVerificationEmailResponse.of(
+          EncryptUtil.encrypt(ID_ENCRYPTION_ALGORITHM, String.valueOf(newId), secretKey)));
+    } catch (Exception e) {
+      log.error(e.toString());
+      throw new KyumallException(ErrorCode.FAIL_TO_ENCRYPT);
+    }
   }
 
   /**
