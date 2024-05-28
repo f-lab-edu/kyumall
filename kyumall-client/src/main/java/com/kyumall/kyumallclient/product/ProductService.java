@@ -91,9 +91,4 @@ public class ProductService {
     return ProductDetailDto.from(productRepository.findWithSellerById(id)
         .orElseThrow(() -> new KyumallException(ErrorCode.PRODUCT_NOT_EXISTS)));
   }
-
-  private Product findProduct(Long id) {
-    return productRepository.findById(id)
-        .orElseThrow(() -> new KyumallException(ErrorCode.PRODUCT_NOT_EXISTS));
-  }
 }
