@@ -46,7 +46,7 @@ public class CategoryController {
   }
 
   /**
-   * 재귀 호출로 카테고리의 서브 카테고리를 추가
+   * 재귀 호출로 카테고리의 서브 카테고리를 계층형으로 추가합니다.
    * @param categoryDtos
    * @param groupingByParentId
    */
