@@ -1,6 +1,7 @@
 package com.kyumall.kyumallclient.product;
 
 import com.kyumall.kyumallclient.product.dto.CategoryDto;
+import com.kyumall.kyumallclient.product.dto.SubCategoryDto;
 import com.kyumall.kyumallcommon.product.entity.Category;
 import com.kyumall.kyumallcommon.product.repository.CategoryRepository;
 import java.util.ArrayList;
@@ -47,5 +48,22 @@ public class CategoryService {
           addSubCategories(subCategories, groupingByParentId);
         }
     );
+  }
+
+  /**
+   * 서브 카테고리를 조회합니다.
+   * 한단계 아래 자식 서브 카테고리만 조회합니다.
+   * @param id
+   * @return
+   */
+  public List<SubCategoryDto> getOneStepSubCategories(Long id) {
+    Map<Long, List<Category>> categoryGroupingByParent = categoryMapService.findCategoryGroupingByParent();
+    if (!categoryGroupingByParent.containsKey(id)) {
+      return new ArrayList<>();
+    }
+    return categoryGroupingByParent.get(id)
+        .stream()
+        .map(category -> SubCategoryDto.from(category, categoryGroupingByParent.containsKey(category.getId())))
+        .toList();
   }
 }

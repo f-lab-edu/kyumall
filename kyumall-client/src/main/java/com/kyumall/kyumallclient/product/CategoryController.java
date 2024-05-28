@@ -2,6 +2,7 @@ package com.kyumall.kyumallclient.product;
 
 import com.kyumall.kyumallclient.product.dto.CategoryDto;
 import com.kyumall.kyumallclient.product.dto.ProductSimpleDto;
+import com.kyumall.kyumallclient.product.dto.SubCategoryDto;
 import com.kyumall.kyumallcommon.response.ResponseWrapper;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +30,15 @@ public class CategoryController {
     return ResponseWrapper.ok(categoryService.getAllCategories());
   }
 
-
+  /**
+   * 카테고리 ID의 한단계 아래 서브 카테고리 목록을를 조회합니다.
+   * 한단계 아래의 서브 카테고리만 조회합니다.
+   * @return
+   */
+  @GetMapping("/{id}/subCategories")
+  public ResponseWrapper<List<SubCategoryDto>> getOneStepSubCategories(@PathVariable Long id) {
+    return ResponseWrapper.ok(categoryService.getOneStepSubCategories(id));
+  }
 
   /**
    * 카테고리에 해당하는 상품 목록을 조회합니다.

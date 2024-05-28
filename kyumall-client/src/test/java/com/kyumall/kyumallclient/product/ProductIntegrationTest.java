@@ -8,6 +8,7 @@ import com.kyumall.kyumallclient.product.dto.CategoryDto;
 import com.kyumall.kyumallclient.product.dto.CreateProductRequest;
 import com.kyumall.kyumallclient.product.dto.ProductDetailDto;
 import com.kyumall.kyumallclient.product.dto.ProductSimpleDto;
+import com.kyumall.kyumallclient.product.dto.SubCategoryDto;
 import com.kyumall.kyumallcommon.factory.MemberFactory;
 import com.kyumall.kyumallcommon.factory.ProductFactory;
 import com.kyumall.kyumallcommon.fixture.member.MemberFixture;
@@ -159,6 +160,30 @@ public class ProductIntegrationTest extends IntegrationTest {
     assertThat(categories.get(0).getSubCategories().get(0).getName()).isEqualTo("화장지");
     assertThat(categories.get(0).getSubCategories().get(0).getSubCategories().get(0).getName()).isEqualTo("물티슈");
     assertThat(categories.get(0).getSubCategories().get(0).getSubCategories().get(1).getName()).isEqualTo("키친타올");
+  }
+
+  @Test
+  @DisplayName("한단계 아래의 서브 카테고리를 조회합니다.")
+  void getOneStepSubCategories_success() {
+    Category food = categoryRepository.saveAndFlush(CategoryFixture.FOOD.toEntity());
+    Category fruit = categoryRepository.saveAndFlush(CategoryFixture.FRUIT.toEntity(food));
+    Category meet = categoryRepository.saveAndFlush(CategoryFixture.MEET.toEntity(food));
+    Category appleAndPear = categoryRepository.saveAndFlush(CategoryFixture.APPLE_PEAR.toEntity(fruit));
+
+    ExtractableResponse<Response> response = RestAssured.given().log().all()
+        .pathParam("id", food.getId())
+        .when().get("/categories/{id}/subCategories")
+        .then().log().all()
+        .extract();
+
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
+    List<SubCategoryDto> subCategories = response.body().jsonPath().getList("result", SubCategoryDto.class);
+    assertThat(subCategories.get(0).getId()).isEqualTo(fruit.getId());
+    assertThat(subCategories.get(0).getName()).isEqualTo(fruit.getName());
+    assertThat(subCategories.get(0).getSubCategoryExists()).isTrue();
+    assertThat(subCategories.get(1).getId()).isEqualTo(meet.getId());
+    assertThat(subCategories.get(1).getName()).isEqualTo(meet.getName());
+    assertThat(subCategories.get(1).getSubCategoryExists()).isFalse();
   }
 
   @Test
