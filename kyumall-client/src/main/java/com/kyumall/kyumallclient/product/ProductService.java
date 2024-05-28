@@ -9,6 +9,7 @@ import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.member.repository.MemberRepository;
 import com.kyumall.kyumallcommon.product.entity.Category;
 import com.kyumall.kyumallcommon.product.entity.Product;
+import com.kyumall.kyumallcommon.product.repository.CategoryRepository;
 import com.kyumall.kyumallcommon.product.repository.ProductRepository;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +23,8 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @Service
 public class ProductService {
-  private final CategoryService categoryService;
+  private final CategoryMapService categoryMapService;
+  private final CategoryRepository categoryRepository;
   private final ProductRepository productRepository;
   private final MemberRepository memberRepository;
 
@@ -32,7 +34,8 @@ public class ProductService {
    * @return
    */
   public Long createProduct(CreateProductRequest request) {
-    Category category = categoryService.findCategoryById(request.getCategoryId());
+    Category category = categoryRepository.findById(request.getCategoryId())
+        .orElseThrow(() -> new KyumallException(ErrorCode.CATEGORY_NOT_EXISTS));
 
     Member seller = memberRepository.findByUsername(request.getSellerUsername())
         .orElseThrow(() -> new KyumallException(ErrorCode.MEMBER_NOT_EXISTS));
@@ -79,7 +82,7 @@ public class ProductService {
    * @return
    */
   private List<Long> findAllSubCategories(Long categoryId) {
-    Map<Long, List<Category>> categoryGroupingByParent = categoryService.findCategoryGroupingByParent();
+    Map<Long, List<Category>> categoryGroupingByParent = categoryMapService.findCategoryGroupingByParent();
     if(!categoryGroupingByParent.containsKey(categoryId)) {
       throw new KyumallException(ErrorCode.CATEGORY_NOT_EXISTS);
     }
