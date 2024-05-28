@@ -13,8 +13,6 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
   @EntityGraph(attributePaths = {"parent"})
   List<Category> findAllByStatus(CategoryStatus status);
 
-  Optional<Category> findByName(String name);
-
   /**
    * 카테고리ID 로 서브 카테고리를 조회합니다.
    *
