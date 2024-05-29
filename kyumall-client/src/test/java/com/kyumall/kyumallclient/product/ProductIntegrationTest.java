@@ -121,7 +121,7 @@ public class ProductIntegrationTest extends IntegrationTest {
     Category paperTowel = saveCategory("키친타올", toiletPaper);
 
     ExtractableResponse<Response> response = RestAssured.given().log().all()
-        .when().get("/categories")
+        .when().get("/categories/hierarchy")
         .then().log().all()
         .extract();
 
@@ -143,12 +143,12 @@ public class ProductIntegrationTest extends IntegrationTest {
     Category paperTowel = saveCategory("키친타올", toiletPaper);
 
     RestAssured.given().log().all()
-        .when().get("/categories")
+        .when().get("/categories/hierarchy")
         .then().log().all()
         .extract();
 
     ExtractableResponse<Response> response = RestAssured.given().log().all()
-        .when().get("/categories")
+        .when().get("/categories/hierarchy")
         .then().log().all()
         .extract();
 

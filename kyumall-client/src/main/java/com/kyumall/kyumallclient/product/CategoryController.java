@@ -25,8 +25,8 @@ public class CategoryController {
    * 전체 카테고리를 조회합니다.
    * @return
    */
-  @GetMapping
-  public ResponseWrapper<List<CategoryDto>> getAllCategories() {
+  @GetMapping("/hierarchy")
+  public ResponseWrapper<List<CategoryDto>> getAllCategoriesHierarchy() {
     return ResponseWrapper.ok(categoryService.getAllCategories());
   }
 
