@@ -2,9 +2,8 @@ package com.kyumall.kyumallclient.product;
 
 import com.kyumall.kyumallclient.product.dto.CategoryDto;
 import com.kyumall.kyumallclient.product.dto.ProductSimpleDto;
-import com.kyumall.kyumallcommon.product.entity.Category;
+import com.kyumall.kyumallclient.product.dto.SubCategoryDto;
 import com.kyumall.kyumallcommon.response.ResponseWrapper;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -24,41 +23,31 @@ public class CategoryController {
   private final CategoryService categoryService;
 
   /**
-   * 전체 카테고리를 조회합니다.
+   * 전체 카테고리를 조회합니다. (계층형 리스트 형태)
    * @return
    */
-  @GetMapping
-  public ResponseWrapper<List<CategoryDto>> getAllCategories() {
-    Map<Long, List<Category>> categoryGroupingByParent = categoryService.findCategoryGroupingByParent();
-    return ResponseWrapper.ok(convertToCategoryHierarchy(categoryGroupingByParent));
+  @GetMapping("/hierarchy")
+  public ResponseWrapper<List<CategoryDto>> getAllCategoriesHierarchy() {
+    return ResponseWrapper.ok(categoryService.getAllCategoriesHierarchy());
   }
 
   /**
-   * 카테고리 Map을 계층형 구조의 List로 변경
-   * @param groupingByParentId
+   * 전체 카테고리를 조회합니다. (맵 형태)
    * @return
    */
-  private List<CategoryDto> convertToCategoryHierarchy(Map<Long, List<Category>> groupingByParentId) {
-    List<CategoryDto> rootCategories = groupingByParentId.get(0L).stream().map(CategoryDto::from)
-        .toList();
-    addSubCategories(rootCategories, groupingByParentId);
-    return rootCategories;
+  @GetMapping("/map")
+  public ResponseWrapper<Map<Long, List<SubCategoryDto>>> getAllCategoriesMap() {
+    return ResponseWrapper.ok(categoryService.getAllCategoriesMap());
   }
 
   /**
-   * 재귀 호출로 카테고리의 서브 카테고리를 추가
-   * @param categoryDtos
-   * @param groupingByParentId
+   * 카테고리 ID의 한단계 아래 서브 카테고리 목록을를 조회합니다.
+   * 한단계 아래의 서브 카테고리만 조회합니다.
+   * @return
    */
-  private void addSubCategories(List<CategoryDto> categoryDtos, Map<Long, List<Category>> groupingByParentId) {
-    categoryDtos.stream().forEach(
-        categoryDto -> {
-          List<CategoryDto> subCategories = groupingByParentId.getOrDefault(categoryDto.getId(), new ArrayList<>())
-              .stream().map(CategoryDto::from).toList();
-          categoryDto.setSubCategories(subCategories);
-          addSubCategories(subCategories, groupingByParentId);
-        }
-    );
+  @GetMapping("/{id}/subCategories")
+  public ResponseWrapper<List<SubCategoryDto>> getOneStepSubCategories(@PathVariable Long id) {
+    return ResponseWrapper.ok(categoryService.getOneStepSubCategories(id));
   }
 
   /**

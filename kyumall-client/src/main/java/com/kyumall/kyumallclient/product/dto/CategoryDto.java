@@ -10,13 +10,16 @@ public class CategoryDto {
   private Long id;
   private String name;
   private List<CategoryDto> subCategories = new ArrayList<>();
+
   public CategoryDto(Long id, String name) {
     this.id = id;
     this.name = name;
   }
+
   public static CategoryDto from(Category category) {
     return new CategoryDto(category.getId(), category.getName());
   }
+
   public void setSubCategories(List<CategoryDto> subCategories) {
     this.subCategories = subCategories;
   }

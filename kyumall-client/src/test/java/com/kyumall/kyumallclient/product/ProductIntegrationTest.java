@@ -8,6 +8,7 @@ import com.kyumall.kyumallclient.product.dto.CategoryDto;
 import com.kyumall.kyumallclient.product.dto.CreateProductRequest;
 import com.kyumall.kyumallclient.product.dto.ProductDetailDto;
 import com.kyumall.kyumallclient.product.dto.ProductSimpleDto;
+import com.kyumall.kyumallclient.product.dto.SubCategoryDto;
 import com.kyumall.kyumallcommon.factory.MemberFactory;
 import com.kyumall.kyumallcommon.factory.ProductFactory;
 import com.kyumall.kyumallcommon.fixture.member.MemberFixture;
@@ -26,6 +27,7 @@ import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -112,15 +114,15 @@ public class ProductIntegrationTest extends IntegrationTest {
   }
 
   @Test
-  @DisplayName("모든 카테고리를 조회합니다.")
-  void getAllCategories_success() {
+  @DisplayName("모든 카테고리를 계층형 리스트 형태로 조회합니다.")
+  void getAllCategoriesHierarchy_success() {
     Category houseItem = saveCategory("생활용품", null);
     Category toiletPaper = saveCategory("화장지", houseItem);
     Category wetWipe = saveCategory("물티슈", toiletPaper);
     Category paperTowel = saveCategory("키친타올", toiletPaper);
 
     ExtractableResponse<Response> response = RestAssured.given().log().all()
-        .when().get("/categories")
+        .when().get("/categories/hierarchy")
         .then().log().all()
         .extract();
 
@@ -134,6 +136,24 @@ public class ProductIntegrationTest extends IntegrationTest {
   }
 
   @Test
+  @DisplayName("모든 카테고리를 맵 형태로 조회합니다.")
+  void getAllCategoriesMap_success() {
+    Category houseItem = saveCategory("생활용품", null);
+    Category toiletPaper = saveCategory("화장지", houseItem);
+    Category wetWipe = saveCategory("물티슈", toiletPaper);
+    Category paperTowel = saveCategory("키친타올", toiletPaper);
+
+    ExtractableResponse<Response> response = RestAssured.given().log().all()
+        .when().get("/categories/map")
+        .then().log().all()
+        .extract();
+
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
+    Map<Long, List> categoryMap = response.body().jsonPath().getMap("result", Long.class, List.class);
+    assertThat(categoryMap.size()).isEqualTo(3);
+  }
+
+  @Test
   @DisplayName("모든 카테고리를 조회합니다.(두번째 결과는 캐싱된 값을 반환합니다.)")
   void getAllCategories_cache_success() {
     Category houseItem = saveCategory("생활용품", null);
@@ -142,12 +162,12 @@ public class ProductIntegrationTest extends IntegrationTest {
     Category paperTowel = saveCategory("키친타올", toiletPaper);
 
     RestAssured.given().log().all()
-        .when().get("/categories")
+        .when().get("/categories/hierarchy")
         .then().log().all()
         .extract();
 
     ExtractableResponse<Response> response = RestAssured.given().log().all()
-        .when().get("/categories")
+        .when().get("/categories/hierarchy")
         .then().log().all()
         .extract();
 
@@ -159,6 +179,30 @@ public class ProductIntegrationTest extends IntegrationTest {
     assertThat(categories.get(0).getSubCategories().get(0).getName()).isEqualTo("화장지");
     assertThat(categories.get(0).getSubCategories().get(0).getSubCategories().get(0).getName()).isEqualTo("물티슈");
     assertThat(categories.get(0).getSubCategories().get(0).getSubCategories().get(1).getName()).isEqualTo("키친타올");
+  }
+
+  @Test
+  @DisplayName("한단계 아래의 서브 카테고리를 조회합니다.")
+  void getOneStepSubCategories_success() {
+    Category food = categoryRepository.saveAndFlush(CategoryFixture.FOOD.toEntity());
+    Category fruit = categoryRepository.saveAndFlush(CategoryFixture.FRUIT.toEntity(food));
+    Category meet = categoryRepository.saveAndFlush(CategoryFixture.MEET.toEntity(food));
+    Category appleAndPear = categoryRepository.saveAndFlush(CategoryFixture.APPLE_PEAR.toEntity(fruit));
+
+    ExtractableResponse<Response> response = RestAssured.given().log().all()
+        .pathParam("id", food.getId())
+        .when().get("/categories/{id}/subCategories")
+        .then().log().all()
+        .extract();
+
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
+    List<SubCategoryDto> subCategories = response.body().jsonPath().getList("result", SubCategoryDto.class);
+    assertThat(subCategories.get(0).getId()).isEqualTo(fruit.getId());
+    assertThat(subCategories.get(0).getName()).isEqualTo(fruit.getName());
+    assertThat(subCategories.get(0).getSubCategoryExists()).isTrue();
+    assertThat(subCategories.get(1).getId()).isEqualTo(meet.getId());
+    assertThat(subCategories.get(1).getName()).isEqualTo(meet.getName());
+    assertThat(subCategories.get(1).getSubCategoryExists()).isFalse();
   }
 
   @Test

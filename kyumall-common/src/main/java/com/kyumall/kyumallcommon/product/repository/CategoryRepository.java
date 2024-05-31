@@ -13,8 +13,14 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
   @EntityGraph(attributePaths = {"parent"})
   List<Category> findAllByStatus(CategoryStatus status);
 
-  Optional<Category> findByName(String name);
-
+  /**
+   * 카테고리ID 로 서브 카테고리를 조회합니다.
+   *
+   * @deprecated 전체 카테고리를 캐시하도록 변경하여, 현재 사용하지 않습니다.
+   * @param categoryId
+   * @return
+   */
+  @Deprecated
   @Query(
       value = "WITH RECURSIVE cte AS ("
           + "  SELECT id, parent_id, name, 0 as depth from category c "
@@ -25,5 +31,5 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
           + ") "
           + "SELECT id from cte "
   , nativeQuery = true)
-  List<Long> findSubCategoryIds(Long categoryId);
+  List<Long> findSubCategoryById(Long categoryId);
 }

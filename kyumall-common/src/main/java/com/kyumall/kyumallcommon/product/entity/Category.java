@@ -36,6 +36,7 @@ public class Category extends BaseTimeEntity {
 
   @Enumerated(value = EnumType.STRING)
   private CategoryStatus status;
+
   @OneToMany(mappedBy = "category")
   private List<Product> products;
 
