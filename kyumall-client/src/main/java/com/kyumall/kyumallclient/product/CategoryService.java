@@ -7,6 +7,7 @@ import com.kyumall.kyumallcommon.product.repository.CategoryRepository;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -16,9 +17,28 @@ public class CategoryService {
   private final CategoryMapService categoryMapService;
   private final CategoryRepository categoryRepository;
 
-  public List<CategoryDto> getAllCategories() {
+  /**
+   * 전체 카테고리를 계층형 리스트 형태로 조회
+   * @return
+   */
+  public List<CategoryDto> getAllCategoriesHierarchy() {
     Map<Long, List<Category>> categoryGroupingByParent = categoryMapService.findCategoryGroupingByParent();
     return convertToCategoryHierarchy(categoryGroupingByParent);
+  }
+
+  /**
+   * 전체 카테고리를 맵 형태로 조회
+   * @return
+   */
+  public Map<Long, List<SubCategoryDto>> getAllCategoriesMap() {
+    Map<Long, List<Category>> categoryGroupingByParent = categoryMapService.findCategoryGroupingByParent();
+    return categoryGroupingByParent.entrySet().stream()
+        .collect(Collectors.toMap(
+            Map.Entry::getKey,  // 키는 변경 없이 유지
+            entry -> entry.getValue().stream()
+                .map(category -> SubCategoryDto.from(category, categoryGroupingByParent.containsKey(category.getId())))
+                .collect(Collectors.toList())
+        ));
   }
 
 

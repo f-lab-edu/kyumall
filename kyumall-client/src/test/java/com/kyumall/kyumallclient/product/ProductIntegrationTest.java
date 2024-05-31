@@ -27,6 +27,7 @@ import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -113,8 +114,8 @@ public class ProductIntegrationTest extends IntegrationTest {
   }
 
   @Test
-  @DisplayName("모든 카테고리를 조회합니다.")
-  void getAllCategories_success() {
+  @DisplayName("모든 카테고리를 계층형 리스트 형태로 조회합니다.")
+  void getAllCategoriesHierarchy_success() {
     Category houseItem = saveCategory("생활용품", null);
     Category toiletPaper = saveCategory("화장지", houseItem);
     Category wetWipe = saveCategory("물티슈", toiletPaper);
@@ -132,6 +133,24 @@ public class ProductIntegrationTest extends IntegrationTest {
     assertThat(categories.get(0).getSubCategories().get(0).getName()).isEqualTo("화장지");
     assertThat(categories.get(0).getSubCategories().get(0).getSubCategories().get(0).getName()).isEqualTo("물티슈");
     assertThat(categories.get(0).getSubCategories().get(0).getSubCategories().get(1).getName()).isEqualTo("키친타올");
+  }
+
+  @Test
+  @DisplayName("모든 카테고리를 맵 형태로 조회합니다.")
+  void getAllCategoriesMap_success() {
+    Category houseItem = saveCategory("생활용품", null);
+    Category toiletPaper = saveCategory("화장지", houseItem);
+    Category wetWipe = saveCategory("물티슈", toiletPaper);
+    Category paperTowel = saveCategory("키친타올", toiletPaper);
+
+    ExtractableResponse<Response> response = RestAssured.given().log().all()
+        .when().get("/categories/map")
+        .then().log().all()
+        .extract();
+
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
+    Map<Long, List> categoryMap = response.body().jsonPath().getMap("result", Long.class, List.class);
+    assertThat(categoryMap.size()).isEqualTo(3);
   }
 
   @Test

@@ -5,6 +5,7 @@ import com.kyumall.kyumallclient.product.dto.ProductSimpleDto;
 import com.kyumall.kyumallclient.product.dto.SubCategoryDto;
 import com.kyumall.kyumallcommon.response.ResponseWrapper;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -22,12 +23,21 @@ public class CategoryController {
   private final CategoryService categoryService;
 
   /**
-   * 전체 카테고리를 조회합니다.
+   * 전체 카테고리를 조회합니다. (계층형 리스트 형태)
    * @return
    */
   @GetMapping("/hierarchy")
   public ResponseWrapper<List<CategoryDto>> getAllCategoriesHierarchy() {
-    return ResponseWrapper.ok(categoryService.getAllCategories());
+    return ResponseWrapper.ok(categoryService.getAllCategoriesHierarchy());
+  }
+
+  /**
+   * 전체 카테고리를 조회합니다. (맵 형태)
+   * @return
+   */
+  @GetMapping("/map")
+  public ResponseWrapper<Map<Long, List<SubCategoryDto>>> getAllCategoriesMap() {
+    return ResponseWrapper.ok(categoryService.getAllCategoriesMap());
   }
 
   /**
