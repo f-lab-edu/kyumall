@@ -86,4 +86,8 @@ public class CategoryService {
         .map(category -> SubCategoryDto.from(category, categoryGroupingByParent.containsKey(category.getId())))
         .toList();
   }
+
+  public void evictCategoryCache() {
+    categoryMapService.evictCategoryMapCache();
+  }
 }

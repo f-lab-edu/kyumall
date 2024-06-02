@@ -12,6 +12,7 @@ import org.springframework.data.domain.Slice;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -61,5 +62,10 @@ public class CategoryController {
   public ResponseWrapper<Slice<ProductSimpleDto>> getProductsInCategory(@PathVariable Long categoryId,
       @PageableDefault(size = 10) Pageable pageable) {
     return ResponseWrapper.ok(productService.getProductsInCategory(categoryId, pageable));
+  }
+
+  @PostMapping("/evict-cache")
+  public void evictCategoryCache() {
+    categoryService.evictCategoryCache();
   }
 }
