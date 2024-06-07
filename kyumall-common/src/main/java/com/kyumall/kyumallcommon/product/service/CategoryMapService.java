@@ -1,4 +1,4 @@
-package com.kyumall.kyumallclient.product;
+package com.kyumall.kyumallcommon.product.service;
 
 import com.kyumall.kyumallcommon.product.entity.Category;
 import com.kyumall.kyumallcommon.product.repository.CategoryRepository;

@@ -4,6 +4,7 @@ import com.kyumall.kyumallclient.product.dto.CategoryDto;
 import com.kyumall.kyumallclient.product.dto.SubCategoryDto;
 import com.kyumall.kyumallcommon.product.entity.Category;
 import com.kyumall.kyumallcommon.product.repository.CategoryRepository;
+import com.kyumall.kyumallcommon.product.service.CategoryMapService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
