@@ -7,10 +7,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CategoryMapService {
@@ -23,6 +25,7 @@ public class CategoryMapService {
    */
   @Cacheable(value = CATEGORY_GROUP_BY_PARENT_MAP, key = "#root.methodName")
   public Map<Long, List<Category>> findCategoryGroupingByParent() {
+    log.info("findCategoryGroupingByParent not cached");
     List<Category> allCategory = categoryRepository.findAllByStatus(CategoryStatus.INUSE);
     return allCategory.stream().collect(Collectors.groupingBy(Category::getParentId));
   }

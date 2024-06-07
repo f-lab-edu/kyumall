@@ -1,9 +1,14 @@
 package com.kyumall.kyumallclient;
 
+import com.kyumall.kyumallcommon.auth.authentication.passwword.PasswordService;
+import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.member.entity.Term;
 import com.kyumall.kyumallcommon.member.entity.TermDetail;
+import com.kyumall.kyumallcommon.member.repository.MemberRepository;
 import com.kyumall.kyumallcommon.member.repository.TermDetailRepository;
 import com.kyumall.kyumallcommon.member.repository.TermRepository;
+import com.kyumall.kyumallcommon.member.vo.MemberStatus;
+import com.kyumall.kyumallcommon.member.vo.MemberType;
 import com.kyumall.kyumallcommon.member.vo.TermStatus;
 import com.kyumall.kyumallcommon.member.vo.TermType;
 import com.kyumall.kyumallcommon.product.entity.Category;
@@ -11,6 +16,7 @@ import com.kyumall.kyumallcommon.product.repository.CategoryRepository;
 import com.kyumall.kyumallcommon.product.vo.CategoryStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
@@ -18,17 +24,32 @@ import org.springframework.stereotype.Component;
  * 초기 데이터를 등록하는데 사용됩니다
  */
 @Component
-@RequiredArgsConstructor @Profile("default")
+@RequiredArgsConstructor @Profile("local")
 public class DataLoader implements CommandLineRunner {
 
+  private final MemberRepository memberRepository;
+  private final PasswordService passwordService;
   private final TermRepository termRepository;
   private final TermDetailRepository termDetailRepository;
   private final CategoryRepository categoryRepository;
+  private final CacheManager cacheManager;
 
   @Override
   public void run(String... args) throws Exception {
+    saveMember();
     saveTerms();
     saveCategories();
+    System.out.println("cacheManager is " + this.cacheManager.getClass().getName());
+  }
+
+  private void saveMember() {
+    memberRepository.saveAndFlush(Member.builder()
+        .username("test01")
+        .email("test01@email.com")
+        .password(passwordService.encrypt("1234"))
+        .type(MemberType.CLIENT)
+        .status(MemberStatus.INUSE)
+        .build());
   }
 
   private void saveCategories() {

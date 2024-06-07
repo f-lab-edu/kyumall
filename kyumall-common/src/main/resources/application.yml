@@ -4,7 +4,9 @@ spring:
       local:
         - app-local
         - ncloud
+        - cache
       dev:
         - app-dev
         - ncloud
+        - cache
     active: local
