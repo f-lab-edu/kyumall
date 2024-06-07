@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 
 @RequiredArgsConstructor
 @Service
-public class CategoryService {
+public class CategoryFacade {
   private final CategoryMapService categoryMapService;
   private final CategoryRepository categoryRepository;
 

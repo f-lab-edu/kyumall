@@ -13,7 +13,6 @@ import org.springframework.data.domain.Slice;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -23,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class CategoryController {
   private final ProductService productService;
-  private final CategoryService categoryService;
+  private final CategoryFacade categoryFacade;
 
   /**
    * 전체 카테고리를 조회합니다. (계층형 리스트 형태)
@@ -31,7 +30,7 @@ public class CategoryController {
    */
   @GetMapping("/hierarchy")
   public ResponseWrapper<List<CategoryDto>> getAllCategoriesHierarchy() {
-    return ResponseWrapper.ok(categoryService.getAllCategoriesHierarchy());
+    return ResponseWrapper.ok(categoryFacade.getAllCategoriesHierarchy());
   }
 
   /**
@@ -40,7 +39,7 @@ public class CategoryController {
    */
   @GetMapping("/map")
   public ResponseWrapper<Map<Long, List<SubCategoryDto>>> getAllCategoriesMap() {
-    return ResponseWrapper.ok(categoryService.getAllCategoriesMap());
+    return ResponseWrapper.ok(categoryFacade.getAllCategoriesMap());
   }
 
   /**
@@ -50,7 +49,7 @@ public class CategoryController {
    */
   @GetMapping("/{id}/subCategories")
   public ResponseWrapper<List<SubCategoryDto>> getOneStepSubCategories(@PathVariable Long id) {
-    return ResponseWrapper.ok(categoryService.getOneStepSubCategories(id));
+    return ResponseWrapper.ok(categoryFacade.getOneStepSubCategories(id));
   }
 
   /**
@@ -68,6 +67,6 @@ public class CategoryController {
 
   @GetMapping("/evict-cache")
   public void evictCategoryCache() {
-    categoryService.evictCategoryCache();
+    categoryFacade.evictCategoryCache();
   }
 }
