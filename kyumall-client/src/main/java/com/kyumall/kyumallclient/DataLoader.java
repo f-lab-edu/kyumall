@@ -53,17 +53,19 @@ public class DataLoader implements CommandLineRunner {
   }
 
   private void saveCategories() {
-    Category food = Category.builder()
-        .name("식품")
+    Category food = saveCategory("식품", null);
+    Category meet = saveCategory("육류", food);
+    Category fruit = saveCategory("과일", food);
+    Category apple = saveCategory("사과", fruit);
+    Category banana = saveCategory("바나나", fruit);
+  }
+
+  private Category saveCategory(String name, Category parent) {
+    return categoryRepository.save(Category.builder()
+        .name(name)
+        .parent(parent)
         .status(CategoryStatus.INUSE)
-        .build();
-    categoryRepository.save(food);
-    Category fruit = Category.builder()
-        .name("과일")
-        .parent(food)
-        .status(CategoryStatus.INUSE)
-        .build();
-    categoryRepository.save(fruit);
+        .build());
   }
 
   private void saveTerms() {

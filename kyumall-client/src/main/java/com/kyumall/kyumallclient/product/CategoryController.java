@@ -4,6 +4,7 @@ import com.kyumall.kyumallclient.product.dto.CategoryDto;
 import com.kyumall.kyumallclient.product.dto.ProductSimpleDto;
 import com.kyumall.kyumallclient.product.dto.SubCategoryDto;
 import com.kyumall.kyumallcommon.response.ResponseWrapper;
+import io.micrometer.core.annotation.Timed;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Timed("kyumall.category")
 @RequiredArgsConstructor
 @RequestMapping("/categories")
 @RestController
@@ -64,7 +66,7 @@ public class CategoryController {
     return ResponseWrapper.ok(productService.getProductsInCategory(categoryId, pageable));
   }
 
-  @PostMapping("/evict-cache")
+  @GetMapping("/evict-cache")
   public void evictCategoryCache() {
     categoryService.evictCategoryCache();
   }
