@@ -3,6 +3,8 @@ package com.kyumall.kyumallclient.product;
 import com.kyumall.kyumallclient.product.dto.CategoryDto;
 import com.kyumall.kyumallclient.product.dto.ProductSimpleDto;
 import com.kyumall.kyumallclient.product.dto.SubCategoryDto;
+import com.kyumall.kyumallcommon.dto.CreatedIdDto;
+import com.kyumall.kyumallcommon.product.dto.CreateCategoryRequest;
 import com.kyumall.kyumallcommon.response.ResponseWrapper;
 import io.micrometer.core.annotation.Timed;
 import java.util.List;
@@ -13,6 +15,8 @@ import org.springframework.data.domain.Slice;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -68,5 +72,15 @@ public class CategoryController {
   @GetMapping("/evict-cache")
   public void evictCategoryCache() {
     categoryFacade.evictCategoryCache();
+  }
+
+  /**
+   * 카테고리를 생성합니다.
+   * @param request
+   * @return 생성된 객체의 아이디
+   */
+  @PostMapping
+  public ResponseWrapper<CreatedIdDto> createCategory(@RequestBody CreateCategoryRequest request) {
+    return ResponseWrapper.ok(CreatedIdDto.of(categoryFacade.createdCategory(request)));
   }
 }

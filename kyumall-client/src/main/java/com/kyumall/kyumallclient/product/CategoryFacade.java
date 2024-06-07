@@ -2,9 +2,10 @@ package com.kyumall.kyumallclient.product;
 
 import com.kyumall.kyumallclient.product.dto.CategoryDto;
 import com.kyumall.kyumallclient.product.dto.SubCategoryDto;
+import com.kyumall.kyumallcommon.product.dto.CreateCategoryRequest;
 import com.kyumall.kyumallcommon.product.entity.Category;
-import com.kyumall.kyumallcommon.product.repository.CategoryRepository;
 import com.kyumall.kyumallcommon.product.service.CategoryMapService;
+import com.kyumall.kyumallcommon.product.service.CategoryService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -16,7 +17,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class CategoryFacade {
   private final CategoryMapService categoryMapService;
-  private final CategoryRepository categoryRepository;
+  private final CategoryService categoryService;
 
   /**
    * 전체 카테고리를 계층형 리스트 형태로 조회
@@ -90,5 +91,10 @@ public class CategoryFacade {
 
   public void evictCategoryCache() {
     categoryMapService.evictCategoryMapCache();
+  }
+
+  public Long createdCategory(CreateCategoryRequest request) {
+    categoryMapService.evictCategoryMapCache();
+    return categoryService.createCategory(request).getId();
   }
 }
