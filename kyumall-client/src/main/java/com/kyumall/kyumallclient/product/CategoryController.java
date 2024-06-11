@@ -83,4 +83,11 @@ public class CategoryController {
   public ResponseWrapper<CreatedIdDto> createCategory(@RequestBody CreateCategoryRequest request) {
     return ResponseWrapper.ok(CreatedIdDto.of(categoryFacade.createdCategory(request)));
   }
+
+  @GetMapping("/generate-memory")
+  public void generateMemory() {
+    for (int i = 0; i < 10000; i++) {
+      String str = "memory generate" + i;
+    }
+  }
 }
