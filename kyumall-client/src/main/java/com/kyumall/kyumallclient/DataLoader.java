@@ -14,17 +14,18 @@ import com.kyumall.kyumallcommon.member.vo.TermType;
 import com.kyumall.kyumallcommon.product.entity.Category;
 import com.kyumall.kyumallcommon.product.repository.CategoryRepository;
 import com.kyumall.kyumallcommon.product.vo.CategoryStatus;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.cache.CacheManager;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 /**
  * 초기 데이터를 등록하는데 사용됩니다
  */
 @Component
-@RequiredArgsConstructor @Profile("local")
+@RequiredArgsConstructor
 public class DataLoader implements CommandLineRunner {
 
   private final MemberRepository memberRepository;
@@ -36,10 +37,25 @@ public class DataLoader implements CommandLineRunner {
 
   @Override
   public void run(String... args) throws Exception {
-    saveMember();
-    saveTerms();
-    saveCategories();
+//    saveMember();
+//    saveTerms();
+//    saveCategories();
+    logJVMSettings();
     System.out.println("cacheManager is " + this.cacheManager.getClass().getName());
+  }
+
+  private void logJVMSettings() {
+    Runtime runtime = Runtime.getRuntime();
+
+    long maxMemory = runtime.maxMemory(); // 최대 메모리 (Xmx)
+    long totalMemory = runtime.totalMemory(); // 현재 할당된 총 메모리 (Xms 부근)
+    long freeMemory = runtime.freeMemory(); // 사용 가능한 메모리
+    long usedMemory = totalMemory - freeMemory; // 사용 중인 메모리
+
+    System.out.println("Max Memory (Xmx): " + maxMemory / (1024 * 1024) + " MB");
+    System.out.println("Total Memory (allocated): " + totalMemory / (1024 * 1024) + " MB");
+    System.out.println("Free Memory (in allocated): " + freeMemory / (1024 * 1024) + " MB");
+    System.out.println("Used Memory: " + usedMemory / (1024 * 1024) + " MB");
   }
 
   private void saveMember() {
@@ -58,10 +74,23 @@ public class DataLoader implements CommandLineRunner {
     Category fruit = saveCategory("과일", food);
     Category apple = saveCategory("사과", fruit);
     Category banana = saveCategory("바나나", fruit);
+    List<Category> categoryList = new ArrayList<>();
+    for (int i = 0; i < 10000; i++) {
+      categoryList.add(createCategory("test" + i));
+    }
+    categoryRepository.saveAllAndFlush(categoryList);
+  }
+
+  private Category createCategory(String name) {
+    return Category.builder()
+        .name(name)
+        .parent(null)
+        .status(CategoryStatus.INUSE)
+        .build();
   }
 
   private Category saveCategory(String name, Category parent) {
-    return categoryRepository.save(Category.builder()
+    return categoryRepository.saveAndFlush(Category.builder()
         .name(name)
         .parent(parent)
         .status(CategoryStatus.INUSE)
