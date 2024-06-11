@@ -8,7 +8,7 @@
     <value-type>java.util.Map</value-type>
     <resources>
 <!--      <heap unit="entries">20</heap>-->
-      <offheap unit="MB">10</offheap>
+      <offheap unit="MB">20</offheap>
     </resources>
   </cache>
 </config>

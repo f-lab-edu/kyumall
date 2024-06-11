@@ -17,7 +17,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @RequiredArgsConstructor
-@Configuration
 public class CategoryCacheMetricConfig {
   @Bean
   public MeterBinder categoryMapCacheCount(CacheManager cacheManager) {
@@ -66,11 +65,16 @@ public class CategoryCacheMetricConfig {
     }
   }
 
+  // Caffeine Cache는 estimateSize() 메서드를 제공해서 직접 캐시에 꺼내지 않아도 사이즈를 확인할 수 있는 반면, Jcache는 캐시를 직접 꺼내지 않고 사이즈를 예측하지 못해서 해당 기능을 사용할 수 없습니다.
   private Map<Long, List<Category>> extractValueFromCacheManager(CacheManager manager) {
     Cache cache = manager.getCache("categoryGroupByParentMap");
-    ValueWrapper valueWrapper = cache.get("findCategoryGroupingByParent");
-    if (valueWrapper != null) {
-      return (Map<Long, List<Category>>) valueWrapper.get();
+    com.github.benmanes.caffeine.cache.Cache caffeineCache = (com.github.benmanes.caffeine.cache.Cache)cache.getNativeCache();
+    long estimatedSize = caffeineCache.estimatedSize();
+    if (estimatedSize > 0) {
+      ValueWrapper valueWrapper = cache.get("findCategoryGroupingByParent");
+      if (valueWrapper != null) {
+        return (Map<Long, List<Category>>) valueWrapper.get();
+      }
     }
     return null;
   }
