@@ -19,8 +19,8 @@ spec:
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: dev
-            - name: JAVA_OPTS
-              value: "-XX:MaxRAMFraction=2"
+#            - name: JAVA_TOOL_OPTIONS
+#              value: "-Xmx300m -Xms300m"
 #            - name: SPRING_APPLICATION_JSON
 #              value: '{"logging.level.root": "debug"}'
           image: gyureal/kyumall-client:latest
