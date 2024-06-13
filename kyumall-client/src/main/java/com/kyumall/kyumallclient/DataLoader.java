@@ -37,9 +37,9 @@ public class DataLoader implements CommandLineRunner {
 
   @Override
   public void run(String... args) throws Exception {
-//    saveMember();
-//    saveTerms();
-//    saveCategories();
+    saveMember();
+    saveTerms();
+    saveCategories();
     logJVMSettings();
     System.out.println("cacheManager is " + this.cacheManager.getClass().getName());
   }
@@ -74,11 +74,6 @@ public class DataLoader implements CommandLineRunner {
     Category fruit = saveCategory("과일", food);
     Category apple = saveCategory("사과", fruit);
     Category banana = saveCategory("바나나", fruit);
-    List<Category> categoryList = new ArrayList<>();
-    for (int i = 0; i < 10000; i++) {
-      categoryList.add(createCategory("test" + i));
-    }
-    categoryRepository.saveAllAndFlush(categoryList);
   }
 
   private Category createCategory(String name) {
