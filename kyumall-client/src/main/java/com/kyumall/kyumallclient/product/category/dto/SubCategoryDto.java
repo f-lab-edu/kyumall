@@ -1,6 +1,6 @@
 package com.kyumall.kyumallclient.product.category.dto;
 
-import com.kyumall.kyumallcommon.product.entity.Category;
+import com.kyumall.kyumallcommon.product.category.Category;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

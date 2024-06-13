@@ -1,6 +1,7 @@
-package com.kyumall.kyumallcommon.order.entity;
+package com.kyumall.kyumallcommon.product.comment;
 
 import com.kyumall.kyumallcommon.BaseTimeEntity;
+import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.product.product.Product;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -15,28 +16,24 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Getter
-@AllArgsConstructor @Builder @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Builder
+@Getter @AllArgsConstructor @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-public class OrderItem extends BaseTimeEntity {
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class ProductComment extends BaseTimeEntity {
+  @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "order_id")
-  private Orders orders;
+  @JoinColumn(name = "member_id")
+  private Member member;
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "product_id")
   private Product product;
-  private Integer count;
-  private Integer orderPrice;
+  private String content;
+  @ManyToOne
+  @JoinColumn(name = "parent_id")
+  private ProductComment parentComment;
 
-  public static OrderItem from(Product product, Orders orders, int count) {
-    return OrderItem.builder()
-        .orders(orders)
-        .product(product)
-        .count(count)
-        .orderPrice(product.getPrice())
-        .build();
+  public void updateComment(String newComment) {
+    this.content = newComment;
   }
 }

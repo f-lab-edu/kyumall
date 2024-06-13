@@ -1,10 +1,11 @@
 package com.kyumall.kyumallclient.product.product;
 
-import com.kyumall.kyumallclient.product.StockService;
-import com.kyumall.kyumallclient.product.product.dto.CreateProductRequest;
+import com.kyumall.kyumallcommon.product.product.StockService;
+import com.kyumall.kyumallcommon.product.product.ProductService;
+import com.kyumall.kyumallcommon.product.product.dto.CreateProductRequest;
 import com.kyumall.kyumallclient.product.product.dto.CreateProductResponse;
-import com.kyumall.kyumallclient.product.product.dto.ProductDetailDto;
-import com.kyumall.kyumallclient.product.product.dto.ProductSimpleDto;
+import com.kyumall.kyumallcommon.product.product.dto.ProductDetailDto;
+import com.kyumall.kyumallcommon.product.product.dto.ProductSimpleDto;
 import com.kyumall.kyumallcommon.auth.argumentResolver.LoginUser;
 import com.kyumall.kyumallcommon.auth.authentication.AuthenticatedUser;
 import com.kyumall.kyumallcommon.response.ResponseWrapper;

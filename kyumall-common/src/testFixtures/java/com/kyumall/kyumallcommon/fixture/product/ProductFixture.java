@@ -1,8 +1,8 @@
 package com.kyumall.kyumallcommon.fixture.product;
 
 import com.kyumall.kyumallcommon.member.entity.Member;
-import com.kyumall.kyumallcommon.product.entity.Category;
-import com.kyumall.kyumallcommon.product.entity.Product;
+import com.kyumall.kyumallcommon.product.category.Category;
+import com.kyumall.kyumallcommon.product.product.Product;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 

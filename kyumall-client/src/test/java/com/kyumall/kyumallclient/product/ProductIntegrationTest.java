@@ -5,9 +5,9 @@ import static org.assertj.core.api.Assertions.*;
 import com.kyumall.kyumallclient.AuthTestUtil;
 import com.kyumall.kyumallclient.IntegrationTest;
 import com.kyumall.kyumallclient.product.category.dto.CategoryDto;
-import com.kyumall.kyumallclient.product.product.dto.CreateProductRequest;
-import com.kyumall.kyumallclient.product.product.dto.ProductDetailDto;
-import com.kyumall.kyumallclient.product.product.dto.ProductSimpleDto;
+import com.kyumall.kyumallcommon.product.product.dto.CreateProductRequest;
+import com.kyumall.kyumallcommon.product.product.dto.ProductDetailDto;
+import com.kyumall.kyumallcommon.product.product.dto.ProductSimpleDto;
 import com.kyumall.kyumallclient.product.category.dto.SubCategoryDto;
 import com.kyumall.kyumallcommon.factory.MemberFactory;
 import com.kyumall.kyumallcommon.factory.ProductFactory;
@@ -15,11 +15,11 @@ import com.kyumall.kyumallcommon.fixture.member.MemberFixture;
 import com.kyumall.kyumallcommon.fixture.product.CategoryFixture;
 import com.kyumall.kyumallcommon.fixture.product.ProductFixture;
 import com.kyumall.kyumallcommon.member.entity.Member;
-import com.kyumall.kyumallcommon.product.entity.Category;
-import com.kyumall.kyumallcommon.product.entity.Product;
-import com.kyumall.kyumallcommon.product.repository.CategoryRepository;
-import com.kyumall.kyumallcommon.product.repository.ProductRepository;
-import com.kyumall.kyumallcommon.product.vo.CategoryStatus;
+import com.kyumall.kyumallcommon.product.category.Category;
+import com.kyumall.kyumallcommon.product.product.Product;
+import com.kyumall.kyumallcommon.product.category.CategoryRepository;
+import com.kyumall.kyumallcommon.product.product.ProductRepository;
+import com.kyumall.kyumallcommon.product.category.CategoryStatus;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.ExtractableResponse;
@@ -33,7 +33,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.CacheManager;
 
 @DisplayName("상품 통합테스트")
 public class ProductIntegrationTest extends IntegrationTest {

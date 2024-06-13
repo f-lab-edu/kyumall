@@ -4,7 +4,7 @@ import com.kyumall.kyumallcommon.BaseTimeEntity;
 import com.kyumall.kyumallcommon.Util.RandomCodeGenerator;
 import com.kyumall.kyumallcommon.member.vo.MemberStatus;
 import com.kyumall.kyumallcommon.member.vo.MemberType;
-import com.kyumall.kyumallcommon.product.entity.Cart;
+import com.kyumall.kyumallcommon.product.cart.Cart;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;

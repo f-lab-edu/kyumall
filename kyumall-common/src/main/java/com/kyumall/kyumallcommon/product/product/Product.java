@@ -1,7 +1,8 @@
-package com.kyumall.kyumallcommon.main.entity;
+package com.kyumall.kyumallcommon.product.product;
 
 import com.kyumall.kyumallcommon.BaseTimeEntity;
-import com.kyumall.kyumallcommon.product.product.Product;
+import com.kyumall.kyumallcommon.member.entity.Member;
+import com.kyumall.kyumallcommon.product.category.Category;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -15,17 +16,23 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
-@AllArgsConstructor @NoArgsConstructor @Builder
+@NoArgsConstructor @AllArgsConstructor @Builder
 @Entity
-public class RecommendationItem extends BaseTimeEntity {
+public class Product extends BaseTimeEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
-  @JoinColumn
   @ManyToOne(fetch = FetchType.LAZY)
-  private Recommendation recommendation;
-  @JoinColumn
+  @JoinColumn(name = "category_id")
+  private Category category;
   @ManyToOne(fetch = FetchType.LAZY)
-  private Product product;
-  private Integer sortOrder;
+  @JoinColumn(name = "seller_id")
+  private Member seller;
+  private String name;
+  private Integer price;
+//  @JoinColumn
+//  @ManyToOne(fetch = FetchType.LAZY)
+//  private Image image;
+  private String image;
+  private String detail;
 }

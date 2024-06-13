@@ -1,11 +1,11 @@
 package com.kyumall.kyumallclient.product.category;
 
-import com.kyumall.kyumallclient.product.product.ProductService;
+import com.kyumall.kyumallcommon.product.product.ProductService;
 import com.kyumall.kyumallclient.product.category.dto.CategoryDto;
-import com.kyumall.kyumallclient.product.product.dto.ProductSimpleDto;
+import com.kyumall.kyumallcommon.product.product.dto.ProductSimpleDto;
 import com.kyumall.kyumallclient.product.category.dto.SubCategoryDto;
 import com.kyumall.kyumallcommon.dto.CreatedIdDto;
-import com.kyumall.kyumallcommon.product.dto.CreateCategoryRequest;
+import com.kyumall.kyumallcommon.product.category.dto.CreateCategoryRequest;
 import com.kyumall.kyumallcommon.response.ResponseWrapper;
 import io.micrometer.core.annotation.Timed;
 import java.util.List;

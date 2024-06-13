@@ -1,4 +1,4 @@
-package com.kyumall.kyumallcommon.main.entity;
+package com.kyumall.kyumallcommon.product.cart;
 
 import com.kyumall.kyumallcommon.BaseTimeEntity;
 import com.kyumall.kyumallcommon.product.product.Product;
@@ -9,23 +9,29 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Getter
-@AllArgsConstructor @NoArgsConstructor @Builder
+@Getter @Builder
+@AllArgsConstructor @NoArgsConstructor
 @Entity
-public class RecommendationItem extends BaseTimeEntity {
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class CartItem extends BaseTimeEntity {
+  @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
-  @JoinColumn
   @ManyToOne(fetch = FetchType.LAZY)
-  private Recommendation recommendation;
-  @JoinColumn
-  @ManyToOne(fetch = FetchType.LAZY)
+  private Cart cart;
+  @OneToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "product_id")
   private Product product;
-  private Integer sortOrder;
+  private Integer count;
+
+  public void plusCount(int count) {
+    this.count += count;
+  }
+  public void updateCount(int count) {
+    this.count = count;
+  }
 }

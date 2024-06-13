@@ -1,6 +1,6 @@
 package com.kyumall.kyumallcommon.config.metric;
 
-import com.kyumall.kyumallcommon.product.entity.Category;
+import com.kyumall.kyumallcommon.product.category.Category;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.binder.MeterBinder;
 import java.io.ByteArrayOutputStream;
@@ -14,7 +14,6 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.Cache.ValueWrapper;
 import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
 @RequiredArgsConstructor
 public class CategoryCacheMetricConfig {

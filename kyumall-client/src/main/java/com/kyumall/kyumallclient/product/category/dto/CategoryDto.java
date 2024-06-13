@@ -1,6 +1,6 @@
 package com.kyumall.kyumallclient.product.category.dto;
 
-import com.kyumall.kyumallcommon.product.entity.Category;
+import com.kyumall.kyumallcommon.product.category.Category;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;

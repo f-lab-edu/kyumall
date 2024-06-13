@@ -2,10 +2,10 @@ package com.kyumall.kyumallclient.product.category;
 
 import com.kyumall.kyumallclient.product.category.dto.CategoryDto;
 import com.kyumall.kyumallclient.product.category.dto.SubCategoryDto;
-import com.kyumall.kyumallcommon.product.dto.CreateCategoryRequest;
-import com.kyumall.kyumallcommon.product.entity.Category;
-import com.kyumall.kyumallcommon.product.service.CategoryMapService;
-import com.kyumall.kyumallcommon.product.service.CategoryService;
+import com.kyumall.kyumallcommon.product.category.dto.CreateCategoryRequest;
+import com.kyumall.kyumallcommon.product.category.Category;
+import com.kyumall.kyumallcommon.product.category.CategoryMapService;
+import com.kyumall.kyumallcommon.product.category.CategoryService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;

@@ -1,12 +1,13 @@
 package com.kyumall.kyumallclient.product.comment;
 
-import com.kyumall.kyumallclient.product.comment.dto.CreateCommentRequest;
-import com.kyumall.kyumallclient.product.comment.dto.ProductCommentDto;
-import com.kyumall.kyumallclient.product.comment.dto.UpdateCommentRequest;
+import com.kyumall.kyumallcommon.product.comment.ProductCommentService;
+import com.kyumall.kyumallcommon.product.comment.dto.CreateCommentRequest;
+import com.kyumall.kyumallcommon.product.comment.dto.ProductCommentDto;
+import com.kyumall.kyumallcommon.product.comment.dto.UpdateCommentRequest;
 import com.kyumall.kyumallcommon.auth.argumentResolver.LoginUser;
 import com.kyumall.kyumallcommon.auth.authentication.AuthenticatedUser;
 import com.kyumall.kyumallcommon.dto.CreatedIdDto;
-import com.kyumall.kyumallcommon.product.vo.RatingType;
+import com.kyumall.kyumallcommon.product.comment.RatingType;
 import com.kyumall.kyumallcommon.response.ResponseWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
