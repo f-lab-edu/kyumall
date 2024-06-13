@@ -1,4 +1,4 @@
-package com.kyumall.kyumallclient.product.dto;
+package com.kyumall.kyumallclient.product.product.dto;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;

@@ -1,4 +1,4 @@
-package com.kyumall.kyumallclient.product.dto;
+package com.kyumall.kyumallclient.product.product.dto;
 
 import com.kyumall.kyumallcommon.product.entity.Product;
 import lombok.AllArgsConstructor;

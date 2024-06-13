@@ -1,4 +1,4 @@
-package com.kyumall.kyumallclient.product.dto;
+package com.kyumall.kyumallclient.product.category.dto;
 
 import com.kyumall.kyumallcommon.product.entity.Category;
 import java.util.ArrayList;

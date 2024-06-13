@@ -19,11 +19,13 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.cache.CacheManager;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 /**
  * 초기 데이터를 등록하는데 사용됩니다
  */
+@Profile({"dev", "local"})
 @Component
 @RequiredArgsConstructor
 public class DataLoader implements CommandLineRunner {

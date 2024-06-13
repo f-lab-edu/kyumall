@@ -1,10 +1,10 @@
-package com.kyumall.kyumallclient.product;
+package com.kyumall.kyumallclient.product.product;
 
-import com.kyumall.kyumallclient.product.dto.ProductDetailDto;
+import com.kyumall.kyumallclient.product.product.dto.ProductDetailDto;
 import com.kyumall.kyumallcommon.exception.ErrorCode;
 import com.kyumall.kyumallcommon.exception.KyumallException;
-import com.kyumall.kyumallclient.product.dto.CreateProductRequest;
-import com.kyumall.kyumallclient.product.dto.ProductSimpleDto;
+import com.kyumall.kyumallclient.product.product.dto.CreateProductRequest;
+import com.kyumall.kyumallclient.product.product.dto.ProductSimpleDto;
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.member.repository.MemberRepository;
 import com.kyumall.kyumallcommon.product.entity.Category;

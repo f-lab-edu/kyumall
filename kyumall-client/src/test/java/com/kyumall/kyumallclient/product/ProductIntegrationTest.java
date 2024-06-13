@@ -4,11 +4,11 @@ import static org.assertj.core.api.Assertions.*;
 
 import com.kyumall.kyumallclient.AuthTestUtil;
 import com.kyumall.kyumallclient.IntegrationTest;
-import com.kyumall.kyumallclient.product.dto.CategoryDto;
-import com.kyumall.kyumallclient.product.dto.CreateProductRequest;
-import com.kyumall.kyumallclient.product.dto.ProductDetailDto;
-import com.kyumall.kyumallclient.product.dto.ProductSimpleDto;
-import com.kyumall.kyumallclient.product.dto.SubCategoryDto;
+import com.kyumall.kyumallclient.product.category.dto.CategoryDto;
+import com.kyumall.kyumallclient.product.product.dto.CreateProductRequest;
+import com.kyumall.kyumallclient.product.product.dto.ProductDetailDto;
+import com.kyumall.kyumallclient.product.product.dto.ProductSimpleDto;
+import com.kyumall.kyumallclient.product.category.dto.SubCategoryDto;
 import com.kyumall.kyumallcommon.factory.MemberFactory;
 import com.kyumall.kyumallcommon.factory.ProductFactory;
 import com.kyumall.kyumallcommon.fixture.member.MemberFixture;
@@ -33,6 +33,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.CacheManager;
 
 @DisplayName("상품 통합테스트")
 public class ProductIntegrationTest extends IntegrationTest {

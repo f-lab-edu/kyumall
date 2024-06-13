@@ -1,7 +1,7 @@
-package com.kyumall.kyumallclient.product;
+package com.kyumall.kyumallclient.product.category;
 
-import com.kyumall.kyumallclient.product.dto.CategoryDto;
-import com.kyumall.kyumallclient.product.dto.SubCategoryDto;
+import com.kyumall.kyumallclient.product.category.dto.CategoryDto;
+import com.kyumall.kyumallclient.product.category.dto.SubCategoryDto;
 import com.kyumall.kyumallcommon.product.dto.CreateCategoryRequest;
 import com.kyumall.kyumallcommon.product.entity.Category;
 import com.kyumall.kyumallcommon.product.service.CategoryMapService;
