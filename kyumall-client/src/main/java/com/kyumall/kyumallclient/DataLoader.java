@@ -1,48 +1,95 @@
 package com.kyumall.kyumallclient;
 
+import com.kyumall.kyumallcommon.auth.authentication.passwword.PasswordService;
+import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.member.entity.Term;
 import com.kyumall.kyumallcommon.member.entity.TermDetail;
+import com.kyumall.kyumallcommon.member.repository.MemberRepository;
 import com.kyumall.kyumallcommon.member.repository.TermDetailRepository;
 import com.kyumall.kyumallcommon.member.repository.TermRepository;
+import com.kyumall.kyumallcommon.member.vo.MemberStatus;
+import com.kyumall.kyumallcommon.member.vo.MemberType;
 import com.kyumall.kyumallcommon.member.vo.TermStatus;
 import com.kyumall.kyumallcommon.member.vo.TermType;
 import com.kyumall.kyumallcommon.product.entity.Category;
 import com.kyumall.kyumallcommon.product.repository.CategoryRepository;
 import com.kyumall.kyumallcommon.product.vo.CategoryStatus;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.context.annotation.Profile;
+import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
 
 /**
  * 초기 데이터를 등록하는데 사용됩니다
  */
 @Component
-@RequiredArgsConstructor @Profile("default")
+@RequiredArgsConstructor
 public class DataLoader implements CommandLineRunner {
 
+  private final MemberRepository memberRepository;
+  private final PasswordService passwordService;
   private final TermRepository termRepository;
   private final TermDetailRepository termDetailRepository;
   private final CategoryRepository categoryRepository;
+  private final CacheManager cacheManager;
 
   @Override
   public void run(String... args) throws Exception {
+    saveMember();
     saveTerms();
     saveCategories();
+    logJVMSettings();
+    System.out.println("cacheManager is " + this.cacheManager.getClass().getName());
+  }
+
+  private void logJVMSettings() {
+    Runtime runtime = Runtime.getRuntime();
+
+    long maxMemory = runtime.maxMemory(); // 최대 메모리 (Xmx)
+    long totalMemory = runtime.totalMemory(); // 현재 할당된 총 메모리 (Xms 부근)
+    long freeMemory = runtime.freeMemory(); // 사용 가능한 메모리
+    long usedMemory = totalMemory - freeMemory; // 사용 중인 메모리
+
+    System.out.println("Max Memory (Xmx): " + maxMemory / (1024 * 1024) + " MB");
+    System.out.println("Total Memory (allocated): " + totalMemory / (1024 * 1024) + " MB");
+    System.out.println("Free Memory (in allocated): " + freeMemory / (1024 * 1024) + " MB");
+    System.out.println("Used Memory: " + usedMemory / (1024 * 1024) + " MB");
+  }
+
+  private void saveMember() {
+    memberRepository.saveAndFlush(Member.builder()
+        .username("test01")
+        .email("test01@email.com")
+        .password(passwordService.encrypt("1234"))
+        .type(MemberType.CLIENT)
+        .status(MemberStatus.INUSE)
+        .build());
   }
 
   private void saveCategories() {
-    Category food = Category.builder()
-        .name("식품")
+    Category food = saveCategory("식품", null);
+    Category meet = saveCategory("육류", food);
+    Category fruit = saveCategory("과일", food);
+    Category apple = saveCategory("사과", fruit);
+    Category banana = saveCategory("바나나", fruit);
+  }
+
+  private Category createCategory(String name) {
+    return Category.builder()
+        .name(name)
+        .parent(null)
         .status(CategoryStatus.INUSE)
         .build();
-    categoryRepository.save(food);
-    Category fruit = Category.builder()
-        .name("과일")
-        .parent(food)
+  }
+
+  private Category saveCategory(String name, Category parent) {
+    return categoryRepository.saveAndFlush(Category.builder()
+        .name(name)
+        .parent(parent)
         .status(CategoryStatus.INUSE)
-        .build();
-    categoryRepository.save(fruit);
+        .build());
   }
 
   private void saveTerms() {

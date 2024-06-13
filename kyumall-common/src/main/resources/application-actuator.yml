@@ -1,0 +1,23 @@
+management:
+  info:
+    java:
+      enabled: true
+    os:
+      enabled: true
+    env:
+      enabled: true
+  server:
+    port: 8181
+  endpoint:
+    health:
+      #      show-details: always
+      show-components: always # up 인지만 확인
+  endpoints:
+    web:
+      exposure:
+        include: "*" # 전체 노출
+
+server:
+  tomcat:
+    mbeanregistry:
+      enabled: true

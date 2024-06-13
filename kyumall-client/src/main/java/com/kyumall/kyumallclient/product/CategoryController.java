@@ -3,7 +3,10 @@ package com.kyumall.kyumallclient.product;
 import com.kyumall.kyumallclient.product.dto.CategoryDto;
 import com.kyumall.kyumallclient.product.dto.ProductSimpleDto;
 import com.kyumall.kyumallclient.product.dto.SubCategoryDto;
+import com.kyumall.kyumallcommon.dto.CreatedIdDto;
+import com.kyumall.kyumallcommon.product.dto.CreateCategoryRequest;
 import com.kyumall.kyumallcommon.response.ResponseWrapper;
+import io.micrometer.core.annotation.Timed;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -12,15 +15,18 @@ import org.springframework.data.domain.Slice;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Timed("kyumall.category")
 @RequiredArgsConstructor
 @RequestMapping("/categories")
 @RestController
 public class CategoryController {
   private final ProductService productService;
-  private final CategoryService categoryService;
+  private final CategoryFacade categoryFacade;
 
   /**
    * 전체 카테고리를 조회합니다. (계층형 리스트 형태)
@@ -28,7 +34,7 @@ public class CategoryController {
    */
   @GetMapping("/hierarchy")
   public ResponseWrapper<List<CategoryDto>> getAllCategoriesHierarchy() {
-    return ResponseWrapper.ok(categoryService.getAllCategoriesHierarchy());
+    return ResponseWrapper.ok(categoryFacade.getAllCategoriesHierarchy());
   }
 
   /**
@@ -37,7 +43,7 @@ public class CategoryController {
    */
   @GetMapping("/map")
   public ResponseWrapper<Map<Long, List<SubCategoryDto>>> getAllCategoriesMap() {
-    return ResponseWrapper.ok(categoryService.getAllCategoriesMap());
+    return ResponseWrapper.ok(categoryFacade.getAllCategoriesMap());
   }
 
   /**
@@ -47,7 +53,7 @@ public class CategoryController {
    */
   @GetMapping("/{id}/subCategories")
   public ResponseWrapper<List<SubCategoryDto>> getOneStepSubCategories(@PathVariable Long id) {
-    return ResponseWrapper.ok(categoryService.getOneStepSubCategories(id));
+    return ResponseWrapper.ok(categoryFacade.getOneStepSubCategories(id));
   }
 
   /**
@@ -61,5 +67,27 @@ public class CategoryController {
   public ResponseWrapper<Slice<ProductSimpleDto>> getProductsInCategory(@PathVariable Long categoryId,
       @PageableDefault(size = 10) Pageable pageable) {
     return ResponseWrapper.ok(productService.getProductsInCategory(categoryId, pageable));
+  }
+
+  @GetMapping("/evict-cache")
+  public void evictCategoryCache() {
+    categoryFacade.evictCategoryCache();
+  }
+
+  /**
+   * 카테고리를 생성합니다.
+   * @param request
+   * @return 생성된 객체의 아이디
+   */
+  @PostMapping
+  public ResponseWrapper<CreatedIdDto> createCategory(@RequestBody CreateCategoryRequest request) {
+    return ResponseWrapper.ok(CreatedIdDto.of(categoryFacade.createdCategory(request)));
+  }
+
+  @GetMapping("/generate-memory")
+  public void generateMemory() {
+    for (int i = 0; i < 10000; i++) {
+      String str = "memory generate" + i;
+    }
   }
 }

@@ -27,4 +27,12 @@ dependencies {
     implementation group: 'org.mindrot', name: 'jbcrypt', version: '0.4'
     implementation group: 'io.jsonwebtoken', name: 'jjwt', version: '0.12.2'
     implementation 'javax.xml.bind:jaxb-api:2.1'
+    // cache
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+    implementation 'org.ehcache:ehcache::jakarta'
+    implementation 'com.github.ben-manes.caffeine:caffeine:3.1.8'
+    //actuator
+    api 'org.springframework.boot:spring-boot-starter-actuator'
+    // prometheus
+    api 'io.micrometer:micrometer-registry-prometheus'
 }
