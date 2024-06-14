@@ -67,9 +67,7 @@ public class ProductService {
    * @return
    */
   public Slice<ProductSimpleDto> getProductsInCategory(Long categoryId, Pageable pageable) {
-    List<Long> subCategoryIds;
-    subCategoryIds = findAllSubCategories(categoryId);
-    subCategoryIds.add(categoryId);
+    List<Long> subCategoryIds = findAllSubCategories(categoryId);
     return productRepository.findByCategoryIds(subCategoryIds, pageable).map(ProductSimpleDto::from);
   }
 
@@ -87,10 +85,17 @@ public class ProductService {
     }
     List<Category> subCategories = categoryGroupingByParent.get(categoryId);
     List<Long> allSubCategories = new ArrayList<>();
+    allSubCategories.add(categoryId); // 입력받은 카테고리 추가
     recursiveSetSubCategories(subCategories, categoryGroupingByParent, allSubCategories);
     return allSubCategories;
   }
 
+  /**
+   * 재귀적으로 호출하여 모든 하위 카테고리를 세팅합니다.
+   * @param categories
+   * @param categoryMap
+   * @param allSubCategories
+   */
   private void recursiveSetSubCategories(List<Category> categories, Map<Long, List<Category>> categoryMap, List<Long> allSubCategories) {
     allSubCategories.addAll(categories.stream().map(Category::getId).toList());
     categories.stream().forEach(category -> {
