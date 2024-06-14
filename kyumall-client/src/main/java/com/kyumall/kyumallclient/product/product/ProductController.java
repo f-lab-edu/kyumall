@@ -29,22 +29,46 @@ public class ProductController {
   private final ProductService productService;
   private final StockService stockService;
 
+  /**
+   * 상품 생성
+   * @TODO: Admin 으로 이동 예정
+   * @param request
+   * @return
+   */
   @PostMapping
   public ResponseWrapper<CreateProductResponse> createProduct(@RequestBody CreateProductRequest request) {
     Long productId = productService.createProduct(request);
     return ResponseWrapper.ok(new CreateProductResponse(productId));
   }
 
+  /**
+   * 전체 상품 조회
+   * @param pageable
+   * @return
+   */
   @GetMapping
   public ResponseWrapper<Page<ProductSimpleDto>> getAllProducts(@PageableDefault(size = 10) Pageable pageable) {
     return ResponseWrapper.ok(productService.getAllProducts(pageable));
   }
 
+  /**
+   * id로 상품 조회
+   * @param id
+   * @return
+   */
   @GetMapping("/{id}")
   public ResponseWrapper<ProductDetailDto> getProduct(@PathVariable Long id) {
     return ResponseWrapper.ok(productService.getProduct(id));
   }
 
+  /**
+   * id에 해당하는 상품의 재고 변경
+   * @TODO: Admin 으로 이동 예정
+   * @param id
+   * @param authenticatedUser
+   * @param quantity
+   * @return
+   */
   @PutMapping("/{id}/change-stock")
   public ResponseWrapper<Void> changeInventory(@PathVariable Long id,
                                               @LoginUser AuthenticatedUser authenticatedUser,
