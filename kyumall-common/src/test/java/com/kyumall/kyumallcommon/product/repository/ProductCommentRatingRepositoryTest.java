@@ -3,6 +3,7 @@ package com.kyumall.kyumallcommon.product.repository;
 
 import static org.assertj.core.api.Assertions.*;
 
+import com.kyumall.kyumallcommon.JpaRepositoryTest;
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.member.repository.MemberRepository;
 import com.kyumall.kyumallcommon.product.comment.ProductCommentRatingRepository;
@@ -25,12 +26,8 @@ import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 
-@Rollback(value = false)
-@Sql("/truncate.sql")
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@ActiveProfiles("test")
-@DataJpaTest
-class ProductCommentRatingRepositoryTest {
+
+class ProductCommentRatingRepositoryTest extends JpaRepositoryTest {
   @Autowired
   MemberRepository memberRepository;
   @Autowired

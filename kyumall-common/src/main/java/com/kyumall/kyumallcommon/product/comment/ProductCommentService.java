@@ -68,6 +68,11 @@ public class ProductCommentService {
     return commentDtos;
   }
 
+//  public Slice<ProductCommentDto> getCommentsV2(Long productId, Pageable pageable, AuthenticatedUser authenticatedUser) {
+//    Product product = findProductById(productId);
+//
+//  }
+
   private static void setLikeCounts(List<LikeCountDto> ratingCounts, ProductCommentDto commentDto) {
     LikeCountDto likeCountDto = ratingCounts.stream()
         .filter(ratingCount -> ratingCount.getProductCommentId().equals(commentDto.getId()))
