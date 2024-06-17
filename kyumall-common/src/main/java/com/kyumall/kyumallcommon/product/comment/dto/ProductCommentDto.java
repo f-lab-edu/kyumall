@@ -14,11 +14,12 @@ public class ProductCommentDto {
   private String email;   // 작성자 이메일
   private String comment;
   private LocalDateTime createdAt;
+  private Long replyCount;  // 대댓글 수
   private Long likeCount; // 댓글 좋아요 수
   private Long dislikeCount;  // 댓글 싫어요 수
   private boolean likeByCurrentUser; // 현재 유저가 좋아요 했는지 여부
   private boolean dislikeByCurrentUser; // 현재 유저가 싫어요 했는지 여부
-  private Long replyCount;  // 대댓글 수
+
 
   public static ProductCommentDto from(ProductComment productComment) {
     return ProductCommentDto.builder()

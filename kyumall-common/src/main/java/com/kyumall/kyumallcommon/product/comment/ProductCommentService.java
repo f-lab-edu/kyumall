@@ -68,10 +68,12 @@ public class ProductCommentService {
     return commentDtos;
   }
 
-//  public Slice<ProductCommentDto> getCommentsV2(Long productId, Pageable pageable, AuthenticatedUser authenticatedUser) {
-//    Product product = findProductById(productId);
-//
-//  }
+  public Slice<ProductCommentDto> getCommentsV2(Long productId, Pageable pageable, AuthenticatedUser authenticatedUser) {
+    Product product = findProductById(productId);
+    long memberId = authenticatedUser == null ? 0 : authenticatedUser.getMemberId();
+
+    return productCommentRepository.findCommentDtosUsingSubquery(product, memberId, pageable);
+  }
 
   private static void setLikeCounts(List<LikeCountDto> ratingCounts, ProductCommentDto commentDto) {
     LikeCountDto likeCountDto = ratingCounts.stream()
