@@ -15,8 +15,14 @@ public interface ProductCommentRepository extends JpaRepository<ProductComment, 
   @EntityGraph(attributePaths = {"member", "product"})
   Optional<ProductComment> findWithProductAndMemberById(Long id);
 
-  @EntityGraph(attributePaths = {"member"})
+  @Query("""
+    select pc from ProductComment pc
+    join fetch pc.member
+    where pc.product = :product
+    and pc.parentComment is null
+  """)
   Slice<ProductComment> findByProductOrderByCreatedAt(Product product, Pageable pageable);
+
 
   @EntityGraph(attributePaths = {"member"})
   Slice<ProductComment> findByParentCommentOrderByCreatedAt(ProductComment comment, Pageable pageable);
