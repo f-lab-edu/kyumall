@@ -6,11 +6,7 @@ import com.kyumall.kyumallcommon.exception.ErrorCode;
 import com.kyumall.kyumallcommon.exception.KyumallException;
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.member.repository.MemberRepository;
-import com.kyumall.kyumallcommon.product.cart.Cart;
-import com.kyumall.kyumallcommon.product.cart.CartItem;
 import com.kyumall.kyumallcommon.product.product.Product;
-import com.kyumall.kyumallcommon.product.cart.CartItemRepository;
-import com.kyumall.kyumallcommon.product.cart.CartRepository;
 import com.kyumall.kyumallcommon.product.product.ProductRepository;
 import java.util.List;
 import java.util.Optional;
@@ -27,6 +23,11 @@ public class CartService {
   private final ProductRepository productRepository;
   private final MemberRepository memberRepository;
 
+  /**
+   * 카트에 상품을 추가합니다.
+   * @param memberId
+   * @param request
+   */
   @Transactional
   public void addCartItem(Long memberId, AddCartItemRequest request) {
     Member member = findMemberWithCart(memberId);
@@ -59,6 +60,11 @@ public class CartService {
         .orElseThrow(() -> new KyumallException(ErrorCode.MEMBER_NOT_EXISTS));
   }
 
+  /**
+   * 카트에 담긴 상품을 삭제합니다.
+   * @param memberId
+   * @param cartItemIds
+   */
   @Transactional
   public void deleteCartItem(Long memberId, List<Long> cartItemIds) {
     Member member = findMemberWithCart(memberId);
@@ -66,14 +72,25 @@ public class CartService {
     member.getCart().deleteCartItems(cartItemIds);
   }
 
+  /**
+   * 카트에 담긴 상품 목록을 조회합니다.
+   * @param memberId
+   * @return
+   */
   public List<CartItemsDto> getCartItems(Long memberId) {
     Member member = findMemberWithCart(memberId);
     return member.getCart().getCartItems()
         .stream().map(CartItemsDto::from).collect(Collectors.toList());
   }
 
+  /**
+   * 카트에 담긴 상품 갯수를 수정합니다.
+   * @param memberId
+   * @param id
+   * @param count
+   */
   @Transactional
-  public void adjustCount(Long memberId, Long id, Integer count) {
+  public void adjustCartItemCount(Long memberId, Long id, Integer count) {
     if (count <= 0) {
       throw new KyumallException(ErrorCode.ITEM_COUNT_MUST_BIGGER_THAN_ZERO);
     }
