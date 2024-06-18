@@ -75,6 +75,13 @@ public class ProductCommentService {
     return productCommentRepository.findCommentDtosUsingSubquery(product, memberId, pageable);
   }
 
+  public Slice<ProductCommentDto> getCommentsV3(Long productId, Pageable pageable, AuthenticatedUser authenticatedUser) {
+    Product product = findProductById(productId);
+    long memberId = authenticatedUser == null ? 0 : authenticatedUser.getMemberId();
+
+    return productCommentRepository.findCommentDtosUsingJoin(product, memberId, pageable);
+  }
+
   private static void setLikeCounts(List<LikeCountDto> ratingCounts, ProductCommentDto commentDto) {
     LikeCountDto likeCountDto = ratingCounts.stream()
         .filter(ratingCount -> ratingCount.getProductCommentId().equals(commentDto.getId()))

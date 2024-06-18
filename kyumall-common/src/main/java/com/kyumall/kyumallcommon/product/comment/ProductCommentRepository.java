@@ -49,6 +49,37 @@ public interface ProductCommentRepository extends JpaRepository<ProductComment, 
   """)
   Slice<ProductCommentDto> findCommentDtosUsingSubquery(Product product, Long memberId, Pageable pageable);
 
+  @Query("""
+    select new com.kyumall.kyumallcommon.product.comment.dto.ProductCommentDto(
+      pc.id,
+      pc.member.username,
+      pc.member.email,
+      pc.content,
+      pc.createdAt,
+      (select count(1) as replyCount from ProductComment subPc where subPc.parentComment.id = pc.id),
+      coalesce(sum(case when pcr.ratingType = com.kyumall.kyumallcommon.product.comment.RatingType.LIKE then 1 else 0 end), 0),
+      coalesce(sum(case when pcr.ratingType = com.kyumall.kyumallcommon.product.comment.RatingType.DISLIKE then 1 else 0 end), 0),
+      case 
+        when coalesce(max(case when pcr.ratingType = com.kyumall.kyumallcommon.product.comment.RatingType.LIKE and pcr.member.id = :memberId then 1 else 0 end), 0) = 1
+        then true
+        else false
+      end,
+      case 
+        when coalesce(max(case when pcr.ratingType = com.kyumall.kyumallcommon.product.comment.RatingType.DISLIKE and pcr.member.id = :memberId then 1 else 0 end), 0) = 1
+        then true
+        else false
+      end
+    )
+    from ProductComment pc
+      left join ProductCommentRating pcr
+        on pcr.productComment.id = pc.id
+    where pc.product = :product
+      and pc.parentComment is null
+    group by pc.id, pc.member.username, pc.member.email, pc.content, pc.createdAt, (select count(1) as replyCount from ProductComment subPc where subPc.parentComment.id = pc.id)
+    order by pc.createdAt
+  """)
+  Slice<ProductCommentDto> findCommentDtosUsingJoin(Product product, Long memberId, Pageable pageable);
+
   @EntityGraph(attributePaths = {"member"})
   Slice<ProductComment> findByParentCommentOrderByCreatedAt(ProductComment comment, Pageable pageable);
 

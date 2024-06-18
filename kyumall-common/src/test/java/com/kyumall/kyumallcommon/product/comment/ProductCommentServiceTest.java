@@ -8,6 +8,7 @@ import com.kyumall.kyumallcommon.factory.MemberFactory;
 import com.kyumall.kyumallcommon.factory.ProductFactory;
 import com.kyumall.kyumallcommon.fixture.member.MemberFixture;
 import com.kyumall.kyumallcommon.fixture.product.ProductCommentFixture;
+import com.kyumall.kyumallcommon.fixture.product.ProductCommentRatingFixture;
 import com.kyumall.kyumallcommon.fixture.product.ProductFixture;
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.member.repository.MemberRepository;
@@ -36,6 +37,7 @@ class ProductCommentServiceTest extends JpaRepositoryTest {
 
   private ProductCommentService productCommentService;
   private Member client;
+  private Member client2;
   private Member seller;
   private Product product;
 
@@ -48,6 +50,7 @@ class ProductCommentServiceTest extends JpaRepositoryTest {
         productCommentRepository, productCommentRatingRepository);
 
     client = memberFactory.createMember(MemberFixture.KIM);
+    client2 = memberFactory.createMember(MemberFixture.PARK);
     seller = memberFactory.createMember(MemberFixture.KIM);
 
     product = productFactory.createProduct(ProductFixture.APPLE, seller);
@@ -56,6 +59,9 @@ class ProductCommentServiceTest extends JpaRepositoryTest {
       ProductComment comment = productCommentRepository.save(ProductCommentFixture.GOOD.toEntity(product, client, null));
       ProductComment subComment1 = productCommentRepository.save(ProductCommentFixture.THANKS.toEntity(product, client, comment));
       ProductComment subComment2 = productCommentRepository.save(ProductCommentFixture.HELP.toEntity(product, client, comment));
+
+      productCommentRatingRepository.save(ProductCommentRatingFixture.LIKE.toEntity(comment, client));
+      productCommentRatingRepository.save(ProductCommentRatingFixture.LIKE.toEntity(comment, client2));
     }
   }
 
@@ -78,7 +84,6 @@ class ProductCommentServiceTest extends JpaRepositoryTest {
   @Test
   void 상품_댓글_조회_서브쿼리_사용하는_경우() {
     // given
-
     // when
     long startTime = System.currentTimeMillis();
     Slice<ProductCommentDto> comments = productCommentService.getCommentsV2(product.getId(),
@@ -90,4 +95,19 @@ class ProductCommentServiceTest extends JpaRepositoryTest {
     System.out.println("### Execution time: " + (endTIme - startTime) + " ms");
     assertThat(comments).hasSize(pageSize);
   }
+  @Test
+  void 상품_댓글_조회_조인을_사용하는_경우() {
+    // given
+    // when
+    long startTime = System.currentTimeMillis();
+    Slice<ProductCommentDto> comments = productCommentService.getCommentsV3(product.getId(),
+        PageRequest.of(0, pageSize),
+        AuthenticatedUser.from(client));
+    long endTIme = System.currentTimeMillis();
+
+    // then
+    System.out.println("### Execution time: " + (endTIme - startTime) + " ms");
+    assertThat(comments).hasSize(pageSize);
+  }
+
 }
