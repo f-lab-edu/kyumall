@@ -15,14 +15,11 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor @Builder
 @Entity
 public class Cart {
   @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,20 +27,23 @@ public class Cart {
   @OneToOne
   @JoinColumn(name = "member_id")
   private Member member;
-  @Builder.Default
   @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<CartItem> cartItems = new ArrayList<>();
 
-  public void addCart(CartItem cartItem) {
-    cartItems.add(cartItem);
+  public Cart(Member member) {
+    this.member = member;
   }
 
-  public void addCart(Product product, int count) {
-    cartItems.add(CartItem.builder()
+  public void addCartItem(Product product, int count) {
+    CartItem cartItem = getCartItemByProduct(product)
+        .orElse(CartItem.builder()
             .cart(this)
             .product(product)
-            .count(count)
-        .build());
+            .count(0)
+            .build());
+
+    cartItem.plusCount(count);
+    cartItems.add(cartItem);
   }
 
   public boolean existsInCart(Product product) {

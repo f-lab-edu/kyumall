@@ -4,14 +4,12 @@ import com.kyumall.kyumallcommon.BaseTimeEntity;
 import com.kyumall.kyumallcommon.Util.RandomCodeGenerator;
 import com.kyumall.kyumallcommon.member.vo.MemberStatus;
 import com.kyumall.kyumallcommon.member.vo.MemberType;
-import com.kyumall.kyumallcommon.product.cart.Cart;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToOne;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -31,8 +29,6 @@ public class Member extends BaseTimeEntity {
   private MemberType type;
   @Enumerated(value = EnumType.STRING)
   private MemberStatus status;
-  @OneToOne(mappedBy = "member")
-  private Cart cart;
 
   public String resetRandomPassword(RandomCodeGenerator randomCodeGenerator) {
     String newPassword = randomCodeGenerator.generatePassword();
@@ -46,13 +42,5 @@ public class Member extends BaseTimeEntity {
 
   public void resetPassword(String newPassword) {
     this.password = newPassword;
-  }
-
-  public boolean hasCart() {
-    return cart != null;
-  }
-
-  public void setCart(Cart cart) {
-    this.cart = cart;
   }
 }
