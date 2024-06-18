@@ -1,5 +1,7 @@
 package com.kyumall.kyumallcommon.product.cart;
 
+import com.kyumall.kyumallcommon.exception.ErrorCode;
+import com.kyumall.kyumallcommon.exception.KyumallException;
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.product.product.Product;
 import jakarta.persistence.CascadeType;
@@ -65,5 +67,11 @@ public class Cart {
 
   public Optional<CartItem> getCartItem(Long cartItemId) {
     return cartItems.stream().filter(cartItem -> cartItem.getId().equals(cartItemId)).findAny();
+  }
+
+  public void updateCartItemCount(Long cartItemId, Integer count) {
+    CartItem cartItem = getCartItem(cartItemId)
+        .orElseThrow(() -> new KyumallException(ErrorCode.CART_ITEM_NOT_EXISTS));
+    cartItem.updateCount(count);
   }
 }

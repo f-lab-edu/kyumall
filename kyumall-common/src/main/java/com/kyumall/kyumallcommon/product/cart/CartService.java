@@ -77,19 +77,17 @@ public class CartService {
   /**
    * 카트에 담긴 상품 갯수를 수정합니다.
    * @param memberId
-   * @param id
+   * @param cartItemId
    * @param count
    */
   @Transactional
-  public void adjustCartItemCount(Long memberId, Long id, Integer count) {
+  public void adjustCartItemCount(Long memberId, Long cartItemId, Integer count) {
     if (count <= 0) {
       throw new KyumallException(ErrorCode.ITEM_COUNT_MUST_BIGGER_THAN_ZERO);
     }
     Member member = findMemberById(memberId);
     Cart cart = findCartOrSaveByMember(member);
 
-    CartItem cartItem = cart.getCartItem(id)
-        .orElseThrow(() -> new KyumallException(ErrorCode.CART_ITEM_NOT_EXISTS));
-    cartItem.updateCount(count);
+    cart.updateCartItemCount(cartItemId, count);
   }
 }
