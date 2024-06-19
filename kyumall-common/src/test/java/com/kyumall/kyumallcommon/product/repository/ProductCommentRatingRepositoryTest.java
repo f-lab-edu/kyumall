@@ -3,13 +3,17 @@ package com.kyumall.kyumallcommon.product.repository;
 
 import static org.assertj.core.api.Assertions.*;
 
+import com.kyumall.kyumallcommon.JpaRepositoryTest;
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.member.repository.MemberRepository;
-import com.kyumall.kyumallcommon.product.dto.LikeCountDto;
-import com.kyumall.kyumallcommon.product.entity.Product;
-import com.kyumall.kyumallcommon.product.entity.ProductComment;
-import com.kyumall.kyumallcommon.product.entity.ProductCommentRating;
-import com.kyumall.kyumallcommon.product.vo.RatingType;
+import com.kyumall.kyumallcommon.product.comment.ProductCommentRatingRepository;
+import com.kyumall.kyumallcommon.product.comment.ProductCommentRepository;
+import com.kyumall.kyumallcommon.product.comment.dto.LikeCountDto;
+import com.kyumall.kyumallcommon.product.product.Product;
+import com.kyumall.kyumallcommon.product.comment.ProductComment;
+import com.kyumall.kyumallcommon.product.comment.ProductCommentRating;
+import com.kyumall.kyumallcommon.product.product.ProductRepository;
+import com.kyumall.kyumallcommon.product.comment.RatingType;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,12 +26,8 @@ import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 
-@Rollback(value = false)
-@Sql("/truncate.sql")
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@ActiveProfiles("test")
-@DataJpaTest
-class ProductCommentRatingRepositoryTest {
+
+class ProductCommentRatingRepositoryTest extends JpaRepositoryTest {
   @Autowired
   MemberRepository memberRepository;
   @Autowired

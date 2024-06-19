@@ -4,17 +4,18 @@ import static org.assertj.core.api.Assertions.*;
 
 import com.kyumall.kyumallclient.AuthTestUtil;
 import com.kyumall.kyumallclient.IntegrationTest;
-import com.kyumall.kyumallclient.product.cart.AddCartItemRequest;
-import com.kyumall.kyumallclient.product.cart.dto.CartItemsDto;
+import com.kyumall.kyumallcommon.product.cart.Cart;
+import com.kyumall.kyumallcommon.product.cart.CartRepository;
+import com.kyumall.kyumallcommon.product.cart.dto.AddCartItemRequest;
+import com.kyumall.kyumallcommon.product.cart.dto.CartItemsDto;
 import com.kyumall.kyumallcommon.factory.MemberFactory;
 import com.kyumall.kyumallcommon.factory.ProductFactory;
 import com.kyumall.kyumallcommon.fixture.member.MemberFixture;
 import com.kyumall.kyumallcommon.fixture.product.ProductFixture;
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.member.repository.MemberRepository;
-import com.kyumall.kyumallcommon.product.entity.CartItem;
-import com.kyumall.kyumallcommon.product.entity.Category;
-import com.kyumall.kyumallcommon.product.entity.Product;
+import com.kyumall.kyumallcommon.product.cart.CartItem;
+import com.kyumall.kyumallcommon.product.product.Product;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.ExtractableResponse;
@@ -37,6 +38,8 @@ class CartIntegrationTest extends IntegrationTest {
   MemberFactory memberFactory;
   @Autowired
   MemberRepository memberRepository;
+  @Autowired
+  CartRepository cartRepository;
 
   private static final String password = MemberFixture.password;
   Member seller;
@@ -83,7 +86,7 @@ class CartIntegrationTest extends IntegrationTest {
     ExtractableResponse<Response> response = requestAddCartItem(request, spec);
     // then
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
-    List<CartItem> cartItems = findMemberWithCart(testMember1.getId()).getCart().getCartItems();
+    List<CartItem> cartItems = findCartByMemberId(testMember1.getId()).getCartItems();
     assertThat(cartItems).hasSize(1);
     assertThat(cartItems.get(0).getProduct().getId()).isEqualTo(apple.getId());
     assertThat(cartItems.get(0).getCount()).isEqualTo(2);
@@ -140,8 +143,7 @@ class CartIntegrationTest extends IntegrationTest {
 
     // then
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
-    Member member = findMemberWithCart(testMember1.getId());
-    List<CartItem> actualCartItems = member.getCart().getCartItems();
+    List<CartItem> actualCartItems = findCartByMemberId(testMember1.getId()).getCartItems();
     assertThat(actualCartItems).hasSize(1);
     assertThat(actualCartItems.get(0).getProduct().getId()).isEqualTo(beef.getId());
   }
@@ -165,8 +167,7 @@ class CartIntegrationTest extends IntegrationTest {
 
     // then
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
-    Member member = findMemberWithCart(testMember1.getId());
-    List<CartItem> actualCartItems = member.getCart().getCartItems();
+    List<CartItem> actualCartItems = findCartByMemberId(testMember1.getId()).getCartItems();
     assertThat(actualCartItems).isEmpty();
   }
 
@@ -190,8 +191,8 @@ class CartIntegrationTest extends IntegrationTest {
         .extract();
 
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
-    Member memberWithCart = findMemberWithCart(testMember1.getId());
-    CartItem cartItem = memberWithCart.getCart().getCartItem(cartItemsToAdjust.getCartItemId())
+    Cart cart = findCartByMemberId(testMember1.getId());
+    CartItem cartItem = cart.getCartItem(cartItemsToAdjust.getCartItemId())
             .orElseThrow(() -> new RuntimeException("test fail"));
     assertThat(cartItem.getCount()).isEqualTo(countToAdjust);
   }
@@ -218,9 +219,9 @@ class CartIntegrationTest extends IntegrationTest {
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_BAD_REQUEST);
   }
 
-  private Member findMemberWithCart(Long memberId) {
-    return memberRepository.findWithCartById(memberId)
-        .orElseThrow(() -> new RuntimeException("test fail"));
+  private Cart findCartByMemberId(Long memberId) {
+    Member member = memberRepository.findById(memberId).orElseThrow();
+    return cartRepository.findWithItemsByMember(member).orElseThrow();
   }
 
   private static ExtractableResponse<Response> requestDeleteCartItems(RequestSpecification spec,

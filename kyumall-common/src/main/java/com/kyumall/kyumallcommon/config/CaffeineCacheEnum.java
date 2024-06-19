@@ -3,7 +3,7 @@ package com.kyumall.kyumallcommon.config;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.RemovalCause;
-import com.kyumall.kyumallcommon.product.entity.Category;
+import com.kyumall.kyumallcommon.product.category.Category;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;

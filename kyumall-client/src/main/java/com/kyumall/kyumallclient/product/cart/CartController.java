@@ -1,6 +1,8 @@
 package com.kyumall.kyumallclient.product.cart;
 
-import com.kyumall.kyumallclient.product.cart.dto.CartItemsDto;
+import com.kyumall.kyumallcommon.product.cart.CartService;
+import com.kyumall.kyumallcommon.product.cart.dto.AddCartItemRequest;
+import com.kyumall.kyumallcommon.product.cart.dto.CartItemsDto;
 import com.kyumall.kyumallcommon.auth.argumentResolver.LoginUser;
 import com.kyumall.kyumallcommon.auth.authentication.AuthenticatedUser;
 import com.kyumall.kyumallcommon.response.ResponseWrapper;
@@ -21,6 +23,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class CartController {
   private final CartService cartService;
+
+  /**
+   * 카트에 상품을 추가합니다.
+   * @param authenticatedUser
+   * @param request
+   * @return
+   */
   @PostMapping("/cartItems")
   public ResponseWrapper<Void> addCartItem(@LoginUser AuthenticatedUser authenticatedUser,
                                         @RequestBody AddCartItemRequest request) {
@@ -28,11 +37,22 @@ public class CartController {
     return ResponseWrapper.ok();
   }
 
+  /**
+   * 카트에 담긴 상품 목록을 조회합니다.
+   * @param authenticatedUser
+   * @return
+   */
   @GetMapping("/cartItems")
   public ResponseWrapper<List<CartItemsDto>> getCartItems(@LoginUser AuthenticatedUser authenticatedUser) {
     return ResponseWrapper.ok(cartService.getCartItems(authenticatedUser.getMemberId()));
   }
 
+  /**
+   * 카트에 담긴 상품을 삭제합니다.
+   * @param authenticatedUser
+   * @param cartItemsIds
+   * @return
+   */
   @DeleteMapping("/cartItems")
   public ResponseWrapper<Void> addCartItem(@LoginUser AuthenticatedUser authenticatedUser,
       @RequestBody List<Long> cartItemsIds) {
@@ -40,10 +60,17 @@ public class CartController {
     return ResponseWrapper.ok();
   }
 
+  /**
+   * 카트에 담긴 상품의 갯수를 수정합니다.
+   * @param authenticatedUser
+   * @param id
+   * @param count
+   * @return
+   */
   @PutMapping("/cartItems/{id}/adjust-count")
   public ResponseWrapper<Void> adjustCartItemCount(@LoginUser AuthenticatedUser authenticatedUser,
       @PathVariable Long id, @RequestParam Integer count) {
-    cartService.adjustCount(authenticatedUser.getMemberId(), id ,count);
+    cartService.adjustCartItemCount(authenticatedUser.getMemberId(), id ,count);
     return ResponseWrapper.ok();
   }
 }

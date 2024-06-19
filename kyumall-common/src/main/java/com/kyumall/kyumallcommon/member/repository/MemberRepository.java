@@ -13,11 +13,4 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
   Optional<Member> findByEmail(String email);
   Optional<Member> findByUsernameAndEmail(String username, String email);
-  @Query("select distinct m from Member m "
-      + "left join fetch m.cart c "
-      + "left join fetch m.cart.cartItems ci "
-      + "left join fetch ci.product p "
-      + "where m.id = :id "
-      + "order by ci.createdAt")
-  Optional<Member> findWithCartById(Long id);
 }

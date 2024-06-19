@@ -4,11 +4,9 @@ spring:
       local:
         - app-local
         - ncloud
-        - cache
         - actuator
       dev:
         - app-dev
         - ncloud
-        - cache
         - actuator
     active: local

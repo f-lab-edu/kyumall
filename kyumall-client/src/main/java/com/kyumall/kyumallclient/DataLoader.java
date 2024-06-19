@@ -11,19 +11,19 @@ import com.kyumall.kyumallcommon.member.vo.MemberStatus;
 import com.kyumall.kyumallcommon.member.vo.MemberType;
 import com.kyumall.kyumallcommon.member.vo.TermStatus;
 import com.kyumall.kyumallcommon.member.vo.TermType;
-import com.kyumall.kyumallcommon.product.entity.Category;
-import com.kyumall.kyumallcommon.product.repository.CategoryRepository;
-import com.kyumall.kyumallcommon.product.vo.CategoryStatus;
-import java.util.ArrayList;
-import java.util.List;
+import com.kyumall.kyumallcommon.product.category.Category;
+import com.kyumall.kyumallcommon.product.category.CategoryRepository;
+import com.kyumall.kyumallcommon.product.category.CategoryStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.cache.CacheManager;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 /**
  * 초기 데이터를 등록하는데 사용됩니다
  */
+@Profile({"dev", "local"})
 @Component
 @RequiredArgsConstructor
 public class DataLoader implements CommandLineRunner {

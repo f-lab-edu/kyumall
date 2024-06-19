@@ -1,7 +1,7 @@
 package com.kyumall.kyumallcommon.order.entity;
 
 import com.kyumall.kyumallcommon.BaseTimeEntity;
-import com.kyumall.kyumallcommon.product.entity.Product;
+import com.kyumall.kyumallcommon.product.product.Product;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
