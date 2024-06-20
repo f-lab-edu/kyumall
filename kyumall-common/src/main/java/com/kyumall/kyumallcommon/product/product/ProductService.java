@@ -45,6 +45,7 @@ public class ProductService {
         .seller(seller)
         .price(request.getPrice())
         .detail(request.getDetail())
+        .productStatus(ProductStatus.INUSE)
         .build());
     return product.getId();
   }

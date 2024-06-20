@@ -26,6 +26,10 @@ public class ProductFactory {
     return productRepository.saveAndFlush(productFixture.toEntity(seller, category));
   }
 
+  public Product saveProduct(Product product) {
+    return productRepository.saveAndFlush(product);
+  }
+
   private Category saveCategoryRecursive(Category category) {
     Category parentCategory = null;
     if (category.getParent() != null) {   // 부모 객체가 존재하면

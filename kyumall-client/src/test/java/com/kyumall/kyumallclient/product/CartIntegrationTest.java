@@ -115,7 +115,27 @@ class CartIntegrationTest extends IntegrationTest {
     assertCartItemsDto(items, 1, beef, 3);
   }
 
+  @Test
+  @DisplayName("장바구니의 항목이 삭제된 상품인 경우, 갯수가 0으로 표시됩니다.")
+  void getCartItems_count_0_when_deleted_product() {
+    Product apple = productFactory.createProduct(ProductFixture.APPLE, seller);
+    Product beef = productFactory.createProduct(ProductFixture.BEEF, seller);
+    addCartItemForGiven(testMember1.getUsername(), apple.getId(), 1);
+    addCartItemForGiven(testMember1.getUsername(), beef.getId(), 3);
+    // apple 상품을 삭제처리
+    productFactory.saveProduct(apple.delete());
 
+    // when 상품 조회
+    ExtractableResponse<Response> response = requestGetCartItems(testMember1.getUsername());
+
+    // then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
+    List<CartItemsDto> items = response.body().jsonPath().getList("result", CartItemsDto.class);
+    assertThat(items.get(0).getCount()).isZero();
+    assertThat(items.get(0).getIsDeleted()).isTrue();
+    assertThat(items.get(1).getCount()).isEqualTo(3);
+    assertThat(items.get(1).getIsDeleted()).isFalse();
+  }
 
   private void assertCartItemsDto(List<CartItemsDto> items, int index, Product product, int count) {
     assertThat(items.get(index).getProductId()).isEqualTo(product.getId());

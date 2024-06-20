@@ -4,6 +4,8 @@ import com.kyumall.kyumallcommon.BaseTimeEntity;
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.product.category.Category;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -33,6 +35,17 @@ public class Product extends BaseTimeEntity {
 //  @JoinColumn
 //  @ManyToOne(fetch = FetchType.LAZY)
 //  private Image image;
+  @Enumerated(EnumType.STRING)
+  private ProductStatus productStatus;
   private String image;
   private String detail;
+
+  public boolean isDeleted() {
+    return productStatus == ProductStatus.DELETED;
+  }
+
+  public Product delete() {
+    this.productStatus = ProductStatus.DELETED;
+    return this;
+  }
 }

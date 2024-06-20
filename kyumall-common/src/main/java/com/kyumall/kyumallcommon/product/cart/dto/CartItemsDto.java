@@ -14,6 +14,7 @@ public class CartItemsDto {
   private Integer price;
   private String image;
   private Integer count;
+  private Boolean isDeleted;  // 삭제된 상품 여부
 
   public static CartItemsDto from(CartItem cartItem) {
     return CartItemsDto.builder()
@@ -22,7 +23,8 @@ public class CartItemsDto {
         .productName(cartItem.getProduct().getName())
         .price(cartItem.getProduct().getPrice())
         .image(cartItem.getProduct().getImage())
-        .count(cartItem.getCount())
+        .count(cartItem.getProduct().isDeleted() ? 0 : cartItem.getCount())
+        .isDeleted(cartItem.getProduct().isDeleted())
         .build();
   }
 }
