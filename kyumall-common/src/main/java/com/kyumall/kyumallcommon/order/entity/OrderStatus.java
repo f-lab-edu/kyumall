@@ -1,4 +1,4 @@
-package com.kyumall.kyumallcommon.order.vo;
+package com.kyumall.kyumallcommon.order.entity;
 
 public enum OrderStatus {
   BEFORE_PAY      // 결제 전

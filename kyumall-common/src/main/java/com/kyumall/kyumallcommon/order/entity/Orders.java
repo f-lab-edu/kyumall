@@ -2,7 +2,6 @@ package com.kyumall.kyumallcommon.order.entity;
 
 import com.kyumall.kyumallcommon.BaseTimeEntity;
 import com.kyumall.kyumallcommon.member.entity.Member;
-import com.kyumall.kyumallcommon.order.vo.OrderStatus;
 import com.kyumall.kyumallcommon.product.product.Product;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;

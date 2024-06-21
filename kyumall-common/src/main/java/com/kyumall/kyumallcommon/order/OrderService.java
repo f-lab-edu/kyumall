@@ -1,14 +1,16 @@
-package com.kyumall.kyumallclient.order;
+package com.kyumall.kyumallcommon.order;
 
 import com.kyumall.kyumallcommon.exception.ErrorCode;
 import com.kyumall.kyumallcommon.exception.KyumallException;
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.member.repository.MemberRepository;
+import com.kyumall.kyumallcommon.order.dto.CreateOrderRequest;
+import com.kyumall.kyumallcommon.order.dto.ProductIdAndCount;
 import com.kyumall.kyumallcommon.pay.PayService;
 import com.kyumall.kyumallcommon.order.entity.OrderItem;
 import com.kyumall.kyumallcommon.order.entity.Orders;
 import com.kyumall.kyumallcommon.order.repository.OrderRepository;
-import com.kyumall.kyumallcommon.order.vo.OrderStatus;
+import com.kyumall.kyumallcommon.order.entity.OrderStatus;
 import com.kyumall.kyumallcommon.product.product.Product;
 import com.kyumall.kyumallcommon.product.stock.Stock;
 import com.kyumall.kyumallcommon.product.product.ProductRepository;
