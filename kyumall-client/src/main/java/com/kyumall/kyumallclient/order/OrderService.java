@@ -4,7 +4,7 @@ import com.kyumall.kyumallcommon.exception.ErrorCode;
 import com.kyumall.kyumallcommon.exception.KyumallException;
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.member.repository.MemberRepository;
-import com.kyumall.kyumallclient.pay.PayService;
+import com.kyumall.kyumallcommon.pay.PayService;
 import com.kyumall.kyumallcommon.order.entity.OrderItem;
 import com.kyumall.kyumallcommon.order.entity.Orders;
 import com.kyumall.kyumallcommon.order.repository.OrderRepository;

@@ -1,4 +1,4 @@
-package com.kyumall.kyumallclient.pay;
+package com.kyumall.kyumallcommon.pay;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

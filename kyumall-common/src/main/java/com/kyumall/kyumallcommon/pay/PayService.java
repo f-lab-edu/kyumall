@@ -1,5 +1,7 @@
-package com.kyumall.kyumallclient.pay;
+package com.kyumall.kyumallcommon.pay;
 
+import com.kyumall.kyumallcommon.pay.PayOpenFeign;
+import com.kyumall.kyumallcommon.pay.PayResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

@@ -1,4 +1,4 @@
-package com.kyumall.kyumallclient.config;
+package com.kyumall.kyumallcommon.config;
 
 import feign.Logger;
 import feign.Logger.Level;
