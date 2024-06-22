@@ -14,16 +14,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RequiredArgsConstructor
-@RequestMapping("/orders")
+@RequestMapping("/orderGroups")
 @RestController
 public class OrderController {
   private final OrderService orderService;
 
   @PostMapping()
-  public ResponseWrapper<CreatedIdDto> createOrder(@LoginUser AuthenticatedUser authenticatedUser,
+  public ResponseWrapper<CreatedIdDto> createOrderGroup(@LoginUser AuthenticatedUser authenticatedUser,
                           @RequestBody CreateOrderRequest request) {
     return ResponseWrapper.ok(
-        CreatedIdDto.of(orderService.createOrder(authenticatedUser.getMemberId(), request)));
+        CreatedIdDto.of(orderService.createOrderGroup(authenticatedUser.getMemberId(), request)));
   }
 
   @PostMapping("/{id}/pay")

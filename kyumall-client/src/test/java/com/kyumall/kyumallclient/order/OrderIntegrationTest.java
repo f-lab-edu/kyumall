@@ -15,8 +15,8 @@ import com.kyumall.kyumallcommon.factory.ProductFactory;
 import com.kyumall.kyumallcommon.fixture.member.MemberFixture;
 import com.kyumall.kyumallcommon.fixture.product.ProductFixture;
 import com.kyumall.kyumallcommon.member.entity.Member;
-import com.kyumall.kyumallcommon.order.entity.Orders;
-import com.kyumall.kyumallcommon.order.repository.OrderRepository;
+import com.kyumall.kyumallcommon.order.entity.OrderGroup;
+import com.kyumall.kyumallcommon.order.repository.OrderGroupRepository;
 import com.kyumall.kyumallcommon.order.entity.OrderStatus;
 import com.kyumall.kyumallcommon.product.product.Product;
 import com.kyumall.kyumallcommon.product.stock.StockRepository;
@@ -37,14 +37,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
-class OrdersIntegrationTest extends IntegrationTest {
+class OrderIntegrationTest extends IntegrationTest {
   private static final String pw = MemberFixture.password;
   @Autowired
   private MemberFactory memberFactory;
   @Autowired
   private ProductFactory productFactory;
   @Autowired
-  private OrderRepository orderRepository;
+  private OrderGroupRepository orderGroupRepository;
   @Autowired
   private StockRepository stockRepository;
   @MockBean
@@ -74,12 +74,12 @@ class OrdersIntegrationTest extends IntegrationTest {
     ExtractableResponse<Response> response = requestCreateOrder(spec, request);
 
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
-    Orders order = findOrder(response);
+    OrderGroup order = findOrder(response);
     assertThat(order.getBuyer().getId()).isEqualTo(member01.getId());
     assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.BEFORE_PAY);
-    assertThat(order.getOrderItems()).hasSize(2);
-    assertThat(order.getOrderItems().get(0).getProduct().getId()).isEqualTo(apple.getId());
-    assertThat(order.getOrderItems().get(1).getProduct().getId()).isEqualTo(beef.getId());
+    assertThat(order.getOrders()).hasSize(2);
+    assertThat(order.getOrders().get(0).getProduct().getId()).isEqualTo(apple.getId());
+    assertThat(order.getOrders().get(1).getProduct().getId()).isEqualTo(beef.getId());
   }
 
   @Test
@@ -102,7 +102,7 @@ class OrdersIntegrationTest extends IntegrationTest {
             new ProductIdAndCount(apple.getId(), appleOrderQuantity),
             new ProductIdAndCount(beef.getId(), beefOrderQuantity)))
         .build();
-    Orders createdOrder = findOrder(requestCreateOrder(spec, createRequest));
+    OrderGroup createdOrder = findOrder(requestCreateOrder(spec, createRequest));
     // mock
     given(payOpenFeign.pay(anyLong(), anyLong())).willReturn(new PayResponse("success", "성공"));
 
@@ -111,7 +111,7 @@ class OrdersIntegrationTest extends IntegrationTest {
 
     // then
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
-    Orders order = orderRepository.findById(createdOrder.getId()).orElseThrow();
+    OrderGroup order = orderGroupRepository.findById(createdOrder.getId()).orElseThrow();
     assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.PAY_COMPLETE);
     assertThat(stockRepository.findByProduct(apple).orElseThrow().getQuantity())
         .isEqualTo(appleStock - appleOrderQuantity);
@@ -120,10 +120,10 @@ class OrdersIntegrationTest extends IntegrationTest {
   }
 
   private static ExtractableResponse<Response> requestPayOrder(RequestSpecification spec,
-      Orders createdOrder) {
+      OrderGroup createdOrder) {
     return RestAssured.given().log().all().spec(spec)
         .pathParam("id", createdOrder.getId())
-        .when().post("/orders/{id}/pay")
+        .when().post("/orderGroups/{id}/pay")
         .then().log().all()
         .extract();
   }
@@ -148,7 +148,7 @@ class OrdersIntegrationTest extends IntegrationTest {
             new ProductIdAndCount(apple.getId(), appleOrderQuantity),
             new ProductIdAndCount(beef.getId(), bananaOrderQuantity)))
         .build();
-    Orders createdOrder = findOrder(requestCreateOrder(spec, createRequest));
+    OrderGroup createdOrder = findOrder(requestCreateOrder(spec, createRequest));
     // mock
     given(payOpenFeign.pay(anyLong(), anyLong())).willReturn(new PayResponse("success", "성공"));
 
@@ -170,7 +170,7 @@ class OrdersIntegrationTest extends IntegrationTest {
     ProductIntegrationTest.requestChangeStock(apple.getId(), appleStock, spec);
     // 주문 다건 생성
     int orderCount = 100;
-    List<Orders> createOrders = new ArrayList<>();
+    List<OrderGroup> createOrders = new ArrayList<>();
     for (int i = 0; i < orderCount; i++) {
       Integer appleOrderQuantity = 1;
       CreateOrderRequest createRequest = CreateOrderRequest.builder()
@@ -207,13 +207,13 @@ class OrdersIntegrationTest extends IntegrationTest {
     return RestAssured.given().log().all().spec(spec)
         .contentType(ContentType.JSON)
         .body(request)
-        .when().post("/orders")
+        .when().post("/orderGroups")
         .then().log().all()
         .extract();
   }
 
-  private Orders findOrder(ExtractableResponse<Response> response) {
-    return orderRepository.findWithOrderItemsById(response.body().jsonPath().getLong("result.id"))
+  private OrderGroup findOrder(ExtractableResponse<Response> response) {
+    return orderGroupRepository.findWithOrderItemsById(response.body().jsonPath().getLong("result.id"))
         .orElseThrow(() -> new RuntimeException("test fail"));
   }
 }

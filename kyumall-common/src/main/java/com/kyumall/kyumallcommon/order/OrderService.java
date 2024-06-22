@@ -6,10 +6,10 @@ import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.member.repository.MemberRepository;
 import com.kyumall.kyumallcommon.order.dto.CreateOrderRequest;
 import com.kyumall.kyumallcommon.order.dto.ProductIdAndCount;
+import com.kyumall.kyumallcommon.order.entity.OrderGroup;
 import com.kyumall.kyumallcommon.pay.PayService;
-import com.kyumall.kyumallcommon.order.entity.OrderItem;
 import com.kyumall.kyumallcommon.order.entity.Orders;
-import com.kyumall.kyumallcommon.order.repository.OrderRepository;
+import com.kyumall.kyumallcommon.order.repository.OrderGroupRepository;
 import com.kyumall.kyumallcommon.order.entity.OrderStatus;
 import com.kyumall.kyumallcommon.product.product.Product;
 import com.kyumall.kyumallcommon.product.stock.Stock;
@@ -29,13 +29,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class OrderService {
   private final MemberRepository memberRepository;
   private final ProductRepository productRepository;
-  private final OrderRepository orderRepository;
+  private final OrderGroupRepository orderGroupRepository;
   private final PayService payService;
   private final StockRepository stockRepository;
   private final EntityManager em;
 
   @Transactional
-  public Long createOrder(Long memberId, CreateOrderRequest request) {
+  public Long createOrderGroup(Long memberId, CreateOrderRequest request) {
     Member member = findMember(memberId);
     List<Product> products = productRepository.findByIdIn(
         request.getProductIdAndCounts().stream().map(ProductIdAndCount::getProductId).toList());
@@ -43,13 +43,13 @@ public class OrderService {
     List<Integer> counts = request.getProductIdAndCounts().stream()
         .map(ProductIdAndCount::getCount).toList();
 
-    Orders order = Orders.builder()
+    OrderGroup order = OrderGroup.builder()
         .buyer(member)
         .orderStatus(OrderStatus.BEFORE_PAY)
         .orderDatetime(LocalDateTime.now())
         .build();
     order.addProducts(products, counts);
-    return orderRepository.save(order).getId();
+    return orderGroupRepository.save(order).getId();
   }
 
   private Member findMember(Long memberId) {
@@ -59,7 +59,7 @@ public class OrderService {
 
   @Transactional
   public void payOrder(Long payId, Long memberId) {
-    Orders order = findOrder(payId);
+    OrderGroup order = findOrder(payId);
     // 재고 조회
     List<Stock> stocks = findStock(order);
     // 재고 체크
@@ -78,42 +78,42 @@ public class OrderService {
     order.payComplete();
   }
 
-  private void decreaseStocks(Orders order, List<Stock> stocks) {
+  private void decreaseStocks(OrderGroup order, List<Stock> stocks) {
     List<Stock> stocksToDecrease = stockRepository.findByInIdsWithPessimisticLock(
         stocks.stream().map(Stock::getId).toList());
-    Map<Long, List<OrderItem>> orderItemByProductId = order.getOrderItems().stream()
+    Map<Long, List<Orders>> orderItemByProductId = order.getOrders().stream()
         .collect(Collectors.groupingBy(oi -> oi.getProduct().getId()));
 
     for (Stock stock: stocksToDecrease) {
-      OrderItem orderItem = orderItemByProductId.get(stock.getProduct().getId()).get(0);
-      stock.decrease(orderItem.getCount());
+      Orders orders = orderItemByProductId.get(stock.getProduct().getId()).get(0);
+      stock.decrease(orders.getCount());
     }
   }
 
-  private List<Stock> findStock(Orders order) {
+  private List<Stock> findStock(OrderGroup order) {
     return stockRepository.findByProductIdIn(
-        order.getOrderItems().stream().map(oi -> oi.getProduct().getId()).toList());
+        order.getOrders().stream().map(oi -> oi.getProduct().getId()).toList());
   }
 
-  private void validateStockQuantity(Orders order, List<Stock> stocks) {
+  private void validateStockQuantity(OrderGroup order, List<Stock> stocks) {
     Map<Long, List<Stock>> stockMapByProduct = stocks.stream()
         .collect(Collectors.groupingBy(stock -> stock.getProduct().getId()));
 
-    for (OrderItem orderItem: order.getOrderItems()) {
-      List<Stock> stocksByProduct = stockMapByProduct.get(orderItem.getProduct().getId());
+    for (Orders orders : order.getOrders()) {
+      List<Stock> stocksByProduct = stockMapByProduct.get(orders.getProduct().getId());
       if (stocksByProduct.isEmpty()) {
         throw new KyumallException(ErrorCode.STOCK_NOT_EXISTS);
       }
       Stock stock = stocksByProduct.get(0);
 
-      if (!stock.decreasable(orderItem.getCount())) {
+      if (!stock.decreasable(orders.getCount())) {
         throw new KyumallException(ErrorCode.STOCK_IS_INSUFFICIENT);
       }
     }
   }
 
-  private Orders findOrder(Long payId) {
-    return orderRepository.findWithOrderItemsById(payId)
+  private OrderGroup findOrder(Long payId) {
+    return orderGroupRepository.findWithOrderItemsById(payId)
         .orElseThrow(() -> new KyumallException(ErrorCode.ORDER_NOT_EXISTS));
   }
 }
