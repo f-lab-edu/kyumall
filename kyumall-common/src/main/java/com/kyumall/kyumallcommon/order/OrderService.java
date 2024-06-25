@@ -12,6 +12,7 @@ import com.kyumall.kyumallcommon.order.entity.Orders;
 import com.kyumall.kyumallcommon.order.repository.OrderGroupRepository;
 import com.kyumall.kyumallcommon.order.entity.OrderStatus;
 import com.kyumall.kyumallcommon.product.product.Product;
+import com.kyumall.kyumallcommon.product.stock.ProductAndStockDto;
 import com.kyumall.kyumallcommon.product.stock.Stock;
 import com.kyumall.kyumallcommon.product.product.ProductRepository;
 import com.kyumall.kyumallcommon.product.stock.StockRepository;
@@ -61,26 +62,27 @@ public class OrderService {
   public void payOrder(Long payId, Long memberId) {
     OrderGroup order = findOrder(payId);
     // 재고 조회
-    List<Stock> stocks = findStock(order);
+//    List<Stock> stocks = findStock(order);
+    List<ProductAndStockDto> productStocksDto = findProductStocks(order);
     // 재고 체크
-    validateStockQuantity(order, stocks);
+    //validateStockQuantity(order, stocks);
+    validateStockQuantityV2(order, productStocksDto);
     // 결재
     boolean isSuccess = payService.pay(order.getBuyer().getId(), order.calculateTotalPrice());
     if (!isSuccess) {
       throw new KyumallException(ErrorCode.ORDER_PAY_FAILS);
     }
-    for (Stock stock: stocks) {
-      em.detach(stock); // Stock 데이터를 Pessimistic Write Lock을 걸어 조회하기 위해 영속성 컨텍스트에서 detach 시키기 (1차 캐시에서 제거)
-    }
+//    for (Stock stock: stocks) {
+//      em.detach(stock); // Stock 데이터를 Pessimistic Write Lock을 걸어 조회하기 위해 영속성 컨텍스트에서 detach 시키기 (1차 캐시에서 제거)
+//    }
     // 재고 감소
-    decreaseStocks(order, stocks);
+    decreaseStocks(order, productStocksDto.stream().map(ProductAndStockDto::getStockId).toList());
     // 결재완료로 상태 변경
     order.payComplete();
   }
 
-  private void decreaseStocks(OrderGroup order, List<Stock> stocks) {
-    List<Stock> stocksToDecrease = stockRepository.findByInIdsWithPessimisticLock(
-        stocks.stream().map(Stock::getId).toList());
+  private void decreaseStocks(OrderGroup order, List<Long> stockIds) {
+    List<Stock> stocksToDecrease = stockRepository.findByInIdsWithPessimisticLock(stockIds);
     Map<Long, List<Orders>> orderItemByProductId = order.getOrders().stream()
         .collect(Collectors.groupingBy(oi -> oi.getProduct().getId()));
 
@@ -92,6 +94,11 @@ public class OrderService {
 
   private List<Stock> findStock(OrderGroup order) {
     return stockRepository.findByProductIdIn(
+        order.getOrders().stream().map(oi -> oi.getProduct().getId()).toList());
+  }
+
+  private List<ProductAndStockDto> findProductStocks(OrderGroup order) {
+    return stockRepository.findProductStockByProductIdIn(
         order.getOrders().stream().map(oi -> oi.getProduct().getId()).toList());
   }
 
@@ -107,6 +114,23 @@ public class OrderService {
       Stock stock = stocksByProduct.get(0);
 
       if (!stock.decreasable(orders.getCount())) {
+        throw new KyumallException(ErrorCode.STOCK_IS_INSUFFICIENT);
+      }
+    }
+  }
+
+  private void validateStockQuantityV2(OrderGroup order, List<ProductAndStockDto> productStocks) {
+    Map<Long, List<ProductAndStockDto>> groupByProductIdMap = productStocks.stream()
+        .collect(Collectors.groupingBy(ps -> ps.getProductId()));
+
+    for (Orders orders : order.getOrders()) {
+      List<ProductAndStockDto> stocksByProduct = groupByProductIdMap.get(orders.getProduct().getId());
+      if (stocksByProduct.isEmpty()) {
+        throw new KyumallException(ErrorCode.STOCK_NOT_EXISTS);
+      }
+      ProductAndStockDto productStockDto = stocksByProduct.get(0);
+
+      if (productStockDto.getQuantity() < orders.getCount()) {
         throw new KyumallException(ErrorCode.STOCK_IS_INSUFFICIENT);
       }
     }
