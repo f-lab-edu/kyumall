@@ -46,7 +46,6 @@ public class OrderService {
 
     OrderGroup order = OrderGroup.builder()
         .buyer(member)
-        .orderStatus(OrderStatus.BEFORE_PAY)
         .orderDatetime(LocalDateTime.now())
         .build();
     order.addProducts(products, counts);
@@ -60,20 +59,21 @@ public class OrderService {
 
   @Transactional
   public void payOrder(Long payId, Long memberId) {
-    OrderGroup order = findOrder(payId);
+    OrderGroup orderGroup = findOrder(payId);
     // 재고 조회
-    List<ProductAndStockDto> productStocksDtos = findProductStocksDto(order);
+    List<ProductAndStockDto> productStocksDtos = findProductStocksDto(orderGroup);
     // 재고 체크
-    validateStockQuantity(order, productStocksDtos);
+    validateStockQuantity(orderGroup, productStocksDtos);
     // 결재
-    boolean isSuccess = payService.pay(order.getBuyer().getId(), order.calculateTotalPrice());
+    boolean isSuccess = payService.pay(orderGroup.getBuyer().getId(), orderGroup.calculateTotalPrice());
     if (!isSuccess) {
       throw new KyumallException(ErrorCode.ORDER_PAY_FAILS);
     }
     // 재고 감소
-    decreaseStocks(order, productStocksDtos.stream().map(ProductAndStockDto::getStockId).toList());
+    decreaseStocks(orderGroup, productStocksDtos.stream().map(ProductAndStockDto::getStockId).toList());
     // 결재완료로 상태 변경
-    order.payComplete();
+    orderGroup.getOrders()
+        .stream().forEach(orders -> orders.payComplete());
   }
 
   private void decreaseStocks(OrderGroup order, List<Long> stockIds) {

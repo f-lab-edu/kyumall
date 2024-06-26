@@ -33,8 +33,7 @@ public class OrderGroup extends BaseTimeEntity {
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "buyer_id")
   private Member buyer;
-  @Enumerated(EnumType.STRING)
-  private OrderStatus orderStatus;
+
   private LocalDateTime orderDatetime;
   @Builder.Default
   @OneToMany(mappedBy = "orderGroup", fetch = FetchType.LAZY,cascade = CascadeType.ALL, orphanRemoval = true)
@@ -59,9 +58,5 @@ public class OrderGroup extends BaseTimeEntity {
       totalPrice += (orders.getOrderPrice() * orders.getCount());
     }
     return totalPrice;
-  }
-
-  public void payComplete() {
-    this.orderStatus = OrderStatus.PAY_COMPLETE;
   }
 }

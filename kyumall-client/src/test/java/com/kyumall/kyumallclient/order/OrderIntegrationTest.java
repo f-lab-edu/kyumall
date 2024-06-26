@@ -76,7 +76,8 @@ class OrderIntegrationTest extends IntegrationTest {
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
     OrderGroup order = findOrder(response);
     assertThat(order.getBuyer().getId()).isEqualTo(member01.getId());
-    assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.BEFORE_PAY);
+    assertThat(order.getOrders().get(0).getOrderStatus()).isEqualTo(OrderStatus.BEFORE_PAY);
+    assertThat(order.getOrders().get(1).getOrderStatus()).isEqualTo(OrderStatus.BEFORE_PAY);
     assertThat(order.getOrders()).hasSize(2);
     assertThat(order.getOrders().get(0).getProduct().getId()).isEqualTo(apple.getId());
     assertThat(order.getOrders().get(1).getProduct().getId()).isEqualTo(beef.getId());
@@ -111,8 +112,9 @@ class OrderIntegrationTest extends IntegrationTest {
 
     // then
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
-    OrderGroup order = orderGroupRepository.findById(createdOrder.getId()).orElseThrow();
-    assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.PAY_COMPLETE);
+    OrderGroup order = orderGroupRepository.findWithOrderItemsById(createdOrder.getId()).orElseThrow();
+    assertThat(order.getOrders().get(0).getOrderStatus()).isEqualTo(OrderStatus.PAY_COMPLETE);
+    assertThat(order.getOrders().get(1).getOrderStatus()).isEqualTo(OrderStatus.PAY_COMPLETE);
     assertThat(stockRepository.findByProduct(apple).orElseThrow().getQuantity())
         .isEqualTo(appleStock - appleOrderQuantity);
     assertThat(stockRepository.findByProduct(beef).orElseThrow().getQuantity())
@@ -123,7 +125,7 @@ class OrderIntegrationTest extends IntegrationTest {
       OrderGroup createdOrder) {
     return RestAssured.given().log().all().spec(spec)
         .pathParam("id", createdOrder.getId())
-        .when().post("/orderGroups/{id}/pay")
+        .when().post("/orders/{id}/pay")
         .then().log().all()
         .extract();
   }
@@ -207,7 +209,7 @@ class OrderIntegrationTest extends IntegrationTest {
     return RestAssured.given().log().all().spec(spec)
         .contentType(ContentType.JSON)
         .body(request)
-        .when().post("/orderGroups")
+        .when().post("/orders")
         .then().log().all()
         .extract();
   }
