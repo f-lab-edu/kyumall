@@ -62,21 +62,16 @@ public class OrderService {
   public void payOrder(Long payId, Long memberId) {
     OrderGroup order = findOrder(payId);
     // 재고 조회
-//    List<Stock> stocks = findStock(order);
-    List<ProductAndStockDto> productStocksDto = findProductStocks(order);
+    List<ProductAndStockDto> productStocksDtos = findProductStocksDto(order);
     // 재고 체크
-    //validateStockQuantity(order, stocks);
-    validateStockQuantityV2(order, productStocksDto);
+    validateStockQuantity(order, productStocksDtos);
     // 결재
     boolean isSuccess = payService.pay(order.getBuyer().getId(), order.calculateTotalPrice());
     if (!isSuccess) {
       throw new KyumallException(ErrorCode.ORDER_PAY_FAILS);
     }
-//    for (Stock stock: stocks) {
-//      em.detach(stock); // Stock 데이터를 Pessimistic Write Lock을 걸어 조회하기 위해 영속성 컨텍스트에서 detach 시키기 (1차 캐시에서 제거)
-//    }
     // 재고 감소
-    decreaseStocks(order, productStocksDto.stream().map(ProductAndStockDto::getStockId).toList());
+    decreaseStocks(order, productStocksDtos.stream().map(ProductAndStockDto::getStockId).toList());
     // 결재완료로 상태 변경
     order.payComplete();
   }
@@ -92,34 +87,19 @@ public class OrderService {
     }
   }
 
-  private List<Stock> findStock(OrderGroup order) {
-    return stockRepository.findByProductIdIn(
-        order.getOrders().stream().map(oi -> oi.getProduct().getId()).toList());
-  }
-
-  private List<ProductAndStockDto> findProductStocks(OrderGroup order) {
+  /**
+   * 주문의 상품과 재고 ID를 조회합니다.
+   * Stock 객체를 조회하면 1차 캐시에 저장되어 향후 재고 감소를 위해 Pessimistic Lock으로 Stock을 조회하여도 쿼리가 발생하지 않고, 1차 캐시의 Stock 객체를 사용하기 때문에 dto를 조회하도록 변경하였습니다.
+   * entityManager.detach 로 stock을 직접 1차 캐시에서 제거하는 방식에서 entityManager를 직접 사용하지 않도록 변경된 방식입니다.
+   * @param order
+   * @return
+   */
+  private List<ProductAndStockDto> findProductStocksDto(OrderGroup order) {
     return stockRepository.findProductStockByProductIdIn(
         order.getOrders().stream().map(oi -> oi.getProduct().getId()).toList());
   }
 
-  private void validateStockQuantity(OrderGroup order, List<Stock> stocks) {
-    Map<Long, List<Stock>> stockMapByProduct = stocks.stream()
-        .collect(Collectors.groupingBy(stock -> stock.getProduct().getId()));
-
-    for (Orders orders : order.getOrders()) {
-      List<Stock> stocksByProduct = stockMapByProduct.get(orders.getProduct().getId());
-      if (stocksByProduct.isEmpty()) {
-        throw new KyumallException(ErrorCode.STOCK_NOT_EXISTS);
-      }
-      Stock stock = stocksByProduct.get(0);
-
-      if (!stock.decreasable(orders.getCount())) {
-        throw new KyumallException(ErrorCode.STOCK_IS_INSUFFICIENT);
-      }
-    }
-  }
-
-  private void validateStockQuantityV2(OrderGroup order, List<ProductAndStockDto> productStocks) {
+  private void validateStockQuantity(OrderGroup order, List<ProductAndStockDto> productStocks) {
     Map<Long, List<ProductAndStockDto>> groupByProductIdMap = productStocks.stream()
         .collect(Collectors.groupingBy(ps -> ps.getProductId()));
 
