@@ -6,11 +6,10 @@ import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.member.repository.MemberRepository;
 import com.kyumall.kyumallcommon.order.dto.CreateOrderRequest;
 import com.kyumall.kyumallcommon.order.dto.ProductIdAndCount;
-import com.kyumall.kyumallcommon.order.entity.OrderGroup;
-import com.kyumall.kyumallcommon.pay.PayService;
 import com.kyumall.kyumallcommon.order.entity.Orders;
-import com.kyumall.kyumallcommon.order.repository.OrderGroupRepository;
-import com.kyumall.kyumallcommon.order.entity.OrderStatus;
+import com.kyumall.kyumallcommon.pay.PayService;
+import com.kyumall.kyumallcommon.order.entity.OrderItem;
+import com.kyumall.kyumallcommon.order.repository.OrdersRepository;
 import com.kyumall.kyumallcommon.product.product.Product;
 import com.kyumall.kyumallcommon.product.stock.ProductAndStockDto;
 import com.kyumall.kyumallcommon.product.stock.Stock;
@@ -30,13 +29,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class OrderService {
   private final MemberRepository memberRepository;
   private final ProductRepository productRepository;
-  private final OrderGroupRepository orderGroupRepository;
+  private final OrdersRepository ordersRepository;
   private final PayService payService;
   private final StockRepository stockRepository;
   private final EntityManager em;
 
   @Transactional
-  public Long createOrderGroup(Long memberId, CreateOrderRequest request) {
+  public Long createOrder(Long memberId, CreateOrderRequest request) {
     Member member = findMember(memberId);
     List<Product> products = productRepository.findByIdIn(
         request.getProductIdAndCounts().stream().map(ProductIdAndCount::getProductId).toList());
@@ -44,12 +43,12 @@ public class OrderService {
     List<Integer> counts = request.getProductIdAndCounts().stream()
         .map(ProductIdAndCount::getCount).toList();
 
-    OrderGroup order = OrderGroup.builder()
+    Orders order = Orders.builder()
         .buyer(member)
         .orderDatetime(LocalDateTime.now())
         .build();
     order.addProducts(products, counts);
-    return orderGroupRepository.save(order).getId();
+    return ordersRepository.save(order).getId();
   }
 
   private Member findMember(Long memberId) {
@@ -59,31 +58,31 @@ public class OrderService {
 
   @Transactional
   public void payOrder(Long payId, Long memberId) {
-    OrderGroup orderGroup = findOrder(payId);
+    Orders orders = findOrder(payId);
     // 재고 조회
-    List<ProductAndStockDto> productStocksDtos = findProductStocksDto(orderGroup);
+    List<ProductAndStockDto> productStocksDtos = findProductStocksDto(orders);
     // 재고 체크
-    validateStockQuantity(orderGroup, productStocksDtos);
+    validateStockQuantity(orders, productStocksDtos);
     // 결재
-    boolean isSuccess = payService.pay(orderGroup.getBuyer().getId(), orderGroup.calculateTotalPrice());
+    boolean isSuccess = payService.pay(orders.getBuyer().getId(), orders.calculateTotalPrice());
     if (!isSuccess) {
       throw new KyumallException(ErrorCode.ORDER_PAY_FAILS);
     }
     // 재고 감소
-    decreaseStocks(orderGroup, productStocksDtos.stream().map(ProductAndStockDto::getStockId).toList());
+    decreaseStocks(orders, productStocksDtos.stream().map(ProductAndStockDto::getStockId).toList());
     // 결재완료로 상태 변경
-    orderGroup.getOrders()
-        .stream().forEach(orders -> orders.payComplete());
+    orders.getOrderItems()
+        .stream().forEach(orderItem -> orderItem.payComplete());
   }
 
-  private void decreaseStocks(OrderGroup order, List<Long> stockIds) {
+  private void decreaseStocks(Orders order, List<Long> stockIds) {
     List<Stock> stocksToDecrease = stockRepository.findByInIdsWithPessimisticLock(stockIds);
-    Map<Long, List<Orders>> orderItemByProductId = order.getOrders().stream()
+    Map<Long, List<OrderItem>> orderItemByProductId = order.getOrderItems().stream()
         .collect(Collectors.groupingBy(oi -> oi.getProduct().getId()));
 
     for (Stock stock: stocksToDecrease) {
-      Orders orders = orderItemByProductId.get(stock.getProduct().getId()).get(0);
-      stock.decrease(orders.getCount());
+      OrderItem orderItem = orderItemByProductId.get(stock.getProduct().getId()).get(0);
+      stock.decrease(orderItem.getCount());
     }
   }
 
@@ -94,30 +93,30 @@ public class OrderService {
    * @param order
    * @return
    */
-  private List<ProductAndStockDto> findProductStocksDto(OrderGroup order) {
+  private List<ProductAndStockDto> findProductStocksDto(Orders order) {
     return stockRepository.findProductStockByProductIdIn(
-        order.getOrders().stream().map(oi -> oi.getProduct().getId()).toList());
+        order.getOrderItems().stream().map(oi -> oi.getProduct().getId()).toList());
   }
 
-  private void validateStockQuantity(OrderGroup order, List<ProductAndStockDto> productStocks) {
+  private void validateStockQuantity(Orders order, List<ProductAndStockDto> productStocks) {
     Map<Long, List<ProductAndStockDto>> groupByProductIdMap = productStocks.stream()
         .collect(Collectors.groupingBy(ps -> ps.getProductId()));
 
-    for (Orders orders : order.getOrders()) {
-      List<ProductAndStockDto> stocksByProduct = groupByProductIdMap.get(orders.getProduct().getId());
+    for (OrderItem orderItem : order.getOrderItems()) {
+      List<ProductAndStockDto> stocksByProduct = groupByProductIdMap.get(orderItem.getProduct().getId());
       if (stocksByProduct.isEmpty()) {
         throw new KyumallException(ErrorCode.STOCK_NOT_EXISTS);
       }
       ProductAndStockDto productStockDto = stocksByProduct.get(0);
 
-      if (productStockDto.getQuantity() < orders.getCount()) {
+      if (productStockDto.getQuantity() < orderItem.getCount()) {
         throw new KyumallException(ErrorCode.STOCK_IS_INSUFFICIENT);
       }
     }
   }
 
-  private OrderGroup findOrder(Long payId) {
-    return orderGroupRepository.findWithOrderItemsById(payId)
+  private Orders findOrder(Long payId) {
+    return ordersRepository.findWithOrderItemsById(payId)
         .orElseThrow(() -> new KyumallException(ErrorCode.ORDER_NOT_EXISTS));
   }
 }

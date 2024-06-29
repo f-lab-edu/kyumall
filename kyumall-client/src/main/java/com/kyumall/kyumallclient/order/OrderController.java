@@ -20,10 +20,10 @@ public class OrderController {
   private final OrderService orderService;
 
   @PostMapping()
-  public ResponseWrapper<CreatedIdDto> createOrderGroup(@LoginUser AuthenticatedUser authenticatedUser,
+  public ResponseWrapper<CreatedIdDto> createOrder(@LoginUser AuthenticatedUser authenticatedUser,
                           @RequestBody CreateOrderRequest request) {
     return ResponseWrapper.ok(
-        CreatedIdDto.of(orderService.createOrderGroup(authenticatedUser.getMemberId(), request)));
+        CreatedIdDto.of(orderService.createOrder(authenticatedUser.getMemberId(), request)));
   }
 
   @PostMapping("/{id}/pay")
