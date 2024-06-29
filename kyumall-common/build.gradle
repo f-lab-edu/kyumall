@@ -35,4 +35,6 @@ dependencies {
     api 'org.springframework.boot:spring-boot-starter-actuator'
     // prometheus
     api 'io.micrometer:micrometer-registry-prometheus'
+    // feign
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
 }

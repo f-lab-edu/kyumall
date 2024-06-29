@@ -1,4 +1,4 @@
-package com.kyumall.kyumallclient.order;
+package com.kyumall.kyumallcommon.order.dto;
 
 import java.util.List;
 import lombok.AllArgsConstructor;

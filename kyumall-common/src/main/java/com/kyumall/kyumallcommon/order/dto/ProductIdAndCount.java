@@ -1,4 +1,4 @@
-package com.kyumall.kyumallclient.order;
+package com.kyumall.kyumallcommon.order.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -1,5 +1,6 @@
 package com.kyumall.kyumallclient.pay;
 
+import com.kyumall.kyumallcommon.pay.PayService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.PostMapping;

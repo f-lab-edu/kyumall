@@ -2,12 +2,9 @@ package com.kyumall.kyumallcommon.order.entity;
 
 import com.kyumall.kyumallcommon.BaseTimeEntity;
 import com.kyumall.kyumallcommon.member.entity.Member;
-import com.kyumall.kyumallcommon.order.vo.OrderStatus;
 import com.kyumall.kyumallcommon.product.product.Product;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -34,8 +31,7 @@ public class Orders extends BaseTimeEntity {
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "buyer_id")
   private Member buyer;
-  @Enumerated(EnumType.STRING)
-  private OrderStatus orderStatus;
+
   private LocalDateTime orderDatetime;
   @Builder.Default
   @OneToMany(mappedBy = "orders", fetch = FetchType.LAZY,cascade = CascadeType.ALL, orphanRemoval = true)
@@ -56,13 +52,9 @@ public class Orders extends BaseTimeEntity {
 
   public long calculateTotalPrice() {
     long totalPrice = 0;
-    for (OrderItem orderItem: orderItems) {
+    for (OrderItem orderItem : this.orderItems) {
       totalPrice += (orderItem.getOrderPrice() * orderItem.getCount());
     }
     return totalPrice;
-  }
-
-  public void payComplete() {
-    this.orderStatus = OrderStatus.PAY_COMPLETE;
   }
 }

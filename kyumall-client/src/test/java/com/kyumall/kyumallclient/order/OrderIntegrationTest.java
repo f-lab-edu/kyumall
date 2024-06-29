@@ -7,15 +7,17 @@ import com.kyumall.kyumallclient.AuthTestUtil;
 import com.kyumall.kyumallclient.IntegrationTest;
 import com.kyumall.kyumallclient.product.ProductIntegrationTest;
 import com.kyumall.kyumallcommon.factory.MemberFactory;
-import com.kyumall.kyumallclient.pay.PayOpenFeign;
-import com.kyumall.kyumallclient.pay.PayResponse;
+import com.kyumall.kyumallcommon.order.dto.CreateOrderRequest;
+import com.kyumall.kyumallcommon.order.dto.ProductIdAndCount;
+import com.kyumall.kyumallcommon.pay.PayOpenFeign;
+import com.kyumall.kyumallcommon.pay.PayResponse;
 import com.kyumall.kyumallcommon.factory.ProductFactory;
 import com.kyumall.kyumallcommon.fixture.member.MemberFixture;
 import com.kyumall.kyumallcommon.fixture.product.ProductFixture;
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.order.entity.Orders;
-import com.kyumall.kyumallcommon.order.repository.OrderRepository;
-import com.kyumall.kyumallcommon.order.vo.OrderStatus;
+import com.kyumall.kyumallcommon.order.repository.OrdersRepository;
+import com.kyumall.kyumallcommon.order.entity.OrderItemStatus;
 import com.kyumall.kyumallcommon.product.product.Product;
 import com.kyumall.kyumallcommon.product.stock.StockRepository;
 import io.restassured.RestAssured;
@@ -35,14 +37,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
-class OrdersIntegrationTest extends IntegrationTest {
+class OrderIntegrationTest extends IntegrationTest {
   private static final String pw = MemberFixture.password;
   @Autowired
   private MemberFactory memberFactory;
   @Autowired
   private ProductFactory productFactory;
   @Autowired
-  private OrderRepository orderRepository;
+  private OrdersRepository ordersRepository;
   @Autowired
   private StockRepository stockRepository;
   @MockBean
@@ -74,7 +76,8 @@ class OrdersIntegrationTest extends IntegrationTest {
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
     Orders order = findOrder(response);
     assertThat(order.getBuyer().getId()).isEqualTo(member01.getId());
-    assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.BEFORE_PAY);
+    assertThat(order.getOrderItems().get(0).getOrderItemStatus()).isEqualTo(OrderItemStatus.BEFORE_PAY);
+    assertThat(order.getOrderItems().get(1).getOrderItemStatus()).isEqualTo(OrderItemStatus.BEFORE_PAY);
     assertThat(order.getOrderItems()).hasSize(2);
     assertThat(order.getOrderItems().get(0).getProduct().getId()).isEqualTo(apple.getId());
     assertThat(order.getOrderItems().get(1).getProduct().getId()).isEqualTo(beef.getId());
@@ -109,8 +112,9 @@ class OrdersIntegrationTest extends IntegrationTest {
 
     // then
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
-    Orders order = orderRepository.findById(createdOrder.getId()).orElseThrow();
-    assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.PAY_COMPLETE);
+    Orders order = ordersRepository.findWithOrderItemsById(createdOrder.getId()).orElseThrow();
+    assertThat(order.getOrderItems().get(0).getOrderItemStatus()).isEqualTo(OrderItemStatus.PAY_COMPLETE);
+    assertThat(order.getOrderItems().get(1).getOrderItemStatus()).isEqualTo(OrderItemStatus.PAY_COMPLETE);
     assertThat(stockRepository.findByProduct(apple).orElseThrow().getQuantity())
         .isEqualTo(appleStock - appleOrderQuantity);
     assertThat(stockRepository.findByProduct(beef).orElseThrow().getQuantity())
@@ -211,7 +215,7 @@ class OrdersIntegrationTest extends IntegrationTest {
   }
 
   private Orders findOrder(ExtractableResponse<Response> response) {
-    return orderRepository.findWithOrderItemsById(response.body().jsonPath().getLong("result.id"))
+    return ordersRepository.findWithOrderItemsById(response.body().jsonPath().getLong("result.id"))
         .orElseThrow(() -> new RuntimeException("test fail"));
   }
 }

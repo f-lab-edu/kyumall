@@ -3,6 +3,8 @@ package com.kyumall.kyumallcommon.order.entity;
 import com.kyumall.kyumallcommon.BaseTimeEntity;
 import com.kyumall.kyumallcommon.product.product.Product;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -22,14 +24,20 @@ public class OrderItem extends BaseTimeEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
+
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "order_id")
   private Orders orders;
+
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "product_id")
   private Product product;
+
   private Integer count;
   private Integer orderPrice;
+
+  @Enumerated(EnumType.STRING)
+  private OrderItemStatus orderItemStatus;
 
   public static OrderItem from(Product product, Orders orders, int count) {
     return OrderItem.builder()
@@ -37,6 +45,11 @@ public class OrderItem extends BaseTimeEntity {
         .product(product)
         .count(count)
         .orderPrice(product.getPrice())
+        .orderItemStatus(OrderItemStatus.BEFORE_PAY)
         .build();
+  }
+
+  public void payComplete() {
+    this.orderItemStatus = OrderItemStatus.PAY_COMPLETE;
   }
 }
