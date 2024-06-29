@@ -34,6 +34,13 @@ public class OrderService {
   private final StockRepository stockRepository;
   private final EntityManager em;
 
+  /**
+   * 주문 생성
+   * 주문하는 상품과 갯수에 맞는 주문을 생성합니다.
+   * @param memberId
+   * @param request
+   * @return
+   */
   @Transactional
   public Long createOrder(Long memberId, CreateOrderRequest request) {
     Member member = findMember(memberId);
@@ -56,6 +63,11 @@ public class OrderService {
         .orElseThrow(() -> new KyumallException(ErrorCode.MEMBER_NOT_EXISTS));
   }
 
+  /**
+   * 주문 결제
+   * @param payId
+   * @param memberId
+   */
   @Transactional
   public void payOrder(Long payId, Long memberId) {
     Orders orders = findOrder(payId);

@@ -19,13 +19,24 @@ import org.springframework.web.bind.annotation.RestController;
 public class OrderController {
   private final OrderService orderService;
 
-  @PostMapping()
+  /**
+   * 주문 생성
+   * @param authenticatedUser
+   * @param request
+   * @return
+   */
+  @PostMapping
   public ResponseWrapper<CreatedIdDto> createOrder(@LoginUser AuthenticatedUser authenticatedUser,
                           @RequestBody CreateOrderRequest request) {
     return ResponseWrapper.ok(
         CreatedIdDto.of(orderService.createOrder(authenticatedUser.getMemberId(), request)));
   }
 
+  /**
+   * 주문 결제
+   * @param id
+   * @param authenticatedUser
+   */
   @PostMapping("/{id}/pay")
   public void payOrder(@PathVariable Long id, @LoginUser AuthenticatedUser authenticatedUser) {
     orderService.payOrder(id, authenticatedUser.getMemberId());
