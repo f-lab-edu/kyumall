@@ -17,7 +17,7 @@ import com.kyumall.kyumallcommon.fixture.product.ProductFixture;
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.order.entity.Orders;
 import com.kyumall.kyumallcommon.order.repository.OrdersRepository;
-import com.kyumall.kyumallcommon.order.entity.OrderStatus;
+import com.kyumall.kyumallcommon.order.entity.OrderItemStatus;
 import com.kyumall.kyumallcommon.product.product.Product;
 import com.kyumall.kyumallcommon.product.stock.StockRepository;
 import io.restassured.RestAssured;
@@ -76,8 +76,8 @@ class OrderIntegrationTest extends IntegrationTest {
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
     Orders order = findOrder(response);
     assertThat(order.getBuyer().getId()).isEqualTo(member01.getId());
-    assertThat(order.getOrderItems().get(0).getOrderStatus()).isEqualTo(OrderStatus.BEFORE_PAY);
-    assertThat(order.getOrderItems().get(1).getOrderStatus()).isEqualTo(OrderStatus.BEFORE_PAY);
+    assertThat(order.getOrderItems().get(0).getOrderItemStatus()).isEqualTo(OrderItemStatus.BEFORE_PAY);
+    assertThat(order.getOrderItems().get(1).getOrderItemStatus()).isEqualTo(OrderItemStatus.BEFORE_PAY);
     assertThat(order.getOrderItems()).hasSize(2);
     assertThat(order.getOrderItems().get(0).getProduct().getId()).isEqualTo(apple.getId());
     assertThat(order.getOrderItems().get(1).getProduct().getId()).isEqualTo(beef.getId());
@@ -113,8 +113,8 @@ class OrderIntegrationTest extends IntegrationTest {
     // then
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
     Orders order = ordersRepository.findWithOrderItemsById(createdOrder.getId()).orElseThrow();
-    assertThat(order.getOrderItems().get(0).getOrderStatus()).isEqualTo(OrderStatus.PAY_COMPLETE);
-    assertThat(order.getOrderItems().get(1).getOrderStatus()).isEqualTo(OrderStatus.PAY_COMPLETE);
+    assertThat(order.getOrderItems().get(0).getOrderItemStatus()).isEqualTo(OrderItemStatus.PAY_COMPLETE);
+    assertThat(order.getOrderItems().get(1).getOrderItemStatus()).isEqualTo(OrderItemStatus.PAY_COMPLETE);
     assertThat(stockRepository.findByProduct(apple).orElseThrow().getQuantity())
         .isEqualTo(appleStock - appleOrderQuantity);
     assertThat(stockRepository.findByProduct(beef).orElseThrow().getQuantity())

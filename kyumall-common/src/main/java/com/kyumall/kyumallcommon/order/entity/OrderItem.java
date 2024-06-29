@@ -37,7 +37,7 @@ public class OrderItem extends BaseTimeEntity {
   private Integer orderPrice;
 
   @Enumerated(EnumType.STRING)
-  private OrderStatus orderStatus;
+  private OrderItemStatus orderItemStatus;
 
   public static OrderItem from(Product product, Orders orders, int count) {
     return OrderItem.builder()
@@ -45,11 +45,11 @@ public class OrderItem extends BaseTimeEntity {
         .product(product)
         .count(count)
         .orderPrice(product.getPrice())
-        .orderStatus(OrderStatus.BEFORE_PAY)
+        .orderItemStatus(OrderItemStatus.BEFORE_PAY)
         .build();
   }
 
   public void payComplete() {
-    this.orderStatus = OrderStatus.PAY_COMPLETE;
+    this.orderItemStatus = OrderItemStatus.PAY_COMPLETE;
   }
 }

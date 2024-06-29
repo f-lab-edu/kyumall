@@ -1,6 +1,6 @@
 package com.kyumall.kyumallcommon.order.entity;
 
-public enum OrderStatus {
+public enum OrderItemStatus {
   BEFORE_PAY      // 결제 전
   , PAY_COMPLETE  // 결재 완료
   , PREPARING_FOR_SHIPMENT // 상품 준비중
