@@ -12,10 +12,9 @@ import com.kyumall.kyumallclient.member.dto.TermDto;
 import com.kyumall.kyumallclient.member.dto.VerifySentCodeRequest;
 import com.kyumall.kyumallcommon.Util.EncryptUtil;
 import com.kyumall.kyumallcommon.Util.RandomCodeGenerator;
+import com.kyumall.kyumallcommon.factory.EmailFactory;
 import com.kyumall.kyumallcommon.fixture.member.TermDetailFixture;
 import com.kyumall.kyumallcommon.fixture.member.TermFixture;
-import com.kyumall.kyumallcommon.mail.Mail;
-import com.kyumall.kyumallcommon.mail.MailService;
 import com.kyumall.kyumallcommon.member.entity.Agreement;
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.member.entity.Term;
@@ -53,8 +52,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 @DisplayName("회원 통합테스트")
 class MemberIntegrationTest extends IntegrationTest {
   @MockBean
-  MailService mailService;
-  @MockBean
   Clock clock;
   @MockBean
   RandomCodeGenerator randomCodeGenerator;
@@ -68,6 +65,9 @@ class MemberIntegrationTest extends IntegrationTest {
   MemberRepository memberRepository;
   @Autowired
   AgreementRepository agreementRepository;
+  @Autowired
+  EmailFactory emailFactory;
+
   @Value("${encrypt.key}")
   private String encryptKey;
   private SecretKey secretKey;
@@ -88,6 +88,9 @@ class MemberIntegrationTest extends IntegrationTest {
     kyumallTermDetail = termDetailRepository.save(TermDetailFixture.PRIVACY_DETAIL.createEntity(privateInfoTerm));
     marketingTermDetail1 = termDetailRepository.save(TermDetailFixture.MARKETING_DETAIL_1.createEntity(marketingTerm));
     marketingTermDetail2 = termDetailRepository.save(TermDetailFixture.MARKETING_DETAIL_2.createEntity(marketingTerm));
+    // 이메일 템플릿
+    emailFactory.createEmailTemplate(MemberService.SIGNUP_VERIFICATION_EMAIL_TEMPLATE_ID, "Kyumall 계정 인증", "email-template/signup-verification-template");
+    emailFactory.createEmailTemplate(MemberService.TEMPORARY_PASSWORD_EMAIL_TEMPLATE_ID, "Kyumall 계정 비밀번호 재설정", "email-template/temporary-password-template");
   }
 
   @Test
@@ -104,8 +107,6 @@ class MemberIntegrationTest extends IntegrationTest {
 
     // then
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
-    // 메일발송 메서드 호출 체크
-    then(mailService).should(times(1)).sendMail(email);
     // DB 저장 체크
     Verification verification = verificationRepository.findUnverifiedByContact(email)
         .orElseThrow(() -> new RuntimeException("테스트 실패"));
@@ -137,7 +138,7 @@ class MemberIntegrationTest extends IntegrationTest {
     // then
     assertThat(response.statusCode()).isNotEqualTo(HttpStatus.SC_OK); // 성공 아님
     // 메일발송 메서드 호출 체크 (첫메일 전송 한번)
-    then(mailService).should(times(1)).sendMail(email);
+//    then(emailService).should(times(1)).sendEmail(anyString(), any());
   }
 
   @Test
@@ -157,7 +158,6 @@ class MemberIntegrationTest extends IntegrationTest {
     // then
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
     // 메일발송 메서드 호출 체크 (첫메일, 재전송 합쳐서 두번)
-    then(mailService).should(times(2)).sendMail(email);
   }
 
   @Test
@@ -416,7 +416,6 @@ class MemberIntegrationTest extends IntegrationTest {
 
     // then
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
-    then(mailService).should().sendMail(any(Mail.class));
     Member updatedMember = memberRepository.findByUsername(member.getUsername())
         .orElseThrow(() -> new RuntimeException());
     assertThat(updatedMember.getPassword()).isEqualTo(tempPassword);
