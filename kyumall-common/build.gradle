@@ -37,4 +37,6 @@ dependencies {
     api 'io.micrometer:micrometer-registry-prometheus'
     // feign
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+    // mail
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
 }

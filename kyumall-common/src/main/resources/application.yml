@@ -4,9 +4,11 @@ spring:
       local:
         - app-local
         - ncloud
+        - mail
         - actuator
       dev:
         - app-dev
         - ncloud
+        - mail
         - actuator
     active: local
