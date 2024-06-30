@@ -32,7 +32,7 @@ public class EmailTemplate extends BaseTimeEntity {
   @Transient
   private EmailTemplateVariables emailTemplateVariables;
 
-  public void setBindingVariables(EmailTemplateVariables emailTemplateVariables) {
+  public void setEmailTemplateVariables(EmailTemplateVariables emailTemplateVariables) {
     if (emailTemplateVariables == null) {
       return;
     }

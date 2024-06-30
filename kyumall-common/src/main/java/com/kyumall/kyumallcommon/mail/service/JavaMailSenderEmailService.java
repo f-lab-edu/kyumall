@@ -49,7 +49,7 @@ public class JavaMailSenderEmailService implements EmailService {
     log.debug("sendEmail, templateId:{}, emailMessage: {}", templateId, emailMessage);
     EmailTemplate emailTemplate = emailTemplateRepository.findById(templateId)
         .orElseThrow(() -> new KyumallException(ErrorCode.EMAIL_TEMPLATE_NOT_FOUND));
-    emailTemplate.setBindingVariables(emailTemplateVariables);
+    emailTemplate.setEmailTemplateVariables(emailTemplateVariables);
 
     emailMessage.bindEmailTemplate(emailTemplate);
     sendMailByJavaMailSender(emailMessage);

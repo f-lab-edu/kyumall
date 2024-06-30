@@ -32,7 +32,7 @@ public class ConsoleEmailService implements EmailService {
   public void sendEmail(String templateId, EmailTemplateVariables emailTemplateVariables, EmailMessage emailMessage) {
     EmailTemplate emailTemplate = emailTemplateRepository.findById(templateId)
         .orElseThrow(() -> new KyumallException(ErrorCode.EMAIL_TEMPLATE_NOT_FOUND));
-    emailTemplate.setBindingVariables(emailTemplateVariables);
+    emailTemplate.setEmailTemplateVariables(emailTemplateVariables);
     emailMessage.bindEmailTemplate(emailTemplate);
 
     log.info("sendEmail, templateId:{}, emailMessage: {}", templateId, emailMessage);
