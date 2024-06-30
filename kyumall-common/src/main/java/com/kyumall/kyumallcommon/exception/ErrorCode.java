@@ -21,6 +21,8 @@ public enum ErrorCode {
   FAIL_TO_CONVERT_STRING_TYPE_KEY_TO_KEY("1010", "문자열 타입의 key를 Key타입으로 변경하는데 실패했습니다.", HttpStatus.SC_INTERNAL_SERVER_ERROR),
   INVALID_TOKEN_FORMAT("1011", "토큰 형식이 올바르지 않습니다.", HttpStatus.SC_FORBIDDEN),
   INVALID_TOKEN("1012", "유효하지 않은 토크입니다.", HttpStatus.SC_FORBIDDEN),
+  EMAIL_SEND_FAIL("1013", "이메일 발송에 실패했습니다.", HttpStatus.SC_INTERNAL_SERVER_ERROR),
+  EMAIL_TEMPLATE_NOT_FOUND("1014", "이메일 템플릿을 찾을 수 없습니다.", HttpStatus.SC_INTERNAL_SERVER_ERROR),
 
   // 회원파트 에러 2000 ~ 2999
   VERIFICATION_MAIL_CAN_SEND_IN_TERM("2000", "본인인증 메일은 3분 간격으로 전송 가능합니다.", HttpStatus.SC_BAD_REQUEST),
