@@ -45,6 +45,11 @@ public class Verification extends BaseTimeEntity {
         .build();
   }
 
+  /**
+   * 랜덤 코드를 생성합니다.
+   * @param randomCodeGenerator
+   * @return
+   */
   public static String generateCode(RandomCodeGenerator randomCodeGenerator) {
     return randomCodeGenerator.generateCode(VERIFICATION_CODE_SIZE);
   }

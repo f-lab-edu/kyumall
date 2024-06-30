@@ -10,10 +10,10 @@ import com.kyumall.kyumallclient.member.dto.SignUpRequest;
 import com.kyumall.kyumallclient.member.dto.TermDto;
 import com.kyumall.kyumallclient.member.dto.VerifySentCodeRequest;
 import com.kyumall.kyumallclient.member.dto.VerifySentCodeResult;
-import com.kyumall.kyumallcommon.Util.EncryptUtil;
 import com.kyumall.kyumallcommon.Util.RandomCodeGenerator;
-import com.kyumall.kyumallcommon.mail.Mail;
-import com.kyumall.kyumallcommon.mail.MailService;
+import com.kyumall.kyumallcommon.mail.domain.EmailMessage;
+import com.kyumall.kyumallcommon.mail.service.EmailService;
+import com.kyumall.kyumallcommon.mail.domain.EmailTemplateVariables;
 import com.kyumall.kyumallcommon.member.entity.Agreement;
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.member.entity.Term;
@@ -40,8 +40,10 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class MemberService {
   public static final String ID_ENCRYPTION_ALGORITHM = "AES";
+  public static final String SIGNUP_VERIFICATION_EMAIL_TEMPLATE_ID = "SIGNUP_VERIFICATION";
+  public static final String TEMPORARY_PASSWORD_EMAIL_TEMPLATE_ID = "TEMPORARY_PASSWORD";
   private final VerificationRepository verificationRepository;
-  private final MailService mailService;
+  private final EmailService emailService;
   private final RandomCodeGenerator randomCodeGenerator;
   private final Clock clock;
   private final MemberRepository memberRepository;
@@ -61,8 +63,14 @@ public class MemberService {
     verificationRepository.findUnverifiedByContact(email)
             .ifPresent(this::processWhenUnverifiedInfoExists);
 
-    mailService.sendMail(email);
-    return verificationRepository.save(Verification.of(email, randomCodeGenerator, clock)).getId();
+    Verification verification = Verification.of(email, randomCodeGenerator, clock);
+
+    emailService.sendEmail(SIGNUP_VERIFICATION_EMAIL_TEMPLATE_ID,
+        EmailTemplateVariables.builder()
+            .addVariable("verificationCode", verification.getCode()).build(),
+        EmailMessage.builder()
+          .to(email).build());
+    return verificationRepository.save(verification).getId();
   }
 
   /**
@@ -192,11 +200,14 @@ public class MemberService {
 
     String newPassword = member.resetRandomPassword(randomCodeGenerator);
 
-    mailService.sendMail(Mail.builder()
+    emailService.sendEmail(TEMPORARY_PASSWORD_EMAIL_TEMPLATE_ID,
+        EmailTemplateVariables.builder()
+            .addVariable("username", member.getUsername())
+            .addVariable("temporaryPassword", newPassword)
+            .build(),
+        EmailMessage.builder()
             .to(member.getEmail())
-            .subject("kyumall 임시 비밀번호")
-            .message("임시 비밀번호:" + newPassword)
-        .build());
+            .build());
   }
 
   /**
