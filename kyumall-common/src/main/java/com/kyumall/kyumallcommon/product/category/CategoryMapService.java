@@ -17,7 +17,7 @@ public class CategoryMapService {
   private final CategoryRepository categoryRepository;
   /**
    * 전체 카테고리를 조회하여 parentId 로 group by 한 Map 을 만듭니다.
-   * 캐시는 히트율이 중요함 id 별로 카테고리를 캐시하지 말고, 전체 카테고리를 캐시해 둘 것
+   * 캐시는 히트율이 중요하기 때문에 id 별로 카테고리를 캐시하는 것이 아닌, 전체 카테고리를 캐시하였습니다.
    * @return all category grouping by parent id
    */
   @Cacheable(value = CATEGORY_GROUP_BY_PARENT_MAP, key = "#root.methodName")
