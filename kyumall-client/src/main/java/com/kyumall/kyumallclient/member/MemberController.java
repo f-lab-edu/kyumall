@@ -1,6 +1,5 @@
 package com.kyumall.kyumallclient.member;
 
-import static com.kyumall.kyumallclient.member.MemberService.ID_ENCRYPTION_ALGORITHM;
 
 import com.kyumall.kyumallcommon.exception.ErrorCode;
 import com.kyumall.kyumallcommon.exception.KyumallException;
@@ -45,6 +44,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class MemberController {
   @Value("${encrypt.key}")
   private String encryptKey;
+  public static final String ID_ENCRYPTION_ALGORITHM = "AES";
   private final MemberService memberService;
   private final SignUpRequestValidator signUpRequestValidator;
 
@@ -66,14 +66,7 @@ public class MemberController {
   @PostMapping("/send-verification-mail")
   public ResponseWrapper<SendVerificationEmailResponse> sendVerificationMail(@NotEmpty @Parameter(description = "인증하려는 이메일", required = true, example = "example@example.com") @RequestParam String email) {
     SecretKey secretKey = EncryptUtil.decodeStringToKey(encryptKey, ID_ENCRYPTION_ALGORITHM);
-    Long newId = memberService.sendVerificationEmail(email, secretKey);
-    try {
-      return ResponseWrapper.ok(SendVerificationEmailResponse.of(
-          EncryptUtil.encrypt(ID_ENCRYPTION_ALGORITHM, String.valueOf(newId), secretKey)));
-    } catch (Exception e) {
-      log.error(e.toString());
-      throw new KyumallException(ErrorCode.FAIL_TO_ENCRYPT);
-    }
+    return ResponseWrapper.ok(memberService.sendVerificationEmail(email, secretKey, ID_ENCRYPTION_ALGORITHM));
   }
 
   /**

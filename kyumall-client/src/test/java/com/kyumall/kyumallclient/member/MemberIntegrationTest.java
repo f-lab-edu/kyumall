@@ -80,7 +80,7 @@ class MemberIntegrationTest extends IntegrationTest {
 
   @BeforeEach
   void init_data() {
-    secretKey = EncryptUtil.decodeStringToKey(encryptKey, MemberService.ID_ENCRYPTION_ALGORITHM);
+    secretKey = EncryptUtil.decodeStringToKey(encryptKey, MemberController.ID_ENCRYPTION_ALGORITHM);
     // 약관 데이터
     privateInfoTerm = termRepository.save(TermFixture.PRIVACY.createEntity());
     marketingTerm = termRepository.save(TermFixture.MARKETING.createEntity());
@@ -117,7 +117,7 @@ class MemberIntegrationTest extends IntegrationTest {
     assertThat(verification.getTryCount()).isEqualTo(0);
     // 암호화하여 반환한 ID값 체크
     String verificationId = response.body().jsonPath().get("result.key");
-    String decryptId = EncryptUtil.decrypt(MemberService.ID_ENCRYPTION_ALGORITHM, verificationId, secretKey);
+    String decryptId = EncryptUtil.decrypt(MemberController.ID_ENCRYPTION_ALGORITHM, verificationId, secretKey);
     assertThat(Long.parseLong(decryptId)).isEqualTo(verification.getId());
   }
 
