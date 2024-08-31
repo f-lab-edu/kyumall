@@ -1,6 +1,9 @@
 package com.kyumall.kyumallclient;
 
+import com.kyumall.kyumallclient.member.MemberService;
 import com.kyumall.kyumallcommon.auth.authentication.passwword.PasswordService;
+import com.kyumall.kyumallcommon.mail.domain.EmailTemplate;
+import com.kyumall.kyumallcommon.mail.repository.EmailTemplateRepository;
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.member.entity.Term;
 import com.kyumall.kyumallcommon.member.entity.TermDetail;
@@ -14,15 +17,26 @@ import com.kyumall.kyumallcommon.member.vo.TermType;
 import com.kyumall.kyumallcommon.product.category.Category;
 import com.kyumall.kyumallcommon.product.category.CategoryRepository;
 import com.kyumall.kyumallcommon.product.category.CategoryStatus;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
 
 /**
- * 초기 데이터를 등록하는데 사용됩니다
+ * 어플리케이션 초기 기동시 동작하는 코드
  */
+@Slf4j
 @Profile({"dev", "local"})
 @Component
 @RequiredArgsConstructor
@@ -34,13 +48,19 @@ public class DataLoader implements CommandLineRunner {
   private final TermDetailRepository termDetailRepository;
   private final CategoryRepository categoryRepository;
   private final CacheManager cacheManager;
+  private final EmailTemplateRepository emailTemplateRepository;
+  private final ResourceLoader resourceLoader;
+  @Value("${spring.mail.password}")
+  private String mailPassword;
 
   @Override
   public void run(String... args) throws Exception {
     saveMember();
     saveTerms();
     saveCategories();
+    saveEmailTemplate();
     logJVMSettings();
+    log.info("mail Password: {}", mailPassword);
     System.out.println("cacheManager is " + this.cacheManager.getClass().getName());
   }
 
@@ -121,5 +141,37 @@ public class DataLoader implements CommandLineRunner {
         .build();
     termDetailRepository.save(kyumallTermDetail);
     termDetailRepository.save(marketingTermDetail);
+  }
+
+  private void saveEmailTemplate() {
+    // 이메일 템플릿
+    createEmailTemplate(MemberService.SIGNUP_VERIFICATION_EMAIL_TEMPLATE_ID, "Kyumall 계정 인증", "email-template/signup-verification-template");
+    createEmailTemplate(MemberService.TEMPORARY_PASSWORD_EMAIL_TEMPLATE_ID, "Kyumall 계정 비밀번호 재설정", "email-template/temporary-password-template");
+  }
+
+  private EmailTemplate createEmailTemplate(String templateId, String subject, String fileName) {
+    EmailTemplate emailTemplate = loadEmailTemplate(templateId, subject, fileName);
+    return emailTemplateRepository.saveAndFlush(emailTemplate);
+  }
+
+  private EmailTemplate loadEmailTemplate(String templateId, String subject ,String fileName) {
+    try {
+      String readFile = getResourceAsString(fileName);
+      return EmailTemplate.builder()
+          .id(templateId)
+          .subject(subject)
+          .template(readFile)
+          .build();
+    } catch (IOException e) {
+      throw new RuntimeException("템플릿 로드 중 오류가 발생", e);
+    }
+  }
+
+  private String getResourceAsString(String fileName) throws IOException {
+    Resource resource = resourceLoader.getResource("classpath:" + fileName + ".html");
+    try (InputStream inputStream = resource.getInputStream();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+      return reader.lines().collect(Collectors.joining(System.lineSeparator()));
+    }
   }
 }

@@ -21,11 +21,13 @@ public enum ErrorCode {
   FAIL_TO_CONVERT_STRING_TYPE_KEY_TO_KEY("1010", "문자열 타입의 key를 Key타입으로 변경하는데 실패했습니다.", HttpStatus.SC_INTERNAL_SERVER_ERROR),
   INVALID_TOKEN_FORMAT("1011", "토큰 형식이 올바르지 않습니다.", HttpStatus.SC_FORBIDDEN),
   INVALID_TOKEN("1012", "유효하지 않은 토크입니다.", HttpStatus.SC_FORBIDDEN),
+  EMAIL_SEND_FAIL("1013", "이메일 발송에 실패했습니다.", HttpStatus.SC_INTERNAL_SERVER_ERROR),
+  EMAIL_TEMPLATE_NOT_FOUND("1014", "이메일 템플릿을 찾을 수 없습니다.", HttpStatus.SC_INTERNAL_SERVER_ERROR),
 
   // 회원파트 에러 2000 ~ 2999
   VERIFICATION_MAIL_CAN_SEND_IN_TERM("2000", "본인인증 메일은 3분 간격으로 전송 가능합니다.", HttpStatus.SC_BAD_REQUEST),
   VERIFICATION_MAIL_NOT_MATCH("2001", "본인인증 이메일이 일치하지 않습니다.", HttpStatus.SC_INTERNAL_SERVER_ERROR),
-  VERIFICATION_FAILED("2002", "본인인증에 실패했습니다.", HttpStatus.SC_BAD_REQUEST),
+  VERIFICATION_MISMATCH_CODE("2002", "본인인증 코드가 일치하지 않습니다.", HttpStatus.SC_BAD_REQUEST),
   VERIFICATION_EXCEED_TRY_COUNT("2003", "본인인증 시도 횟수를 초과하였습니다.", HttpStatus.SC_BAD_REQUEST),
   TERM_NOT_EXISTS("2004", "약관이 존재하지 않습니다.", HttpStatus.SC_BAD_REQUEST),
   REQUIRED_TERM_MUST_AGREED("2005", "필수 약관은 반드시 동의해야합니다.", HttpStatus.SC_BAD_REQUEST),
@@ -33,6 +35,7 @@ public enum ErrorCode {
   PASSWORD_AND_CONFIRM_NOT_EQUALS("2007", "비밀번호와 비밀번호 확인이 일치하지 않습니다.", HttpStatus.SC_BAD_REQUEST),
   PASSWORD_NOT_MATCHED("2008", "비밀번호가 일치하지 않습니다.", HttpStatus.SC_BAD_REQUEST),
   TERM_DETAIL_NOT_EXISTS("2009", "약관 상세가 존재하지 않습니다.", HttpStatus.SC_BAD_REQUEST),
+  VERIFICATION_EXCEED_TIME_LIMIT("2010", "본인 인증 유효시간이 초과되었습니다.", HttpStatus.SC_BAD_REQUEST),
 
   // 상품파트 에러 (3000 ~ 3999)
   CATEGORY_NOT_EXISTS("3000", "카테고리가 존재하지 않습니다.", HttpStatus.SC_BAD_REQUEST),

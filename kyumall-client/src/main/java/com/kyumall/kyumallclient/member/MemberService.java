@@ -1,5 +1,7 @@
 package com.kyumall.kyumallclient.member;
 
+import com.kyumall.kyumallclient.member.dto.SendVerificationEmailResponse;
+import com.kyumall.kyumallcommon.Util.EncryptUtil;
 import com.kyumall.kyumallcommon.auth.authentication.passwword.PasswordService;
 import com.kyumall.kyumallcommon.exception.ErrorCode;
 import com.kyumall.kyumallcommon.exception.KyumallException;
@@ -9,11 +11,11 @@ import com.kyumall.kyumallclient.member.dto.ResetPasswordRequest;
 import com.kyumall.kyumallclient.member.dto.SignUpRequest;
 import com.kyumall.kyumallclient.member.dto.TermDto;
 import com.kyumall.kyumallclient.member.dto.VerifySentCodeRequest;
-import com.kyumall.kyumallclient.member.dto.VerifySentCodeResult;
-import com.kyumall.kyumallcommon.Util.EncryptUtil;
+import com.kyumall.kyumallcommon.member.vo.VerifyResult;
 import com.kyumall.kyumallcommon.Util.RandomCodeGenerator;
-import com.kyumall.kyumallcommon.mail.Mail;
-import com.kyumall.kyumallcommon.mail.MailService;
+import com.kyumall.kyumallcommon.mail.domain.EmailMessage;
+import com.kyumall.kyumallcommon.mail.service.EmailService;
+import com.kyumall.kyumallcommon.mail.domain.EmailTemplateVariables;
 import com.kyumall.kyumallcommon.member.entity.Agreement;
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.member.entity.Term;
@@ -39,9 +41,10 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Service
 public class MemberService {
-  public static final String ID_ENCRYPTION_ALGORITHM = "AES";
+  public static final String SIGNUP_VERIFICATION_EMAIL_TEMPLATE_ID = "SIGNUP_VERIFICATION";
+  public static final String TEMPORARY_PASSWORD_EMAIL_TEMPLATE_ID = "TEMPORARY_PASSWORD";
   private final VerificationRepository verificationRepository;
-  private final MailService mailService;
+  private final EmailService emailService;
   private final RandomCodeGenerator randomCodeGenerator;
   private final Clock clock;
   private final MemberRepository memberRepository;
@@ -50,19 +53,36 @@ public class MemberService {
   private final PasswordService passwordService;
 
   /**
-   * 본인 인증 메일을 발송합니다.
-   * 메일 발송 후 발송 내용을 저장합니다.
-   * 이미 발송된 메일이 있는 경우, 재발송 가능한지 체크 후 발송합니다.
-   * @param email
+   * 본인 인증 메일을 발송합니다. 메일 발송 후 발송 내용을 저장합니다. 이미 발송된 메일이 있는 경우, 재발송 가능한지 체크 후 발송합니다.
+   * verification ID를 암호화 한 후 반환합니다. 암호화된 ID는 인증을 검증할때 체크되도록 하여 본인인증의 보안을 강화합니다.
+   * @param email 본인인증 받을 메일
+   * @param secretKey 암호화를 위한 secretKey
+   * @param encryptionAlgorithm id 암호화 할 알고리즘
    * @return 생성된 verification 객체의 id 값
    */
   @Transactional
-  public Long sendVerificationEmail(String email, SecretKey secretKey) {
+  public SendVerificationEmailResponse sendVerificationEmail(String email, SecretKey secretKey, String encryptionAlgorithm) {
     verificationRepository.findUnverifiedByContact(email)
             .ifPresent(this::processWhenUnverifiedInfoExists);
 
-    mailService.sendMail(email);
-    return verificationRepository.save(Verification.of(email, randomCodeGenerator, clock)).getId();
+    Verification verification = Verification.of(email, randomCodeGenerator, clock);
+
+    emailService.sendEmail(SIGNUP_VERIFICATION_EMAIL_TEMPLATE_ID,
+        EmailTemplateVariables.builder()
+            .addVariable("verificationCode", verification.getCode()).build(),
+        EmailMessage.builder()
+          .to(email).build());
+
+    Long verificationID = verificationRepository.save(verification).getId();
+    return SendVerificationEmailResponse.of(encryptId(verificationID, encryptionAlgorithm, secretKey));
+  }
+
+  private String encryptId(Long id, String encryptionAlgorithm, SecretKey secretKey) {
+    try {
+      return EncryptUtil.encrypt(encryptionAlgorithm, String.valueOf(id), secretKey);
+    } catch (Exception e) {
+      throw new KyumallException(ErrorCode.FAIL_TO_ENCRYPT, e);
+    }
   }
 
   /**
@@ -83,32 +103,21 @@ public class MemberService {
    * 예외 발생 시 Tx Rollback 되기 때문에 실패시, 예외를 트랜잭션 안에서 던지지 않고 결과를 enum 으로 반환합니다.
    * 인증객체의 ID와 전달받은 ID(decryptedKey)를 값이 동일한지 검증합니다.
    * @param request
-   * @return VerifySentCodeResult 인증결과
+   * @return verifyResult 인증결과
    */
   @Transactional
-  public VerifySentCodeResult verifySentCode(VerifySentCodeRequest request, String decryptedKey) {
+  public VerifyResult verifySentCode(VerifySentCodeRequest request, String decryptedKey) {
     Verification verification = verificationRepository.findUnverifiedByContact(request.getEmail())
         .orElseThrow(() -> new KyumallException(ErrorCode.VERIFICATION_MAIL_NOT_MATCH));
 
     validateVerificationKey(verification.getId(), decryptedKey);
 
-    // 인증 성공
-    if (verification.verify(request.getCode())) {
-      return VerifySentCodeResult.SUCCESS;
-    }
-    // 인증 실패
-    if (verification.isUnderTryCount()) { // 시도 횟수 3회 미만
-      verification.increaseTryCount();
-      return VerifySentCodeResult.FAIL;
-    }
-    // 시도횟수 초과시 만료 처리
-    verification.expired();
-    return VerifySentCodeResult.EXCEED_COUNT;
+    return verification.tryToVerify(request.getCode(), clock);
   }
 
   private void validateVerificationKey(Long verificationId, String decryptedKey) {
     if (verificationId != Long.parseLong(decryptedKey)) {
-      throw new KyumallException(ErrorCode.VERIFICATION_FAILED);
+      throw new KyumallException(ErrorCode.VERIFICATION_MISMATCH_CODE);
     }
   }
 
@@ -192,11 +201,14 @@ public class MemberService {
 
     String newPassword = member.resetRandomPassword(randomCodeGenerator);
 
-    mailService.sendMail(Mail.builder()
+    emailService.sendEmail(TEMPORARY_PASSWORD_EMAIL_TEMPLATE_ID,
+        EmailTemplateVariables.builder()
+            .addVariable("username", member.getUsername())
+            .addVariable("temporaryPassword", newPassword)
+            .build(),
+        EmailMessage.builder()
             .to(member.getEmail())
-            .subject("kyumall 임시 비밀번호")
-            .message("임시 비밀번호:" + newPassword)
-        .build());
+            .build());
   }
 
   /**

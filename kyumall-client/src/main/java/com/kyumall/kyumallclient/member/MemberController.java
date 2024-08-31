@@ -1,6 +1,5 @@
 package com.kyumall.kyumallclient.member;
 
-import static com.kyumall.kyumallclient.member.MemberService.ID_ENCRYPTION_ALGORITHM;
 
 import com.kyumall.kyumallcommon.exception.ErrorCode;
 import com.kyumall.kyumallcommon.exception.KyumallException;
@@ -11,7 +10,7 @@ import com.kyumall.kyumallclient.member.dto.SendVerificationEmailResponse;
 import com.kyumall.kyumallclient.member.dto.SignUpRequest;
 import com.kyumall.kyumallclient.member.dto.TermDto;
 import com.kyumall.kyumallclient.member.dto.VerifySentCodeRequest;
-import com.kyumall.kyumallclient.member.dto.VerifySentCodeResult;
+import com.kyumall.kyumallcommon.member.vo.VerifyResult;
 import com.kyumall.kyumallclient.member.validator.SignUpRequestValidator;
 import com.kyumall.kyumallcommon.response.ResponseWrapper;
 import com.kyumall.kyumallcommon.Util.EncryptUtil;
@@ -45,6 +44,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class MemberController {
   @Value("${encrypt.key}")
   private String encryptKey;
+  public static final String ID_ENCRYPTION_ALGORITHM = "AES";
   private final MemberService memberService;
   private final SignUpRequestValidator signUpRequestValidator;
 
@@ -66,14 +66,7 @@ public class MemberController {
   @PostMapping("/send-verification-mail")
   public ResponseWrapper<SendVerificationEmailResponse> sendVerificationMail(@NotEmpty @Parameter(description = "인증하려는 이메일", required = true, example = "example@example.com") @RequestParam String email) {
     SecretKey secretKey = EncryptUtil.decodeStringToKey(encryptKey, ID_ENCRYPTION_ALGORITHM);
-    Long newId = memberService.sendVerificationEmail(email, secretKey);
-    try {
-      return ResponseWrapper.ok(SendVerificationEmailResponse.of(
-          EncryptUtil.encrypt(ID_ENCRYPTION_ALGORITHM, String.valueOf(newId), secretKey)));
-    } catch (Exception e) {
-      log.error(e.toString());
-      throw new KyumallException(ErrorCode.FAIL_TO_ENCRYPT);
-    }
+    return ResponseWrapper.ok(memberService.sendVerificationEmail(email, secretKey, ID_ENCRYPTION_ALGORITHM));
   }
 
   /**
@@ -90,13 +83,16 @@ public class MemberController {
   public void verifySentCode(@RequestBody VerifySentCodeRequest request) {
     String decryptKey = decryptKey(request.getVerificationKey());
 
-    VerifySentCodeResult result = memberService.verifySentCode(request, decryptKey);
+    VerifyResult result = memberService.verifySentCode(request, decryptKey);
     // 트랜잭션 내에서 exception을 발생시키면 트랜잭션이 롤백 되어서 밖에서 처리하였습니다.
-    if (result == VerifySentCodeResult.FAIL) {
-      throw new KyumallException(ErrorCode.VERIFICATION_FAILED);
+    if (result == VerifyResult.EXCEED_TIME_LIMIT) {
+      throw new KyumallException(ErrorCode.VERIFICATION_EXCEED_TIME_LIMIT);
     }
-    if (result == VerifySentCodeResult.EXCEED_COUNT) {
+    if (result == VerifyResult.EXCEED_TRY_COUNT) {
       throw new KyumallException(ErrorCode.VERIFICATION_EXCEED_TRY_COUNT);
+    }
+    if (result == VerifyResult.MISMATCH_CODE) {
+      throw new KyumallException(ErrorCode.VERIFICATION_MISMATCH_CODE);
     }
   }
 
@@ -107,7 +103,7 @@ public class MemberController {
       decryptId = EncryptUtil.decrypt(ID_ENCRYPTION_ALGORITHM, verificationKey, secretKey);
     } catch (Exception e) {
       log.error(e.toString());
-      throw new KyumallException(ErrorCode.VERIFICATION_FAILED);
+      throw new KyumallException(ErrorCode.VERIFICATION_MISMATCH_CODE);
     }
     return decryptId;
   }
