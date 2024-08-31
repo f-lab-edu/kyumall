@@ -105,11 +105,11 @@ public class MemberService {
       return VerifySentCodeResult.SUCCESS;
     }
     // 인증 실패
-    if (verification.isUnderTryCount()) { // 시도 횟수 3회 미만
+    if (verification.isUnderTryCount()) { // 시도 횟수 3회 미만 -> 시도횟수 증가 후 저장
       verification.increaseTryCount();
       return VerifySentCodeResult.FAIL;
     }
-    // 시도횟수 초과시 만료 처리
+    // 시도횟수 초과시 해당 verification 만료 처리
     verification.expired();
     return VerifySentCodeResult.EXCEED_COUNT;
   }
