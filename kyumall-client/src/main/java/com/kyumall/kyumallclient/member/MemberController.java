@@ -10,7 +10,7 @@ import com.kyumall.kyumallclient.member.dto.SendVerificationEmailResponse;
 import com.kyumall.kyumallclient.member.dto.SignUpRequest;
 import com.kyumall.kyumallclient.member.dto.TermDto;
 import com.kyumall.kyumallclient.member.dto.VerifySentCodeRequest;
-import com.kyumall.kyumallclient.member.dto.VerifySentCodeResult;
+import com.kyumall.kyumallcommon.member.vo.VerifyResult;
 import com.kyumall.kyumallclient.member.validator.SignUpRequestValidator;
 import com.kyumall.kyumallcommon.response.ResponseWrapper;
 import com.kyumall.kyumallcommon.Util.EncryptUtil;
@@ -83,13 +83,16 @@ public class MemberController {
   public void verifySentCode(@RequestBody VerifySentCodeRequest request) {
     String decryptKey = decryptKey(request.getVerificationKey());
 
-    VerifySentCodeResult result = memberService.verifySentCode(request, decryptKey);
+    VerifyResult result = memberService.verifySentCode(request, decryptKey);
     // 트랜잭션 내에서 exception을 발생시키면 트랜잭션이 롤백 되어서 밖에서 처리하였습니다.
-    if (result == VerifySentCodeResult.FAIL) {
-      throw new KyumallException(ErrorCode.VERIFICATION_FAILED);
+    if (result == VerifyResult.EXCEED_TIME_LIMIT) {
+      throw new KyumallException(ErrorCode.VERIFICATION_EXCEED_TIME_LIMIT);
     }
-    if (result == VerifySentCodeResult.EXCEED_COUNT) {
+    if (result == VerifyResult.EXCEED_TRY_COUNT) {
       throw new KyumallException(ErrorCode.VERIFICATION_EXCEED_TRY_COUNT);
+    }
+    if (result == VerifyResult.MISMATCH_CODE) {
+      throw new KyumallException(ErrorCode.VERIFICATION_MISMATCH_CODE);
     }
   }
 
@@ -100,7 +103,7 @@ public class MemberController {
       decryptId = EncryptUtil.decrypt(ID_ENCRYPTION_ALGORITHM, verificationKey, secretKey);
     } catch (Exception e) {
       log.error(e.toString());
-      throw new KyumallException(ErrorCode.VERIFICATION_FAILED);
+      throw new KyumallException(ErrorCode.VERIFICATION_MISMATCH_CODE);
     }
     return decryptId;
   }

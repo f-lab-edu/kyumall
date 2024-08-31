@@ -11,7 +11,7 @@ import com.kyumall.kyumallclient.member.dto.ResetPasswordRequest;
 import com.kyumall.kyumallclient.member.dto.SignUpRequest;
 import com.kyumall.kyumallclient.member.dto.TermDto;
 import com.kyumall.kyumallclient.member.dto.VerifySentCodeRequest;
-import com.kyumall.kyumallclient.member.dto.VerifySentCodeResult;
+import com.kyumall.kyumallcommon.member.vo.VerifyResult;
 import com.kyumall.kyumallcommon.Util.RandomCodeGenerator;
 import com.kyumall.kyumallcommon.mail.domain.EmailMessage;
 import com.kyumall.kyumallcommon.mail.service.EmailService;
@@ -26,13 +26,11 @@ import com.kyumall.kyumallcommon.member.repository.MemberRepository;
 import com.kyumall.kyumallcommon.member.repository.TermRepository;
 import com.kyumall.kyumallcommon.member.repository.VerificationRepository;
 import com.kyumall.kyumallcommon.member.vo.TermStatus;
-import com.kyumall.kyumallcommon.response.ResponseWrapper;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
-import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -105,32 +103,21 @@ public class MemberService {
    * 예외 발생 시 Tx Rollback 되기 때문에 실패시, 예외를 트랜잭션 안에서 던지지 않고 결과를 enum 으로 반환합니다.
    * 인증객체의 ID와 전달받은 ID(decryptedKey)를 값이 동일한지 검증합니다.
    * @param request
-   * @return VerifySentCodeResult 인증결과
+   * @return verifyResult 인증결과
    */
   @Transactional
-  public VerifySentCodeResult verifySentCode(VerifySentCodeRequest request, String decryptedKey) {
+  public VerifyResult verifySentCode(VerifySentCodeRequest request, String decryptedKey) {
     Verification verification = verificationRepository.findUnverifiedByContact(request.getEmail())
         .orElseThrow(() -> new KyumallException(ErrorCode.VERIFICATION_MAIL_NOT_MATCH));
 
     validateVerificationKey(verification.getId(), decryptedKey);
 
-    // 인증 성공
-    if (verification.verify(request.getCode())) {
-      return VerifySentCodeResult.SUCCESS;
-    }
-    // 인증 실패
-    if (verification.isUnderTryCount()) { // 시도 횟수 3회 미만 -> 시도횟수 증가 후 저장
-      verification.increaseTryCount();
-      return VerifySentCodeResult.FAIL;
-    }
-    // 시도횟수 초과시 해당 verification 만료 처리
-    verification.expired();
-    return VerifySentCodeResult.EXCEED_COUNT;
+    return verification.tryToVerify(request.getCode(), clock);
   }
 
   private void validateVerificationKey(Long verificationId, String decryptedKey) {
     if (verificationId != Long.parseLong(decryptedKey)) {
-      throw new KyumallException(ErrorCode.VERIFICATION_FAILED);
+      throw new KyumallException(ErrorCode.VERIFICATION_MISMATCH_CODE);
     }
   }
 
