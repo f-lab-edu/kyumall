@@ -40,7 +40,7 @@ import org.springframework.stereotype.Component;
 @Profile({"dev", "local"})
 @Component
 @RequiredArgsConstructor
-public class DataLoader implements CommandLineRunner {
+public class AppInitialRunner implements CommandLineRunner {
 
   private final MemberRepository memberRepository;
   private final PasswordService passwordService;
@@ -61,7 +61,7 @@ public class DataLoader implements CommandLineRunner {
     saveEmailTemplate();
     logJVMSettings();
     log.info("mail Password: {}", mailPassword);
-    System.out.println("cacheManager is " + this.cacheManager.getClass().getName());
+    log.info("cacheManager is {}", this.cacheManager.getClass().getName());
   }
 
   private void logJVMSettings() {
