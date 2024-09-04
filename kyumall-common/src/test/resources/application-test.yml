@@ -12,6 +12,9 @@ spring:
         show_sql: true
         format_sql: true
       dialect: org.hibernate.dialect.MySQL8InnoDBDialect
+  redis:
+    host: localhost
+    port: 6379
 
 encrypt:
   key: /MHRr8os9VnGseZ6Crf4SA==

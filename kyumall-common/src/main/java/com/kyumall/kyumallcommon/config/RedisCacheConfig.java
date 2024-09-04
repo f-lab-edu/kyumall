@@ -49,13 +49,13 @@ public class RedisCacheConfig {
    */
   @Bean
   public RedisCacheManager redisCacheManager(RedisConnectionFactory redisConnectionFactory) {
-    RedisCacheConfiguration cacheConfig = RedisCacheConfiguration.defaultCacheConfig()
+    RedisCacheConfiguration defaultCacheConfig = RedisCacheConfiguration.defaultCacheConfig()
         .disableCachingNullValues() // Null 값 캐시 안함
-        .entryTtl(Duration.ZERO)  // TTL 설정 안함
+        .entryTtl(Duration.ofDays(1))
         .serializeKeysWith(SerializationPair.fromSerializer(RedisSerializer.string()))
         .serializeValuesWith(SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer(objectMapper())));
     return RedisCacheManager.RedisCacheManagerBuilder.fromConnectionFactory(redisConnectionFactory)
-        .cacheDefaults(cacheConfig)
+        .cacheDefaults(defaultCacheConfig)
         .build();
   }
 
@@ -81,6 +81,6 @@ public class RedisCacheConfig {
         .setVisibility(PropertyAccessor.FIELD, Visibility.ANY)
         .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
         .registerModule(new JavaTimeModule())
-        .activateDefaultTyping(ptv, DefaultTyping.NON_FINAL);
+        .activateDefaultTyping(ptv, DefaultTyping.EVERYTHING);
   }
 }

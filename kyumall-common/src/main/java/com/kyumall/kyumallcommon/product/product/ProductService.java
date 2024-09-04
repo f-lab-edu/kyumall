@@ -1,5 +1,6 @@
 package com.kyumall.kyumallcommon.product.product;
 
+import com.kyumall.kyumallcommon.product.category.dto.CategoryDto;
 import com.kyumall.kyumallcommon.product.product.dto.ProductDetailDto;
 import com.kyumall.kyumallcommon.exception.ErrorCode;
 import com.kyumall.kyumallcommon.exception.KyumallException;
@@ -13,6 +14,7 @@ import com.kyumall.kyumallcommon.product.category.CategoryMapService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -68,8 +70,9 @@ public class ProductService {
    * @return
    */
   public Slice<ProductSimpleDto> getProductsInCategory(Long categoryId, Pageable pageable) {
-    List<Long> subCategoryIds = findAllSubCategories(categoryId);
-    return productRepository.findByCategoryIds(subCategoryIds, pageable).map(ProductSimpleDto::from);
+    List<String> subCategoryIds = findAllSubCategories(categoryId);
+    List<Long> longIdList = subCategoryIds.stream().map(Long::parseLong).collect(Collectors.toList());
+    return productRepository.findByCategoryIds(longIdList, pageable).map(ProductSimpleDto::from);
   }
 
   /**
@@ -79,15 +82,15 @@ public class ProductService {
    * @param categoryId
    * @return
    */
-  private List<Long> findAllSubCategories(Long categoryId) {
-    Map<Long, List<Category>> categoryGroupingByParent = categoryMapService.findCategoryGroupingByParent();
-    if(!categoryGroupingByParent.containsKey(categoryId)) {
+  private List<String> findAllSubCategories(Long categoryId) {
+    Map<String, List<CategoryDto>> categoryMap = categoryMapService.findCategoryGroupingByParent();
+    if(!categoryMap.containsKey(categoryId.toString())) {
       throw new KyumallException(ErrorCode.CATEGORY_NOT_EXISTS);
     }
-    List<Category> subCategories = categoryGroupingByParent.get(categoryId);
-    List<Long> allSubCategories = new ArrayList<>();
-    allSubCategories.add(categoryId); // 입력받은 카테고리 추가
-    recursiveSetSubCategories(subCategories, categoryGroupingByParent, allSubCategories);
+    List<CategoryDto> subCategories = categoryMap.get(categoryId.toString());
+    List<String> allSubCategories = new ArrayList<>();
+    allSubCategories.add(categoryId.toString()); // 입력받은 카테고리 추가
+    recursiveSetSubCategories(subCategories, categoryMap, allSubCategories);
     return allSubCategories;
   }
 
@@ -97,10 +100,10 @@ public class ProductService {
    * @param categoryMap
    * @param allSubCategories
    */
-  private void recursiveSetSubCategories(List<Category> categories, Map<Long, List<Category>> categoryMap, List<Long> allSubCategories) {
-    allSubCategories.addAll(categories.stream().map(Category::getId).toList());
-    categories.stream().forEach(category -> {
-      List<Category> subCategories = categoryMap.getOrDefault(category.getId(), new ArrayList<>());
+  private void recursiveSetSubCategories(List<CategoryDto> categories, Map<String, List<CategoryDto>> categoryMap, List<String> allSubCategories) {
+    allSubCategories.addAll(categories.stream().map(CategoryDto::getId).toList());
+    categories.stream().forEach(categoryDto -> {
+      List<CategoryDto> subCategories = categoryMap.getOrDefault(categoryDto.getId(), new ArrayList<>());
       recursiveSetSubCategories(subCategories, categoryMap, allSubCategories);
     });
   }
