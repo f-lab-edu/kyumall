@@ -26,8 +26,8 @@ public class CategoryFacade {
    * @return
    */
   public List<HierarchyCategoryDto> getAllCategoriesHierarchy() {
-    Map<String, List<CategoryDto>> categoryGroupingByParent = categoryMapService.findCategoryGroupingByParent();
-    return convertToCategoryHierarchy(categoryGroupingByParent);
+    Map<String, List<CategoryDto>> categoryMap = categoryMapService.findCategoryGroupingByParent();
+    return convertToCategoryHierarchy(categoryMap);
   }
 
   /**
@@ -35,12 +35,12 @@ public class CategoryFacade {
    * @return
    */
   public Map<Long, List<SubCategoryDto>> getAllCategoriesMap() {
-    Map<String, List<CategoryDto>> categoryGroupingByParent = categoryMapService.findCategoryGroupingByParent();
-    return categoryGroupingByParent.entrySet().stream()
+    Map<String, List<CategoryDto>> categoryMap = categoryMapService.findCategoryGroupingByParent();
+    return categoryMap.entrySet().stream()
         .collect(Collectors.toMap(
             entry -> Long.parseLong(entry.getKey()),  // 키는 변경 없이 유지
             entry -> entry.getValue().stream()
-                .map(categoryDto -> SubCategoryDto.from(categoryDto, categoryGroupingByParent.containsKey(categoryDto.getId())))
+                .map(categoryDto -> SubCategoryDto.from(categoryDto, categoryMap.containsKey(categoryDto.getId())))
                 .collect(Collectors.toList())
         ));
   }
@@ -83,13 +83,13 @@ public class CategoryFacade {
    * @return
    */
   public List<SubCategoryDto> getOneStepSubCategories(String id) {
-    Map<String, List<CategoryDto>> categoryGroupingByParent = categoryMapService.findCategoryGroupingByParent();
-    if (!categoryGroupingByParent.containsKey(id)) {
+    Map<String, List<CategoryDto>> categoryMap = categoryMapService.findCategoryGroupingByParent();
+    if (!categoryMap.containsKey(id)) {
       return new ArrayList<>();
     }
-    return categoryGroupingByParent.get(id)
+    return categoryMap.get(id)
         .stream()
-        .map(category -> SubCategoryDto.from(category, categoryGroupingByParent.containsKey(category.getId())))
+        .map(category -> SubCategoryDto.from(category, categoryMap.containsKey(category.getId())))
         .toList();
   }
 
