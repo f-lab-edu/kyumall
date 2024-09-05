@@ -32,6 +32,6 @@ public class CategoryMapService {
 
   @CacheEvict(value = CATEGORY_GROUP_BY_PARENT_MAP, allEntries = true)
   public void evictCategoryMapCache() {
-
+    log.info("categoryGroupByParentMap cache evicted");
   }
 }

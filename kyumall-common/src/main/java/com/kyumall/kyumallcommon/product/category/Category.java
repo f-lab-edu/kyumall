@@ -49,6 +49,28 @@ public class Category extends BaseTimeEntity implements Serializable {
   }
 
   /**
+   * newParentId 와 기존의 ParentId가 다른지 판별합니다.
+   * @param newParentId
+   * @return
+   */
+  public boolean isParentChanged(Long newParentId) {
+    if (newParentId == null) {
+      return false;
+    }
+    return getParentId() != newParentId;
+  }
+
+  public void changeParent(Category newParent) {
+    this.parent = newParent;
+  }
+
+  public void changeName(String newName) {
+    if (!name.equals(newName)) {
+      this.name = newName;
+    }
+  }
+
+  /**
    * 루트 카테고리의 경우, ParentID 를 0으로 반환합니다.
    */
   public Long getParentIdAsZeroIfRoot() {

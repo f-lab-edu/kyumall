@@ -19,7 +19,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class CategoryFacade {
   private final CategoryMapService categoryMapService;
-  private final CategoryService categoryService;
 
   /**
    * 전체 카테고리를 계층형 리스트 형태로 조회
@@ -91,14 +90,5 @@ public class CategoryFacade {
         .stream()
         .map(category -> SubCategoryDto.from(category, categoryMap.containsKey(category.getId())))
         .toList();
-  }
-
-  public void evictCategoryCache() {
-    categoryMapService.evictCategoryMapCache();
-  }
-
-  public Long createdCategory(CreateCategoryRequest request) {
-    categoryMapService.evictCategoryMapCache();
-    return categoryService.createCategory(request).getId();
   }
 }

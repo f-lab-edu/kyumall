@@ -69,19 +69,4 @@ public class CategoryController {
       @PageableDefault(size = 10) Pageable pageable) {
     return ResponseWrapper.ok(productService.getProductsInCategory(categoryId, pageable));
   }
-
-  @GetMapping("/evict-cache")
-  public void evictCategoryCache() {
-    categoryFacade.evictCategoryCache();
-  }
-
-  /**
-   * 카테고리를 생성합니다.
-   * @param request
-   * @return 생성된 객체의 아이디
-   */
-  @PostMapping
-  public ResponseWrapper<CreatedIdDto> createCategory(@RequestBody CreateCategoryRequest request) {
-    return ResponseWrapper.ok(CreatedIdDto.of(categoryFacade.createdCategory(request)));
-  }
 }
