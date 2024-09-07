@@ -4,9 +4,9 @@ import com.kyumall.kyumallcommon.fixture.product.CategoryFixture;
 import com.kyumall.kyumallcommon.fixture.product.ProductFixture;
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.product.category.Category;
-import com.kyumall.kyumallcommon.product.product.Product;
+import com.kyumall.kyumallcommon.product.product.entity.Product;
 import com.kyumall.kyumallcommon.product.category.CategoryRepository;
-import com.kyumall.kyumallcommon.product.product.ProductRepository;
+import com.kyumall.kyumallcommon.product.product.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

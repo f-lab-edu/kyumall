@@ -1,4 +1,4 @@
-package com.kyumall.kyumallcommon.product.comment;
+package com.kyumall.kyumallcommon.product;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -12,9 +12,13 @@ import com.kyumall.kyumallcommon.fixture.product.ProductCommentRatingFixture;
 import com.kyumall.kyumallcommon.fixture.product.ProductFixture;
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.member.repository.MemberRepository;
-import com.kyumall.kyumallcommon.product.comment.dto.ProductCommentDto;
-import com.kyumall.kyumallcommon.product.product.Product;
-import com.kyumall.kyumallcommon.product.product.ProductRepository;
+import com.kyumall.kyumallcommon.product.product.dto.ProductCommentDto;
+import com.kyumall.kyumallcommon.product.product.ProductCommentService;
+import com.kyumall.kyumallcommon.product.product.entity.Product;
+import com.kyumall.kyumallcommon.product.product.repository.ProductCommentRatingRepository;
+import com.kyumall.kyumallcommon.product.product.repository.ProductCommentRepository;
+import com.kyumall.kyumallcommon.product.product.repository.ProductRepository;
+import com.kyumall.kyumallcommon.product.product.entity.ProductComment;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

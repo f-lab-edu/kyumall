@@ -18,7 +18,7 @@ import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.order.entity.Orders;
 import com.kyumall.kyumallcommon.order.repository.OrdersRepository;
 import com.kyumall.kyumallcommon.order.entity.OrderItemStatus;
-import com.kyumall.kyumallcommon.product.product.Product;
+import com.kyumall.kyumallcommon.product.product.entity.Product;
 import com.kyumall.kyumallcommon.product.stock.StockRepository;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;

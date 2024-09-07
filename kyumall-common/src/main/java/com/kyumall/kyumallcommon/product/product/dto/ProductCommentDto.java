@@ -1,6 +1,6 @@
-package com.kyumall.kyumallcommon.product.comment.dto;
+package com.kyumall.kyumallcommon.product.product.dto;
 
-import com.kyumall.kyumallcommon.product.comment.ProductComment;
+import com.kyumall.kyumallcommon.product.product.entity.ProductComment;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

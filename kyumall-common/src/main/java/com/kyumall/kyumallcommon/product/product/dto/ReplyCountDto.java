@@ -1,4 +1,4 @@
-package com.kyumall.kyumallcommon.product.comment.dto;
+package com.kyumall.kyumallcommon.product.product.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

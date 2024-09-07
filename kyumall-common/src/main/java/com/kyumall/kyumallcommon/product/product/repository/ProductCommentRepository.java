@@ -1,8 +1,9 @@
-package com.kyumall.kyumallcommon.product.comment;
+package com.kyumall.kyumallcommon.product.product.repository;
 
-import com.kyumall.kyumallcommon.product.comment.dto.ProductCommentDto;
-import com.kyumall.kyumallcommon.product.comment.dto.ReplyCountDto;
-import com.kyumall.kyumallcommon.product.product.Product;
+import com.kyumall.kyumallcommon.product.product.dto.ProductCommentDto;
+import com.kyumall.kyumallcommon.product.product.dto.ReplyCountDto;
+import com.kyumall.kyumallcommon.product.product.entity.Product;
+import com.kyumall.kyumallcommon.product.product.entity.ProductComment;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Pageable;
@@ -26,7 +27,7 @@ public interface ProductCommentRepository extends JpaRepository<ProductComment, 
 
 
   @Query("""
-    select new com.kyumall.kyumallcommon.product.comment.dto.ProductCommentDto(
+    select new com.kyumall.kyumallcommon.product.product.dto.ProductCommentDto(
       pc.id,
       pc.member.username,
       pc.member.email,
@@ -34,13 +35,13 @@ public interface ProductCommentRepository extends JpaRepository<ProductComment, 
       pc.createdAt,
       (select count(1) as replyCount from ProductComment subPc where subPc.parentComment.id = pc.id),
       (select count(1) as likeCount from ProductCommentRating pcr 
-        where pcr.productComment.id = pc.id and pcr.ratingType = com.kyumall.kyumallcommon.product.comment.RatingType.LIKE),
+        where pcr.productComment.id = pc.id and pcr.ratingType = com.kyumall.kyumallcommon.product.product.entity.RatingType.LIKE),
       (select count(1) as dislikeCount from ProductCommentRating pcr 
-        where pcr.productComment.id = pc.id and pcr.ratingType = com.kyumall.kyumallcommon.product.comment.RatingType.DISLIKE),
+        where pcr.productComment.id = pc.id and pcr.ratingType = com.kyumall.kyumallcommon.product.product.entity.RatingType.DISLIKE),
       (select count(pcr) > 0 from ProductCommentRating pcr 
-        where pcr.productComment.id = pc.id and pcr.member.id = :memberId and pcr.ratingType = com.kyumall.kyumallcommon.product.comment.RatingType.LIKE),
+        where pcr.productComment.id = pc.id and pcr.member.id = :memberId and pcr.ratingType = com.kyumall.kyumallcommon.product.product.entity.RatingType.LIKE),
       (select count(pcr) > 0 from ProductCommentRating pcr 
-        where pcr.productComment.id = pc.id and pcr.member.id = :memberId and pcr.ratingType = com.kyumall.kyumallcommon.product.comment.RatingType.DISLIKE)
+        where pcr.productComment.id = pc.id and pcr.member.id = :memberId and pcr.ratingType = com.kyumall.kyumallcommon.product.product.entity.RatingType.DISLIKE)
     ) 
     from ProductComment pc
     where pc.product = :product
@@ -50,22 +51,22 @@ public interface ProductCommentRepository extends JpaRepository<ProductComment, 
   Slice<ProductCommentDto> findCommentDtosUsingSubquery(Product product, Long memberId, Pageable pageable);
 
   @Query("""
-    select new com.kyumall.kyumallcommon.product.comment.dto.ProductCommentDto(
+    select new com.kyumall.kyumallcommon.product.product.dto.ProductCommentDto(
       pc.id,
       pc.member.username,
       pc.member.email,
       pc.content,
       pc.createdAt,
       (select count(1) as replyCount from ProductComment subPc where subPc.parentComment.id = pc.id),
-      coalesce(sum(case when pcr.ratingType = com.kyumall.kyumallcommon.product.comment.RatingType.LIKE then 1 else 0 end), 0),
-      coalesce(sum(case when pcr.ratingType = com.kyumall.kyumallcommon.product.comment.RatingType.DISLIKE then 1 else 0 end), 0),
+      coalesce(sum(case when pcr.ratingType = com.kyumall.kyumallcommon.product.product.entity.RatingType.LIKE then 1 else 0 end), 0),
+      coalesce(sum(case when pcr.ratingType = com.kyumall.kyumallcommon.product.product.entity.RatingType.DISLIKE then 1 else 0 end), 0),
       case 
-        when coalesce(max(case when pcr.ratingType = com.kyumall.kyumallcommon.product.comment.RatingType.LIKE and pcr.member.id = :memberId then 1 else 0 end), 0) = 1
+        when coalesce(max(case when pcr.ratingType = com.kyumall.kyumallcommon.product.product.entity.RatingType.LIKE and pcr.member.id = :memberId then 1 else 0 end), 0) = 1
         then true
         else false
       end,
       case 
-        when coalesce(max(case when pcr.ratingType = com.kyumall.kyumallcommon.product.comment.RatingType.DISLIKE and pcr.member.id = :memberId then 1 else 0 end), 0) = 1
+        when coalesce(max(case when pcr.ratingType = com.kyumall.kyumallcommon.product.product.entity.RatingType.DISLIKE and pcr.member.id = :memberId then 1 else 0 end), 0) = 1
         then true
         else false
       end
@@ -85,7 +86,7 @@ public interface ProductCommentRepository extends JpaRepository<ProductComment, 
 
   List<ProductComment> findByParentComment(ProductComment productComment);
 
-  @Query("select new com.kyumall.kyumallcommon.product.comment.dto.ReplyCountDto"
+  @Query("select new com.kyumall.kyumallcommon.product.product.dto.ReplyCountDto"
       + "(pc.parentComment.id, count(1)) "
       + " from ProductComment pc "
       + " where pc.parentComment.id in :commentIds "
