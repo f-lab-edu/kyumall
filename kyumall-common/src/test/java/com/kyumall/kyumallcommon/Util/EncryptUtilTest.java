@@ -30,7 +30,7 @@ class EncryptUtilTest {
       assertThat(base64EncodedPublicKey).isNotNull();
       assertThat(base64EncodedPrivateKey).isNotNull();
     } catch (NoSuchAlgorithmException e) {
-      throw new RuntimeException("없는 알고리즘 입니다.");
+      throw new IllegalArgumentException("없는 알고리즘 입니다.");
     }
   }
 
