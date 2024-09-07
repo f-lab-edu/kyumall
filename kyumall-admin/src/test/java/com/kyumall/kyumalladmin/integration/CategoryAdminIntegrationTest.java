@@ -69,6 +69,13 @@ class CategoryAdminIntegrationTest extends IntegrationTest {
         .extract();
   }
 
+  private static ExtractableResponse<Response> requestApplyCategoryToClientApp() {
+    return RestAssured.given().log().all()
+        .when().post("/categories/apply-to-client-app")
+        .then().log().all()
+        .extract();
+  }
+
   @Test
   @DisplayName("하위 카테고리 생성에 성공합니다. 음식 카테고리 하위에 사과,배 카테고리를 추가합니다.")
   void addCategory_subcategory_success() {
@@ -90,7 +97,7 @@ class CategoryAdminIntegrationTest extends IntegrationTest {
   }
 
   @Test
-  @DisplayName("카테고리 생성 요청 성공시, 카테고리 캐시가 만료됩니다.")
+  @DisplayName("카테고리 생성 요청을 성공하더라도, 캐시가 만료되지 않습니다.")
   void addCategory_cacheEvict_success() {
     // FOOD 카테고리 추가
     Category parentCategory = productFactory.createCategory(CategoryFixture.FOOD);
@@ -108,7 +115,7 @@ class CategoryAdminIntegrationTest extends IntegrationTest {
     // 새 데이터 캐시
     Map<String, List<CategoryDto>> cachedCategoryAfterAdd = categoryMapService.findCategoryGroupingByParent();
     assertThat(cachedCategoryBeforeAdd).hasSize(1);
-    assertThat(cachedCategoryAfterAdd).hasSize(2);  // 캐시 만료후 새 데이터 캐시됨
+    assertThat(cachedCategoryAfterAdd).hasSize(1);  // 수정후에도, 캐시에는 기존의 1건만 존재
   }
 
   @Test
@@ -132,4 +139,25 @@ class CategoryAdminIntegrationTest extends IntegrationTest {
     assertThat(newCategory.getParent().getId()).isEqualTo(request.getNewParentId());
   }
 
+  @Test
+  @DisplayName("카테고리 만료 기능 호출 시, 기존 카테고리가 만료되고, 신규 카테고리가 캐시됩니다")
+  void applyCategoryToClientApp_category_evict_success() {
+    // 캐시된 카테고리 조회
+    Category food = productFactory.createCategory(CategoryFixture.FOOD);
+    List<CategoryDto> categoryMapBeforeAdd = categoryMapService.findCategoryGroupingByParent().get("0");
+    // 캐시 추가
+    Category fashion = productFactory.createCategory(CategoryFixture.FASHION);
+    List<CategoryDto> categoryMapAfterAdd = categoryMapService.findCategoryGroupingByParent().get("0");
+
+    // when
+    // 캐시 만료
+    requestApplyCategoryToClientApp();
+
+    // then
+    // 캐시된 카테고리 조회
+    List<CategoryDto> categoryMapAfterEvict = categoryMapService.findCategoryGroupingByParent().get("0");
+    assertThat(categoryMapBeforeAdd).hasSize(1);
+    assertThat(categoryMapAfterAdd).hasSize(1);
+    assertThat(categoryMapAfterEvict).hasSize(2); // 캐시 만료 후 2개로 증가
+  }
 }

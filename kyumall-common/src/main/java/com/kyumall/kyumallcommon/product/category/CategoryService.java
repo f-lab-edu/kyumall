@@ -2,9 +2,13 @@ package com.kyumall.kyumallcommon.product.category;
 
 import com.kyumall.kyumallcommon.exception.ErrorCode;
 import com.kyumall.kyumallcommon.exception.KyumallException;
+import com.kyumall.kyumallcommon.product.category.dto.CategoryDto;
 import com.kyumall.kyumallcommon.product.category.dto.CreateCategoryRequest;
 import com.kyumall.kyumallcommon.product.category.dto.UpdateCategoryRequest;
 import jakarta.transaction.Transactional;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -45,5 +49,15 @@ public class CategoryService {
           .orElseThrow(() -> new KyumallException(ErrorCode.CATEGORY_NOT_EXISTS));
       category.changeParent(newParentCategory);
     }
+  }
+
+  /**
+   * 전체 카테고리를 Map 으로 Group by 하여 반환합니다.
+   * @return
+   */
+  public Map<String, List<CategoryDto>> findCategoryGroupingByParent() {
+    List<CategoryDto> allCategory = categoryRepository.findAllByStatus(CategoryStatus.INUSE)
+        .stream().map(CategoryDto::from).collect(Collectors.toList());
+    return allCategory.stream().collect(Collectors.groupingBy(CategoryDto::getParentId));
   }
 }

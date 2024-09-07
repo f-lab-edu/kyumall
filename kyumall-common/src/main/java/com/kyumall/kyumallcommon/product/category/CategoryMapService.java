@@ -15,7 +15,8 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class CategoryMapService {
   private static final String CATEGORY_GROUP_BY_PARENT_MAP = "categoryGroupByParentMap";
-  private final CategoryRepository categoryRepository;
+  private final CategoryService categoryService;
+
   /**
    * 전체 카테고리를 조회하여 parentId 로 group by 한 Map 을 만듭니다.
    * 캐시는 히트율이 중요하기 때문에 id 별로 카테고리를 캐시하는 것이 아닌, 전체 카테고리를 캐시하였습니다.
@@ -25,9 +26,7 @@ public class CategoryMapService {
   @Cacheable(value = CATEGORY_GROUP_BY_PARENT_MAP, key = "#root.methodName")
   public Map<String, List<CategoryDto>> findCategoryGroupingByParent() {
     log.info("findCategoryGroupingByParent not cached");
-    List<CategoryDto> allCategory = categoryRepository.findAllByStatus(CategoryStatus.INUSE)
-        .stream().map(CategoryDto::from).collect(Collectors.toList());
-    return allCategory.stream().collect(Collectors.groupingBy(CategoryDto::getParentId));
+    return categoryService.findCategoryGroupingByParent();
   }
 
   @CacheEvict(value = CATEGORY_GROUP_BY_PARENT_MAP, allEntries = true)
