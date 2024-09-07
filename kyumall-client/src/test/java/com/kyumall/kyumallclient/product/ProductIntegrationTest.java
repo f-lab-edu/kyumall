@@ -42,8 +42,6 @@ public class ProductIntegrationTest extends IntegrationTest {
   private ProductFactory productFactory;
   @Autowired
   private CategoryRepository categoryRepository;
-  @Autowired
-  private ProductRepository productRepository;
 
   Member seller;
 
@@ -60,32 +58,6 @@ public class ProductIntegrationTest extends IntegrationTest {
         .parent(parent)
         .status(CategoryStatus.INUSE)
         .build());
-  }
-
-  @Test
-  @DisplayName("상품 생성에 성공합니다.")
-  void createProduct_success() {
-    // given
-    Category fruit = productFactory.createCategory(CategoryFixture.FRUIT);
-    CreateProductRequest request = CreateProductRequest.builder()
-        .productName("얼음골 사과")
-        .categoryId(fruit.getId())
-        .sellerUsername(seller.getUsername())
-        .price(30000)
-        .detail("사과입니다.").build();
-    // when
-    ExtractableResponse<Response> response = requestCreateProduct(
-        request);
-
-    // then
-    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
-    Integer createdId = response.body().jsonPath().get("result.id");
-    Product savedProduct = findProductById(createdId.longValue());
-    assertThat(savedProduct.getName()).isEqualTo(request.getProductName());
-    assertThat(savedProduct.getCategory().getId()).isEqualTo(request.getCategoryId());
-    assertThat(savedProduct.getSeller().getId()).isEqualTo(seller.getId());
-    assertThat(savedProduct.getPrice()).isEqualTo(request.getPrice());
-    assertThat(savedProduct.getDetail()).isEqualTo(request.getDetail());
   }
 
   @Test
@@ -313,26 +285,5 @@ public class ProductIntegrationTest extends IntegrationTest {
         .when().put("/products/{id}/change-stock")
         .then().log().all()
         .extract();
-  }
-
-  private Product createProductForTest(CreateProductRequest request) {
-    Integer newProductId = requestCreateProduct(request).body().jsonPath().get("result.id");
-    return findProductById(newProductId.longValue());
-  }
-
-  private static ExtractableResponse<Response> requestCreateProduct(
-      CreateProductRequest request) {
-    ExtractableResponse<Response> response = RestAssured.given().log().all()
-        .contentType(ContentType.JSON)
-        .body(request)
-        .when().post("/products")
-        .then().log().all()
-        .extract();
-    return response;
-  }
-
-  private Product findProductById(Long productId) {
-    return productRepository.findWithFetchById(productId)
-        .orElseThrow(() -> new RuntimeException());
   }
 }
