@@ -96,14 +96,6 @@ public class AppInitialRunner implements CommandLineRunner {
     Category banana = saveCategory("바나나", fruit);
   }
 
-  private Category createCategory(String name) {
-    return Category.builder()
-        .name(name)
-        .parent(null)
-        .status(CategoryStatus.INUSE)
-        .build();
-  }
-
   private Category saveCategory(String name, Category parent) {
     return categoryRepository.saveAndFlush(Category.builder()
         .name(name)
