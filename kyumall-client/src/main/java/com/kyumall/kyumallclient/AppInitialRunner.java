@@ -72,10 +72,10 @@ public class AppInitialRunner implements CommandLineRunner {
     long freeMemory = runtime.freeMemory(); // 사용 가능한 메모리
     long usedMemory = totalMemory - freeMemory; // 사용 중인 메모리
 
-    System.out.println("Max Memory (Xmx): " + maxMemory / (1024 * 1024) + " MB");
-    System.out.println("Total Memory (allocated): " + totalMemory / (1024 * 1024) + " MB");
-    System.out.println("Free Memory (in allocated): " + freeMemory / (1024 * 1024) + " MB");
-    System.out.println("Used Memory: " + usedMemory / (1024 * 1024) + " MB");
+    log.info("Max Memory (Xmx): " + maxMemory / (1024 * 1024) + " MB");
+    log.info("Total Memory (allocated): " + totalMemory / (1024 * 1024) + " MB");
+    log.info("Free Memory (in allocated): " + freeMemory / (1024 * 1024) + " MB");
+    log.info("Used Memory: " + usedMemory / (1024 * 1024) + " MB");
   }
 
   private void saveMember() {
