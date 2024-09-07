@@ -34,7 +34,7 @@ public class EmailFactory {
           .template(readFile)
           .build();
     } catch (IOException e) {
-      throw new RuntimeException("템플릿 로드 중 오류가 발생", e);
+      throw new IllegalStateException("템플릿 로드 중 오류가 발생", e);
     }
   }
 

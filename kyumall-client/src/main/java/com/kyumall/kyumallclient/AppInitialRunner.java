@@ -40,7 +40,7 @@ import org.springframework.stereotype.Component;
 @Profile({"dev", "local"})
 @Component
 @RequiredArgsConstructor
-public class DataLoader implements CommandLineRunner {
+public class AppInitialRunner implements CommandLineRunner {
 
   private final MemberRepository memberRepository;
   private final PasswordService passwordService;
@@ -61,7 +61,7 @@ public class DataLoader implements CommandLineRunner {
     saveEmailTemplate();
     logJVMSettings();
     log.info("mail Password: {}", mailPassword);
-    System.out.println("cacheManager is " + this.cacheManager.getClass().getName());
+    log.info("cacheManager is {}", this.cacheManager.getClass().getName());
   }
 
   private void logJVMSettings() {
@@ -72,10 +72,10 @@ public class DataLoader implements CommandLineRunner {
     long freeMemory = runtime.freeMemory(); // 사용 가능한 메모리
     long usedMemory = totalMemory - freeMemory; // 사용 중인 메모리
 
-    System.out.println("Max Memory (Xmx): " + maxMemory / (1024 * 1024) + " MB");
-    System.out.println("Total Memory (allocated): " + totalMemory / (1024 * 1024) + " MB");
-    System.out.println("Free Memory (in allocated): " + freeMemory / (1024 * 1024) + " MB");
-    System.out.println("Used Memory: " + usedMemory / (1024 * 1024) + " MB");
+    log.info("Max Memory (Xmx): " + maxMemory / (1024 * 1024) + " MB");
+    log.info("Total Memory (allocated): " + totalMemory / (1024 * 1024) + " MB");
+    log.info("Free Memory (in allocated): " + freeMemory / (1024 * 1024) + " MB");
+    log.info("Used Memory: " + usedMemory / (1024 * 1024) + " MB");
   }
 
   private void saveMember() {
@@ -94,14 +94,6 @@ public class DataLoader implements CommandLineRunner {
     Category fruit = saveCategory("과일", food);
     Category apple = saveCategory("사과", fruit);
     Category banana = saveCategory("바나나", fruit);
-  }
-
-  private Category createCategory(String name) {
-    return Category.builder()
-        .name(name)
-        .parent(null)
-        .status(CategoryStatus.INUSE)
-        .build();
   }
 
   private Category saveCategory(String name, Category parent) {
@@ -163,7 +155,7 @@ public class DataLoader implements CommandLineRunner {
           .template(readFile)
           .build();
     } catch (IOException e) {
-      throw new RuntimeException("템플릿 로드 중 오류가 발생", e);
+      throw new IllegalStateException("템플릿 로드 중 오류가 발생", e);
     }
   }
 

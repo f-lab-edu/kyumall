@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
 import com.kyumall.kyumallclient.IntegrationTest;
-import com.kyumall.kyumallclient.TestUtil;
 import com.kyumall.kyumallclient.member.dto.RecoverPasswordRequest;
 import com.kyumall.kyumallclient.member.dto.ResetPasswordRequest;
 import com.kyumall.kyumallclient.member.dto.SignUpRequest;
@@ -28,6 +27,7 @@ import com.kyumall.kyumallcommon.member.repository.VerificationRepository;
 import com.kyumall.kyumallcommon.member.vo.MemberStatus;
 import com.kyumall.kyumallcommon.member.vo.MemberType;
 import com.kyumall.kyumallcommon.member.vo.VerificationStatus;
+import com.kyumall.kyumallcommon.util.TestUtil;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.ExtractableResponse;

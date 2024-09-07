@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.*;
 
 import com.kyumall.kyumallclient.AuthTestUtil;
 import com.kyumall.kyumallclient.IntegrationTest;
-import com.kyumall.kyumallclient.product.category.dto.CategoryDto;
+import com.kyumall.kyumallclient.product.category.dto.HierarchyCategoryDto;
 import com.kyumall.kyumallcommon.product.product.dto.CreateProductRequest;
 import com.kyumall.kyumallcommon.product.product.dto.ProductDetailDto;
 import com.kyumall.kyumallcommon.product.product.dto.ProductSimpleDto;
@@ -127,7 +127,7 @@ public class ProductIntegrationTest extends IntegrationTest {
         .extract();
 
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
-    List<CategoryDto> categories = response.body().jsonPath().getList("result", CategoryDto.class);
+    List<HierarchyCategoryDto> categories = response.body().jsonPath().getList("result", HierarchyCategoryDto.class);
     assertThat(categories).hasSize(1);
     assertThat(categories.get(0).getName()).isEqualTo("생활용품");
     assertThat(categories.get(0).getSubCategories().get(0).getName()).isEqualTo("화장지");
@@ -161,7 +161,7 @@ public class ProductIntegrationTest extends IntegrationTest {
     Category wetWipe = saveCategory("물티슈", toiletPaper);
     Category paperTowel = saveCategory("키친타올", toiletPaper);
 
-    RestAssured.given().log().all()
+    ExtractableResponse<Response> extract = RestAssured.given().log().all()
         .when().get("/categories/hierarchy")
         .then().log().all()
         .extract();
@@ -173,7 +173,7 @@ public class ProductIntegrationTest extends IntegrationTest {
 
 
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
-    List<CategoryDto> categories = response.body().jsonPath().getList("result", CategoryDto.class);
+    List<HierarchyCategoryDto> categories = response.body().jsonPath().getList("result", HierarchyCategoryDto.class);
     assertThat(categories).hasSize(1);
     assertThat(categories.get(0).getName()).isEqualTo("생활용품");
     assertThat(categories.get(0).getSubCategories().get(0).getName()).isEqualTo("화장지");
@@ -197,7 +197,7 @@ public class ProductIntegrationTest extends IntegrationTest {
 
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
     List<SubCategoryDto> subCategories = response.body().jsonPath().getList("result", SubCategoryDto.class);
-    assertThat(subCategories.get(0).getId()).isEqualTo(fruit.getId());
+      assertThat(subCategories.get(0).getId()).isEqualTo(fruit.getId());
     assertThat(subCategories.get(0).getName()).isEqualTo(fruit.getName());
     assertThat(subCategories.get(0).getSubCategoryExists()).isTrue();
     assertThat(subCategories.get(1).getId()).isEqualTo(meet.getId());

@@ -6,6 +6,7 @@ spring:
         - ncloud
         - mail
         - actuator
+        - redis-local
       dev:
         - app-dev
         - ncloud

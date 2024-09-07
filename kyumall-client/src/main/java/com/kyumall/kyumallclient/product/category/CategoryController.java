@@ -1,7 +1,7 @@
 package com.kyumall.kyumallclient.product.category;
 
 import com.kyumall.kyumallcommon.product.product.ProductService;
-import com.kyumall.kyumallclient.product.category.dto.CategoryDto;
+import com.kyumall.kyumallclient.product.category.dto.HierarchyCategoryDto;
 import com.kyumall.kyumallcommon.product.product.dto.ProductSimpleDto;
 import com.kyumall.kyumallclient.product.category.dto.SubCategoryDto;
 import com.kyumall.kyumallcommon.dto.CreatedIdDto;
@@ -34,7 +34,7 @@ public class CategoryController {
    * @return
    */
   @GetMapping("/hierarchy")
-  public ResponseWrapper<List<CategoryDto>> getAllCategoriesHierarchy() {
+  public ResponseWrapper<List<HierarchyCategoryDto>> getAllCategoriesHierarchy() {
     return ResponseWrapper.ok(categoryFacade.getAllCategoriesHierarchy());
   }
 
@@ -54,7 +54,7 @@ public class CategoryController {
    */
   @GetMapping("/{id}/subCategories")
   public ResponseWrapper<List<SubCategoryDto>> getOneStepSubCategories(@PathVariable Long id) {
-    return ResponseWrapper.ok(categoryFacade.getOneStepSubCategories(id));
+    return ResponseWrapper.ok(categoryFacade.getOneStepSubCategories(id.toString()));
   }
 
   /**
@@ -68,20 +68,5 @@ public class CategoryController {
   public ResponseWrapper<Slice<ProductSimpleDto>> getProductsInCategory(@PathVariable Long categoryId,
       @PageableDefault(size = 10) Pageable pageable) {
     return ResponseWrapper.ok(productService.getProductsInCategory(categoryId, pageable));
-  }
-
-  @GetMapping("/evict-cache")
-  public void evictCategoryCache() {
-    categoryFacade.evictCategoryCache();
-  }
-
-  /**
-   * 카테고리를 생성합니다.
-   * @param request
-   * @return 생성된 객체의 아이디
-   */
-  @PostMapping
-  public ResponseWrapper<CreatedIdDto> createCategory(@RequestBody CreateCategoryRequest request) {
-    return ResponseWrapper.ok(CreatedIdDto.of(categoryFacade.createdCategory(request)));
   }
 }

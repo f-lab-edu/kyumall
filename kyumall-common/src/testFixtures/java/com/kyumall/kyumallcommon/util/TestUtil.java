@@ -1,4 +1,4 @@
-package com.kyumall.kyumallcommon.Util;
+package com.kyumall.kyumallcommon.util;
 
 import java.time.Clock;
 import java.time.LocalDateTime;

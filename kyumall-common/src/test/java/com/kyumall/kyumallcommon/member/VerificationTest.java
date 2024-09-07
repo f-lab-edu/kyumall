@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.*;
 
 import com.kyumall.kyumallcommon.Util.ApacheRandomCodeGenerator;
 import com.kyumall.kyumallcommon.Util.RandomCodeGenerator;
-import com.kyumall.kyumallcommon.Util.TestUtil;
+import com.kyumall.kyumallcommon.util.TestUtil;
 import com.kyumall.kyumallcommon.member.entity.Verification;
 import com.kyumall.kyumallcommon.member.vo.VerifyResult;
 import java.time.LocalDateTime;
