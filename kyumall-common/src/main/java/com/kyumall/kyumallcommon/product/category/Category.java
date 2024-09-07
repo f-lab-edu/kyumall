@@ -14,6 +14,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import java.io.Serializable;
 import java.util.List;
+import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -57,7 +58,7 @@ public class Category extends BaseTimeEntity implements Serializable {
     if (newParentId == null) {
       return false;
     }
-    return getParentId() != newParentId;
+    return !Objects.equals(getParentId(), newParentId);
   }
 
   public void changeParent(Category newParent) {
