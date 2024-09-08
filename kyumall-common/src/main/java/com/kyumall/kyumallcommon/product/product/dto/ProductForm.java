@@ -7,13 +7,15 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
+/**
+ * 상품 추가/수정 양식
+ */
 @Getter @AllArgsConstructor @Builder
-public class CreateProductRequest {
+public class ProductForm {
   @NotEmpty
   private String productName;
   @NotNull
   private Long categoryId;
-  @NotEmpty
   private String sellerUsername;
   @NotNull @Min(0)
   private Integer price;

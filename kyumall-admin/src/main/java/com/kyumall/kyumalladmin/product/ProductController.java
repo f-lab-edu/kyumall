@@ -5,8 +5,9 @@ import com.kyumall.kyumallcommon.auth.authentication.AuthenticatedUser;
 import com.kyumall.kyumallcommon.dto.CreatedIdDto;
 import com.kyumall.kyumallcommon.product.product.ProductService;
 import com.kyumall.kyumallcommon.product.product.StockService;
-import com.kyumall.kyumallcommon.product.product.dto.CreateProductRequest;
+import com.kyumall.kyumallcommon.product.product.dto.ProductForm;
 import com.kyumall.kyumallcommon.response.ResponseWrapper;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,9 +30,21 @@ public class ProductController {
    * @return
    */
   @PostMapping
-  public ResponseWrapper<CreatedIdDto> createProduct(@RequestBody CreateProductRequest request) {
+  public ResponseWrapper<CreatedIdDto> createProduct(@RequestBody @Valid ProductForm request) {
     Long productId = productService.createProduct(request);
     return ResponseWrapper.ok(new CreatedIdDto(productId));
+  }
+
+  /**
+   * 상품 정보 변경
+   * @param id
+   * @param request
+   * @param loginUser
+   */
+  @PutMapping("/{id}")
+  public void updateProduct(@PathVariable Long id, @RequestBody @Valid ProductForm request,
+      @LoginUser AuthenticatedUser loginUser) {
+    productService.updateProduct(id, request, loginUser.getMemberId());
   }
 
   /**

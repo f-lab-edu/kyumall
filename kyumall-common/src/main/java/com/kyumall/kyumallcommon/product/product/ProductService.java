@@ -4,7 +4,7 @@ import com.kyumall.kyumallcommon.product.category.dto.CategoryDto;
 import com.kyumall.kyumallcommon.product.product.dto.ProductDetailDto;
 import com.kyumall.kyumallcommon.exception.ErrorCode;
 import com.kyumall.kyumallcommon.exception.KyumallException;
-import com.kyumall.kyumallcommon.product.product.dto.CreateProductRequest;
+import com.kyumall.kyumallcommon.product.product.dto.ProductForm;
 import com.kyumall.kyumallcommon.product.product.dto.ProductSimpleDto;
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.member.repository.MemberRepository;
@@ -14,6 +14,8 @@ import com.kyumall.kyumallcommon.product.category.CategoryMapService;
 import com.kyumall.kyumallcommon.product.product.entity.Product;
 import com.kyumall.kyumallcommon.product.product.entity.ProductStatus;
 import com.kyumall.kyumallcommon.product.product.repository.ProductRepository;
+import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -37,7 +39,7 @@ public class ProductService {
    * @param request
    * @return
    */
-  public Long createProduct(CreateProductRequest request) {
+  public Long createProduct(ProductForm request) {
     Category category = categoryRepository.findById(request.getCategoryId())
         .orElseThrow(() -> new KyumallException(ErrorCode.CATEGORY_NOT_EXISTS));
 
@@ -53,6 +55,31 @@ public class ProductService {
         .productStatus(ProductStatus.INUSE)
         .build());
     return product.getId();
+  }
+
+  /**
+   * 상품 정보를 수정합니다.
+   * 상품을 등록한 관리자만 수정할 수 있습니다.
+   * @param id
+   * @param request
+   * @param loginUserId
+   */
+  @Transactional
+  public void updateProduct(Long id, @Valid ProductForm request, Long loginUserId) {
+    Product product = productRepository.findById(id)
+        .orElseThrow(() -> new KyumallException(ErrorCode.PRODUCT_NOT_EXISTS));
+
+    if (!product.isSeller(loginUserId)) {
+      throw new KyumallException(ErrorCode.PRODUCT_UPDATE_FORBIDDEN);
+    }
+
+    if (product.isCategoryChanged(request.getCategoryId())) {
+      Category category = categoryRepository.findById(request.getCategoryId())
+          .orElseThrow(() -> new KyumallException(ErrorCode.CATEGORY_NOT_EXISTS));
+      product.changeCategory(category);
+    }
+
+    product.changeInfo(request.getProductName(), request.getPrice(), request.getDetail());
   }
 
   /**

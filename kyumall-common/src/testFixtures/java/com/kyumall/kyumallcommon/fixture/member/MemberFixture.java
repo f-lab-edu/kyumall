@@ -16,6 +16,9 @@ public enum MemberFixture {
   PARK("userPart01", "park01@example.com", MemberStatus.INUSE, MemberType.CLIENT),
   // seller
   LEE("userLee01", "lee01@example.com", MemberStatus.INUSE, MemberType.SELLER),
+  // admin
+  MIKE("userMike01", "Mike01@example.com", MemberStatus.INUSE, MemberType.ADMIN),
+  BILLY("userBilly01", "Billy01@example.com", MemberStatus.INUSE, MemberType.ADMIN),
   ;
 
   private final String username;
