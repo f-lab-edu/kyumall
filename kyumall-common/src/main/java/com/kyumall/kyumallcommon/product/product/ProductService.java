@@ -36,14 +36,16 @@ public class ProductService {
 
   /**
    * 상품을 생성합니다.
+   *
    * @param request
+   * @param loginUserId
    * @return
    */
-  public Long createProduct(ProductForm request) {
+  public Long createProduct(ProductForm request, Long loginUserId) {
     Category category = categoryRepository.findById(request.getCategoryId())
         .orElseThrow(() -> new KyumallException(ErrorCode.CATEGORY_NOT_EXISTS));
 
-    Member seller = memberRepository.findByUsername(request.getSellerUsername())
+    Member seller = memberRepository.findById(loginUserId)
         .orElseThrow(() -> new KyumallException(ErrorCode.MEMBER_NOT_EXISTS));
 
     Product product = productRepository.save(Product.builder()

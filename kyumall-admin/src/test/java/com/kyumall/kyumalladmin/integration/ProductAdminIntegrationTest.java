@@ -53,12 +53,11 @@ public class ProductAdminIntegrationTest extends IntegrationTest {
     ProductForm request = ProductForm.builder()
         .productName("얼음골 사과")
         .categoryId(fruit.getId())
-        .sellerUsername(adminMike.getUsername())
         .price(30000)
         .detail("사과입니다.").build();
+    RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(adminMike.getUsername(), MemberFixture.password);
     // when
-    ExtractableResponse<Response> response = requestCreateProduct(
-        request);
+    ExtractableResponse<Response> response = requestCreateProduct(spec, request);
 
     // then
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
@@ -119,9 +118,9 @@ public class ProductAdminIntegrationTest extends IntegrationTest {
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_FORBIDDEN);
   }
 
-  private static ExtractableResponse<Response> requestCreateProduct(
-      ProductForm request) {
+  private static ExtractableResponse<Response> requestCreateProduct(RequestSpecification spec, ProductForm request) {
     ExtractableResponse<Response> response = RestAssured.given().log().all()
+        .spec(spec)
         .contentType(ContentType.JSON)
         .body(request)
         .when().post("/products")

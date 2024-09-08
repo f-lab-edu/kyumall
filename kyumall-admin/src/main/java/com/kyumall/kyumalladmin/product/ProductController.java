@@ -30,8 +30,9 @@ public class ProductController {
    * @return
    */
   @PostMapping
-  public ResponseWrapper<CreatedIdDto> createProduct(@RequestBody @Valid ProductForm request) {
-    Long productId = productService.createProduct(request);
+  public ResponseWrapper<CreatedIdDto> createProduct(@RequestBody @Valid ProductForm request,
+      @LoginUser AuthenticatedUser loginUser) {
+    Long productId = productService.createProduct(request, loginUser.getMemberId());
     return ResponseWrapper.ok(new CreatedIdDto(productId));
   }
 

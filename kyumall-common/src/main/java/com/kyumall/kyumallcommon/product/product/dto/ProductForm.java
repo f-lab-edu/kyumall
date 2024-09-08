@@ -16,7 +16,6 @@ public class ProductForm {
   private String productName;
   @NotNull
   private Long categoryId;
-  private String sellerUsername;
   @NotNull @Min(0)
   private Integer price;
   private String detail;
