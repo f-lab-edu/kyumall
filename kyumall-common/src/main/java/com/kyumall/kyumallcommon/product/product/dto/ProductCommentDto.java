@@ -20,13 +20,12 @@ public class ProductCommentDto {
   private boolean likeByCurrentUser; // 현재 유저가 좋아요 했는지 여부
   private boolean dislikeByCurrentUser; // 현재 유저가 싫어요 했는지 여부
 
-
   public static ProductCommentDto from(ProductComment productComment) {
     return ProductCommentDto.builder()
         .id(productComment.getId())
         .username(productComment.getMember().getUsername())
         .email(productComment.getMember().getEmail())
-        .comment(productComment.getContent())
+        .comment(productComment.getContentApplyDeleted())
         .createdAt(productComment.getCreatedAt())
         .build();
   }

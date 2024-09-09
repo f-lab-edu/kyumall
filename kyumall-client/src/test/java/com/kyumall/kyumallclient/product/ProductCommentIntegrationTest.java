@@ -198,6 +198,29 @@ class ProductCommentIntegrationTest extends IntegrationTest {
   }
 
   @Test
+  @DisplayName("상품의 댓글 목록을 조회합니다. 삭제된 댓글의 경우, 삭제 메세지를 대신 표시합니다.")
+  void getComments_replaced_with_deleted_comment_success() {
+    // given
+    Product apple = productFactory.createProduct(ProductFixture.APPLE, seller);
+    // 댓글 추가
+    Long comment1Id = requestCreateCommentAndReturnId(apple.getId(), "test", testMember1.getUsername());
+    Long comment2Id = requestCreateCommentAndReturnId(apple.getId(), "test", testMember2.getUsername());
+    // comment1Id 댓글 삭제
+    RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(), password);
+    requestDeleteComment(spec, apple.getId() ,comment1Id);
+
+    // when
+    ExtractableResponse<Response> response = requestGetComments(spec, apple.getId(), 0);
+
+    // then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
+    List<ProductCommentDto> commentDtoList = response.body().jsonPath()
+        .getList("result.content", ProductCommentDto.class);
+    assertThat(commentDtoList).hasSize(2);
+    assertThat(commentDtoList.get(0).getComment()).isEqualTo(ProductComment.COMMENT_DELETED);
+  }
+
+  @Test
   @DisplayName("상품의 댓글을 수정합니다.")
   void updateComment_success() {
     // given
@@ -254,7 +277,7 @@ class ProductCommentIntegrationTest extends IntegrationTest {
   }
 
   @Test
-  @DisplayName("상품 댓글 삭제에 성공합니다.")
+  @DisplayName("본인이 작성한 상품 댓글의 삭제에 성공합니다.")
   void deleteComment_success() {
     // given
     Product apple = productFactory.createProduct(ProductFixture.APPLE, seller);
@@ -267,8 +290,9 @@ class ProductCommentIntegrationTest extends IntegrationTest {
 
     // then
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
-    Optional<ProductComment> optionalComment = productCommentRepository.findById(commentId);
-    assertThat(optionalComment.isEmpty()).isTrue();
+    ProductComment comment = productCommentRepository.findById(commentId).orElseThrow();
+    assertThat(comment.isDeleted()).isTrue();
+    assertThat(comment.isDeletedByAdmin()).isFalse();
   }
 
   @Test

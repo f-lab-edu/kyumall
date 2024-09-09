@@ -21,7 +21,7 @@ public enum ProductCommentFixture {
         .product(product)
         .member(member)
         .content(content)
-        .parentComment(parentComment)
+        .parentComment(parentComment) // null 일 경우, 댓글, null이 아닐 경우 대댓글
         .build();
   }
 }
