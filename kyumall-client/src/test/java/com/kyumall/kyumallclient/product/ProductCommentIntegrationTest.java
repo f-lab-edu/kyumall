@@ -88,7 +88,7 @@ class ProductCommentIntegrationTest extends IntegrationTest {
         password);
     List<Long> createdIDList = new ArrayList<>();
     for (int i = 0; i < totalSize; i++) {
-      createdIDList.add(requestCreateCommentForGiven(apple.getId(), "test",
+      createdIDList.add(requestCreateCommentAndReturnId(apple.getId(), "test",
           testMember1.getUsername()));
     }
 
@@ -129,7 +129,7 @@ class ProductCommentIntegrationTest extends IntegrationTest {
         password);
     List<Long> createdIDList = new ArrayList<>();
     for (int i = 0; i < totalSize; i++) {
-      createdIDList.add(requestCreateCommentForGiven(apple.getId(), "test", testMember1.getUsername()));
+      createdIDList.add(requestCreateCommentAndReturnId(apple.getId(), "test", testMember1.getUsername()));
     }
 
     // when
@@ -154,8 +154,8 @@ class ProductCommentIntegrationTest extends IntegrationTest {
     // given
     Product apple = productFactory.createProduct(ProductFixture.APPLE, seller);
     // 댓글 추가
-    Long comment1Id = requestCreateCommentForGiven(apple.getId(), "test", testMember1.getUsername());
-    Long comment2Id = requestCreateCommentForGiven(apple.getId(), "test", testMember2.getUsername());
+    Long comment1Id = requestCreateCommentAndReturnId(apple.getId(), "test", testMember1.getUsername());
+    Long comment2Id = requestCreateCommentAndReturnId(apple.getId(), "test", testMember2.getUsername());
     // 댓글에 좋아요 추가
     RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(), password);
     requestUpdateCommentRating(spec, apple.getId() ,comment1Id, RatingType.LIKE);
@@ -179,8 +179,8 @@ class ProductCommentIntegrationTest extends IntegrationTest {
     // given
     Product apple = productFactory.createProduct(ProductFixture.APPLE, seller);
     // 댓글 추가
-    Long comment1Id = requestCreateCommentForGiven(apple.getId(), "test", testMember1.getUsername());
-    Long comment2Id = requestCreateCommentForGiven(apple.getId(), "test", testMember2.getUsername());
+    Long comment1Id = requestCreateCommentAndReturnId(apple.getId(), "test", testMember1.getUsername());
+    Long comment2Id = requestCreateCommentAndReturnId(apple.getId(), "test", testMember2.getUsername());
     // 댓글에 대댓글 추가
     RequestSpecification spec1 = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(), password);
     RequestSpecification spec2 = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(), password);
@@ -204,7 +204,7 @@ class ProductCommentIntegrationTest extends IntegrationTest {
     Product apple = productFactory.createProduct(ProductFixture.APPLE, seller);
     RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(),
         password);
-    Long commentId = requestCreateCommentForGiven(apple.getId(), "첫 댓글입니다.", testMember1.getUsername());
+    Long commentId = requestCreateCommentAndReturnId(apple.getId(), "첫 댓글입니다.", testMember1.getUsername());
     UpdateCommentRequest request = new UpdateCommentRequest("수정된 댓글 입니다.");
 
     // when
@@ -223,7 +223,7 @@ class ProductCommentIntegrationTest extends IntegrationTest {
     Product apple = productFactory.createProduct(ProductFixture.APPLE, seller);
     RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(),
         password);
-    Long commentId = requestCreateCommentForGiven(apple.getId(), "첫 댓글입니다.", testMember1.getUsername());
+    Long commentId = requestCreateCommentAndReturnId(apple.getId(), "첫 댓글입니다.", testMember1.getUsername());
     UpdateCommentRequest request = new UpdateCommentRequest("수정된 댓글 입니다.");
     RequestSpecification otherUserSpec = AuthTestUtil.requestLoginAndGetSpec(testMember2.getUsername(),
         password);
@@ -243,7 +243,7 @@ class ProductCommentIntegrationTest extends IntegrationTest {
     Product beef = productFactory.createProduct(ProductFixture.BEEF, seller);
     RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(),
         password);
-    Long commentId = requestCreateCommentForGiven(apple.getId(), "첫 댓글입니다.", testMember1.getUsername());
+    Long commentId = requestCreateCommentAndReturnId(apple.getId(), "첫 댓글입니다.", testMember1.getUsername());
     UpdateCommentRequest request = new UpdateCommentRequest("수정된 댓글 입니다.");
 
     // when
@@ -260,7 +260,7 @@ class ProductCommentIntegrationTest extends IntegrationTest {
     Product apple = productFactory.createProduct(ProductFixture.APPLE, seller);
     RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(),
         password);
-    Long commentId = requestCreateCommentForGiven(apple.getId(), "첫 댓글입니다.", testMember1.getUsername());
+    Long commentId = requestCreateCommentAndReturnId(apple.getId(), "첫 댓글입니다.", testMember1.getUsername());
 
     // when
     ExtractableResponse<Response> response = requestDeleteComment(spec, apple.getId() ,commentId);
@@ -278,7 +278,7 @@ class ProductCommentIntegrationTest extends IntegrationTest {
     Product apple = productFactory.createProduct(ProductFixture.APPLE, seller);
     RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(),
         password);
-    Long commentId = requestCreateCommentForGiven(apple.getId(), "첫 댓글입니다.", testMember1.getUsername());
+    Long commentId = requestCreateCommentAndReturnId(apple.getId(), "첫 댓글입니다.", testMember1.getUsername());
     RatingType ratingType = RatingType.LIKE;
 
     // when
@@ -296,7 +296,7 @@ class ProductCommentIntegrationTest extends IntegrationTest {
     // given
     Product apple = productFactory.createProduct(ProductFixture.APPLE, seller);
     RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(), password);
-    Long commentId = requestCreateCommentForGiven(apple.getId(), "첫 댓글입니다.", testMember1.getUsername());
+    Long commentId = requestCreateCommentAndReturnId(apple.getId(), "첫 댓글입니다.", testMember1.getUsername());
     CreateCommentRequest request = new CreateCommentRequest("대댓글 입니다.");
     // when
     ExtractableResponse<Response> response = requestCreateCommentReply(spec, apple.getId() ,commentId, request);
@@ -314,7 +314,7 @@ class ProductCommentIntegrationTest extends IntegrationTest {
     // given
     Product apple = productFactory.createProduct(ProductFixture.APPLE, seller);
     RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(), password);
-    Long commentId = requestCreateCommentForGiven(apple.getId(), "첫 댓글입니다.", testMember1.getUsername());
+    Long commentId = requestCreateCommentAndReturnId(apple.getId(), "첫 댓글입니다.", testMember1.getUsername());
     requestCreateCommentReply(spec, apple.getId() ,commentId, new CreateCommentRequest("대댓글 입니다."));
     // when
     ExtractableResponse<Response> response = requestGetCommentReplies(spec, apple.getId(),
@@ -391,7 +391,7 @@ class ProductCommentIntegrationTest extends IntegrationTest {
         .orElseThrow(() -> new RuntimeException("test fail"));
   }
 
-  public static Long requestCreateCommentForGiven(Long productId, String comment, String username) {
+  public static Long requestCreateCommentAndReturnId(Long productId, String comment, String username) {
     RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(username, password);
     ExtractableResponse<Response> response = requestCreateComment(productId, comment, spec);
     return response.body().jsonPath().getLong("result.id");
