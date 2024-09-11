@@ -1,4 +1,4 @@
-package com.kyumall.kyumallcommon.product.comment.dto;
+package com.kyumall.kyumallcommon.product.product.dto;
 
 import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;

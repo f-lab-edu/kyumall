@@ -1,7 +1,7 @@
 package com.kyumall.kyumallcommon.product.category;
 
 import com.kyumall.kyumallcommon.BaseTimeEntity;
-import com.kyumall.kyumallcommon.product.product.Product;
+import com.kyumall.kyumallcommon.product.product.entity.Product;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;

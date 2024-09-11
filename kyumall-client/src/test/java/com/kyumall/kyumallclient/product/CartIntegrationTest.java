@@ -15,7 +15,7 @@ import com.kyumall.kyumallcommon.fixture.product.ProductFixture;
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.member.repository.MemberRepository;
 import com.kyumall.kyumallcommon.product.cart.CartItem;
-import com.kyumall.kyumallcommon.product.product.Product;
+import com.kyumall.kyumallcommon.product.product.entity.Product;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.ExtractableResponse;

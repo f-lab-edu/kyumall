@@ -1,8 +1,8 @@
 package com.kyumall.kyumallcommon.fixture.product;
 
 import com.kyumall.kyumallcommon.member.entity.Member;
-import com.kyumall.kyumallcommon.product.comment.ProductComment;
-import com.kyumall.kyumallcommon.product.product.Product;
+import com.kyumall.kyumallcommon.product.product.entity.ProductComment;
+import com.kyumall.kyumallcommon.product.product.entity.Product;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -21,7 +21,7 @@ public enum ProductCommentFixture {
         .product(product)
         .member(member)
         .content(content)
-        .parentComment(parentComment)
+        .parentComment(parentComment) // null 일 경우, 댓글, null이 아닐 경우 대댓글
         .build();
   }
 }

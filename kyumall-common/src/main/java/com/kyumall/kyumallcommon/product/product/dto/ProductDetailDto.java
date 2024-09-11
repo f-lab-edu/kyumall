@@ -1,6 +1,6 @@
 package com.kyumall.kyumallcommon.product.product.dto;
 
-import com.kyumall.kyumallcommon.product.product.Product;
+import com.kyumall.kyumallcommon.product.product.entity.Product;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

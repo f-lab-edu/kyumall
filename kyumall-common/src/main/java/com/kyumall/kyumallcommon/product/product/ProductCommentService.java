@@ -1,17 +1,22 @@
-package com.kyumall.kyumallcommon.product.comment;
+package com.kyumall.kyumallcommon.product.product;
 
-import com.kyumall.kyumallcommon.product.comment.dto.CreateCommentRequest;
-import com.kyumall.kyumallcommon.product.comment.dto.ProductCommentDto;
-import com.kyumall.kyumallcommon.product.comment.dto.UpdateCommentRequest;
+import com.kyumall.kyumallcommon.product.product.dto.CreateCommentRequest;
+import com.kyumall.kyumallcommon.product.product.dto.ProductCommentDto;
+import com.kyumall.kyumallcommon.product.product.dto.UpdateCommentRequest;
 import com.kyumall.kyumallcommon.auth.authentication.AuthenticatedUser;
 import com.kyumall.kyumallcommon.exception.ErrorCode;
 import com.kyumall.kyumallcommon.exception.KyumallException;
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.member.repository.MemberRepository;
-import com.kyumall.kyumallcommon.product.comment.dto.LikeCountDto;
-import com.kyumall.kyumallcommon.product.comment.dto.ReplyCountDto;
-import com.kyumall.kyumallcommon.product.product.Product;
-import com.kyumall.kyumallcommon.product.product.ProductRepository;
+import com.kyumall.kyumallcommon.product.product.dto.LikeCountDto;
+import com.kyumall.kyumallcommon.product.product.dto.ReplyCountDto;
+import com.kyumall.kyumallcommon.product.product.entity.Product;
+import com.kyumall.kyumallcommon.product.product.entity.RatingType;
+import com.kyumall.kyumallcommon.product.product.repository.ProductCommentRatingRepository;
+import com.kyumall.kyumallcommon.product.product.repository.ProductCommentRepository;
+import com.kyumall.kyumallcommon.product.product.repository.ProductRepository;
+import com.kyumall.kyumallcommon.product.product.entity.ProductComment;
+import com.kyumall.kyumallcommon.product.product.entity.ProductCommentRating;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -109,12 +114,37 @@ public class ProductCommentService {
     comment.updateComment(request.getComment());
   }
 
-  // 삭제
+  /**
+   * 댓글을 삭제 처리합니다.
+   * 삭제 플래그 처리 합니다.
+   * @param productId
+   * @param commentId
+   * @param memberId
+   */
+  @Transactional
   public void deleteComment(Long productId, Long commentId, Long memberId) {
     ProductComment comment = findComment(commentId);
     validateUpdateComment(productId, memberId, comment);
 
-    productCommentRepository.deleteById(comment.getId());
+    comment.delete();
+  }
+
+  /**
+   * 관리자가 상품에 등록된 댓글을 삭제합니다.
+   * 관리자 본인이 등록한 상품의 댓글이어야 삭제 가능합니다.
+   * @param productId
+   * @param commentId
+   * @param adminMemberId
+   */
+  @Transactional
+  public void deleteCommentByAdmin(Long productId, Long commentId, Long adminMemberId) {
+    ProductComment comment = findComment(commentId);
+    Product product = findProductById(productId);
+    if (!product.isSeller(adminMemberId)) {
+      throw new KyumallException(ErrorCode.COMMENT_UPDATE_FORBIDDEN);
+    }
+
+    comment.deleteByAdmin();
   }
 
   @Transactional
@@ -165,6 +195,13 @@ public class ProductCommentService {
     return commentDtos;
   }
 
+  /**
+   * 댓글 수정 유효성 체크
+   * 해당 댓글의 작성자만 삭제 처리 가능합니다.
+   * @param productId
+   * @param memberId
+   * @param comment
+   */
   private static void validateUpdateComment(Long productId, Long memberId, ProductComment comment) {
     if (!comment.getMember().getId().equals(memberId)) {
       throw new KyumallException(ErrorCode.COMMENT_UPDATE_FORBIDDEN);

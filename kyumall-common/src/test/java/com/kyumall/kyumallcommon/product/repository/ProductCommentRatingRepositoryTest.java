@@ -6,25 +6,20 @@ import static org.assertj.core.api.Assertions.*;
 import com.kyumall.kyumallcommon.JpaRepositoryTest;
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.member.repository.MemberRepository;
-import com.kyumall.kyumallcommon.product.comment.ProductCommentRatingRepository;
-import com.kyumall.kyumallcommon.product.comment.ProductCommentRepository;
-import com.kyumall.kyumallcommon.product.comment.dto.LikeCountDto;
-import com.kyumall.kyumallcommon.product.product.Product;
-import com.kyumall.kyumallcommon.product.comment.ProductComment;
-import com.kyumall.kyumallcommon.product.comment.ProductCommentRating;
-import com.kyumall.kyumallcommon.product.product.ProductRepository;
-import com.kyumall.kyumallcommon.product.comment.RatingType;
+import com.kyumall.kyumallcommon.product.product.repository.ProductCommentRatingRepository;
+import com.kyumall.kyumallcommon.product.product.repository.ProductCommentRepository;
+import com.kyumall.kyumallcommon.product.product.dto.LikeCountDto;
+import com.kyumall.kyumallcommon.product.product.entity.Product;
+import com.kyumall.kyumallcommon.product.product.entity.ProductComment;
+import com.kyumall.kyumallcommon.product.product.entity.ProductCommentRating;
+import com.kyumall.kyumallcommon.product.product.repository.ProductRepository;
+import com.kyumall.kyumallcommon.product.product.entity.RatingType;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.test.annotation.Rollback;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.jdbc.Sql;
 
 
 class ProductCommentRatingRepositoryTest extends JpaRepositoryTest {

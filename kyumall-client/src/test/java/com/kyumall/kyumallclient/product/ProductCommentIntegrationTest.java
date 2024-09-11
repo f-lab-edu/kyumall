@@ -4,20 +4,20 @@ import static org.assertj.core.api.Assertions.*;
 
 import com.kyumall.kyumallclient.AuthTestUtil;
 import com.kyumall.kyumallclient.IntegrationTest;
-import com.kyumall.kyumallcommon.product.comment.dto.CreateCommentRequest;
-import com.kyumall.kyumallcommon.product.comment.dto.ProductCommentDto;
-import com.kyumall.kyumallcommon.product.comment.dto.UpdateCommentRequest;
+import com.kyumall.kyumallcommon.product.product.dto.CreateCommentRequest;
+import com.kyumall.kyumallcommon.product.product.dto.ProductCommentDto;
+import com.kyumall.kyumallcommon.product.product.dto.UpdateCommentRequest;
 import com.kyumall.kyumallcommon.factory.MemberFactory;
 import com.kyumall.kyumallcommon.factory.ProductFactory;
 import com.kyumall.kyumallcommon.fixture.member.MemberFixture;
 import com.kyumall.kyumallcommon.fixture.product.ProductFixture;
 import com.kyumall.kyumallcommon.member.entity.Member;
-import com.kyumall.kyumallcommon.product.product.Product;
-import com.kyumall.kyumallcommon.product.comment.ProductComment;
-import com.kyumall.kyumallcommon.product.comment.ProductCommentRating;
-import com.kyumall.kyumallcommon.product.comment.ProductCommentRatingRepository;
-import com.kyumall.kyumallcommon.product.comment.ProductCommentRepository;
-import com.kyumall.kyumallcommon.product.comment.RatingType;
+import com.kyumall.kyumallcommon.product.product.entity.Product;
+import com.kyumall.kyumallcommon.product.product.entity.ProductComment;
+import com.kyumall.kyumallcommon.product.product.entity.ProductCommentRating;
+import com.kyumall.kyumallcommon.product.product.repository.ProductCommentRatingRepository;
+import com.kyumall.kyumallcommon.product.product.repository.ProductCommentRepository;
+import com.kyumall.kyumallcommon.product.product.entity.RatingType;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.ExtractableResponse;
@@ -88,7 +88,7 @@ class ProductCommentIntegrationTest extends IntegrationTest {
         password);
     List<Long> createdIDList = new ArrayList<>();
     for (int i = 0; i < totalSize; i++) {
-      createdIDList.add(requestCreateCommentForGiven(apple.getId(), "test",
+      createdIDList.add(requestCreateCommentAndReturnId(apple.getId(), "test",
           testMember1.getUsername()));
     }
 
@@ -129,7 +129,7 @@ class ProductCommentIntegrationTest extends IntegrationTest {
         password);
     List<Long> createdIDList = new ArrayList<>();
     for (int i = 0; i < totalSize; i++) {
-      createdIDList.add(requestCreateCommentForGiven(apple.getId(), "test", testMember1.getUsername()));
+      createdIDList.add(requestCreateCommentAndReturnId(apple.getId(), "test", testMember1.getUsername()));
     }
 
     // when
@@ -154,8 +154,8 @@ class ProductCommentIntegrationTest extends IntegrationTest {
     // given
     Product apple = productFactory.createProduct(ProductFixture.APPLE, seller);
     // 댓글 추가
-    Long comment1Id = requestCreateCommentForGiven(apple.getId(), "test", testMember1.getUsername());
-    Long comment2Id = requestCreateCommentForGiven(apple.getId(), "test", testMember2.getUsername());
+    Long comment1Id = requestCreateCommentAndReturnId(apple.getId(), "test", testMember1.getUsername());
+    Long comment2Id = requestCreateCommentAndReturnId(apple.getId(), "test", testMember2.getUsername());
     // 댓글에 좋아요 추가
     RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(), password);
     requestUpdateCommentRating(spec, apple.getId() ,comment1Id, RatingType.LIKE);
@@ -179,8 +179,8 @@ class ProductCommentIntegrationTest extends IntegrationTest {
     // given
     Product apple = productFactory.createProduct(ProductFixture.APPLE, seller);
     // 댓글 추가
-    Long comment1Id = requestCreateCommentForGiven(apple.getId(), "test", testMember1.getUsername());
-    Long comment2Id = requestCreateCommentForGiven(apple.getId(), "test", testMember2.getUsername());
+    Long comment1Id = requestCreateCommentAndReturnId(apple.getId(), "test", testMember1.getUsername());
+    Long comment2Id = requestCreateCommentAndReturnId(apple.getId(), "test", testMember2.getUsername());
     // 댓글에 대댓글 추가
     RequestSpecification spec1 = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(), password);
     RequestSpecification spec2 = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(), password);
@@ -198,13 +198,36 @@ class ProductCommentIntegrationTest extends IntegrationTest {
   }
 
   @Test
+  @DisplayName("상품의 댓글 목록을 조회합니다. 삭제된 댓글의 경우, 삭제 메세지를 대신 표시합니다.")
+  void getComments_replaced_with_deleted_comment_success() {
+    // given
+    Product apple = productFactory.createProduct(ProductFixture.APPLE, seller);
+    // 댓글 추가
+    Long comment1Id = requestCreateCommentAndReturnId(apple.getId(), "test", testMember1.getUsername());
+    Long comment2Id = requestCreateCommentAndReturnId(apple.getId(), "test", testMember2.getUsername());
+    // comment1Id 댓글 삭제
+    RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(), password);
+    requestDeleteComment(spec, apple.getId() ,comment1Id);
+
+    // when
+    ExtractableResponse<Response> response = requestGetComments(spec, apple.getId(), 0);
+
+    // then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
+    List<ProductCommentDto> commentDtoList = response.body().jsonPath()
+        .getList("result.content", ProductCommentDto.class);
+    assertThat(commentDtoList).hasSize(2);
+    assertThat(commentDtoList.get(0).getComment()).isEqualTo(ProductComment.COMMENT_DELETED);
+  }
+
+  @Test
   @DisplayName("상품의 댓글을 수정합니다.")
   void updateComment_success() {
     // given
     Product apple = productFactory.createProduct(ProductFixture.APPLE, seller);
     RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(),
         password);
-    Long commentId = requestCreateCommentForGiven(apple.getId(), "첫 댓글입니다.", testMember1.getUsername());
+    Long commentId = requestCreateCommentAndReturnId(apple.getId(), "첫 댓글입니다.", testMember1.getUsername());
     UpdateCommentRequest request = new UpdateCommentRequest("수정된 댓글 입니다.");
 
     // when
@@ -223,7 +246,7 @@ class ProductCommentIntegrationTest extends IntegrationTest {
     Product apple = productFactory.createProduct(ProductFixture.APPLE, seller);
     RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(),
         password);
-    Long commentId = requestCreateCommentForGiven(apple.getId(), "첫 댓글입니다.", testMember1.getUsername());
+    Long commentId = requestCreateCommentAndReturnId(apple.getId(), "첫 댓글입니다.", testMember1.getUsername());
     UpdateCommentRequest request = new UpdateCommentRequest("수정된 댓글 입니다.");
     RequestSpecification otherUserSpec = AuthTestUtil.requestLoginAndGetSpec(testMember2.getUsername(),
         password);
@@ -243,7 +266,7 @@ class ProductCommentIntegrationTest extends IntegrationTest {
     Product beef = productFactory.createProduct(ProductFixture.BEEF, seller);
     RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(),
         password);
-    Long commentId = requestCreateCommentForGiven(apple.getId(), "첫 댓글입니다.", testMember1.getUsername());
+    Long commentId = requestCreateCommentAndReturnId(apple.getId(), "첫 댓글입니다.", testMember1.getUsername());
     UpdateCommentRequest request = new UpdateCommentRequest("수정된 댓글 입니다.");
 
     // when
@@ -254,21 +277,22 @@ class ProductCommentIntegrationTest extends IntegrationTest {
   }
 
   @Test
-  @DisplayName("상품 댓글 삭제에 성공합니다.")
+  @DisplayName("본인이 작성한 상품 댓글의 삭제에 성공합니다.")
   void deleteComment_success() {
     // given
     Product apple = productFactory.createProduct(ProductFixture.APPLE, seller);
     RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(),
         password);
-    Long commentId = requestCreateCommentForGiven(apple.getId(), "첫 댓글입니다.", testMember1.getUsername());
+    Long commentId = requestCreateCommentAndReturnId(apple.getId(), "첫 댓글입니다.", testMember1.getUsername());
 
     // when
     ExtractableResponse<Response> response = requestDeleteComment(spec, apple.getId() ,commentId);
 
     // then
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
-    Optional<ProductComment> optionalComment = productCommentRepository.findById(commentId);
-    assertThat(optionalComment.isEmpty()).isTrue();
+    ProductComment comment = productCommentRepository.findById(commentId).orElseThrow();
+    assertThat(comment.isDeleted()).isTrue();
+    assertThat(comment.isDeletedByAdmin()).isFalse();
   }
 
   @Test
@@ -278,7 +302,7 @@ class ProductCommentIntegrationTest extends IntegrationTest {
     Product apple = productFactory.createProduct(ProductFixture.APPLE, seller);
     RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(),
         password);
-    Long commentId = requestCreateCommentForGiven(apple.getId(), "첫 댓글입니다.", testMember1.getUsername());
+    Long commentId = requestCreateCommentAndReturnId(apple.getId(), "첫 댓글입니다.", testMember1.getUsername());
     RatingType ratingType = RatingType.LIKE;
 
     // when
@@ -296,7 +320,7 @@ class ProductCommentIntegrationTest extends IntegrationTest {
     // given
     Product apple = productFactory.createProduct(ProductFixture.APPLE, seller);
     RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(), password);
-    Long commentId = requestCreateCommentForGiven(apple.getId(), "첫 댓글입니다.", testMember1.getUsername());
+    Long commentId = requestCreateCommentAndReturnId(apple.getId(), "첫 댓글입니다.", testMember1.getUsername());
     CreateCommentRequest request = new CreateCommentRequest("대댓글 입니다.");
     // when
     ExtractableResponse<Response> response = requestCreateCommentReply(spec, apple.getId() ,commentId, request);
@@ -314,7 +338,7 @@ class ProductCommentIntegrationTest extends IntegrationTest {
     // given
     Product apple = productFactory.createProduct(ProductFixture.APPLE, seller);
     RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(), password);
-    Long commentId = requestCreateCommentForGiven(apple.getId(), "첫 댓글입니다.", testMember1.getUsername());
+    Long commentId = requestCreateCommentAndReturnId(apple.getId(), "첫 댓글입니다.", testMember1.getUsername());
     requestCreateCommentReply(spec, apple.getId() ,commentId, new CreateCommentRequest("대댓글 입니다."));
     // when
     ExtractableResponse<Response> response = requestGetCommentReplies(spec, apple.getId(),
@@ -391,7 +415,7 @@ class ProductCommentIntegrationTest extends IntegrationTest {
         .orElseThrow(() -> new RuntimeException("test fail"));
   }
 
-  public static Long requestCreateCommentForGiven(Long productId, String comment, String username) {
+  public static Long requestCreateCommentAndReturnId(Long productId, String comment, String username) {
     RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(username, password);
     ExtractableResponse<Response> response = requestCreateComment(productId, comment, spec);
     return response.body().jsonPath().getLong("result.id");

@@ -3,7 +3,7 @@ package com.kyumall.kyumallcommon.product.stock;
 import com.kyumall.kyumallcommon.BaseTimeEntity;
 import com.kyumall.kyumallcommon.exception.ErrorCode;
 import com.kyumall.kyumallcommon.exception.KyumallException;
-import com.kyumall.kyumallcommon.product.product.Product;
+import com.kyumall.kyumallcommon.product.product.entity.Product;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;

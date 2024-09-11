@@ -1,4 +1,4 @@
-package com.kyumall.kyumallcommon.product.comment;
+package com.kyumall.kyumallcommon.product.product.entity;
 
 import com.kyumall.kyumallcommon.BaseTimeEntity;
 import com.kyumall.kyumallcommon.member.entity.Member;

@@ -1,6 +1,6 @@
-package com.kyumall.kyumallcommon.product.product;
+package com.kyumall.kyumallcommon.product.product.repository;
 
-import com.kyumall.kyumallcommon.product.product.Product;
+import com.kyumall.kyumallcommon.product.product.entity.Product;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;

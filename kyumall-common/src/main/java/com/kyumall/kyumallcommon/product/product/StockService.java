@@ -2,9 +2,9 @@ package com.kyumall.kyumallcommon.product.product;
 
 import com.kyumall.kyumallcommon.exception.ErrorCode;
 import com.kyumall.kyumallcommon.exception.KyumallException;
-import com.kyumall.kyumallcommon.product.product.Product;
+import com.kyumall.kyumallcommon.product.product.entity.Product;
+import com.kyumall.kyumallcommon.product.product.repository.ProductRepository;
 import com.kyumall.kyumallcommon.product.stock.Stock;
-import com.kyumall.kyumallcommon.product.product.ProductRepository;
 import com.kyumall.kyumallcommon.product.stock.StockRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

@@ -47,6 +47,7 @@ public enum ErrorCode {
   COMMENT_NOT_EXISTS("3005", "댓글이 존재하지 않습니다.", HttpStatus.SC_BAD_REQUEST),
   COMMENT_AND_PRODUCT_NOT_MATCHED("3006", "댓글과 상품이 일치하지 않습니다.", HttpStatus.SC_BAD_REQUEST),
   COMMENT_UPDATE_FORBIDDEN("3007", "댓글 수정에 대한 권한 이없습니다.", HttpStatus.SC_FORBIDDEN),
+  PRODUCT_UPDATE_FORBIDDEN("3008", "상품 수정에 대한 권한이 없습니다.", HttpStatus.SC_FORBIDDEN),
 
   // 메인 파트 에러 (4000 ~ 4999)
   BANNER_GROUP_NOT_FOUND("4000", "배너 그룹을 찾을 수 없습니다.", HttpStatus.SC_BAD_REQUEST),

@@ -1,6 +1,6 @@
-package com.kyumall.kyumallcommon.product.comment.dto;
+package com.kyumall.kyumallcommon.product.product.dto;
 
-import com.kyumall.kyumallcommon.product.comment.ProductComment;
+import com.kyumall.kyumallcommon.product.product.entity.ProductComment;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,13 +20,12 @@ public class ProductCommentDto {
   private boolean likeByCurrentUser; // 현재 유저가 좋아요 했는지 여부
   private boolean dislikeByCurrentUser; // 현재 유저가 싫어요 했는지 여부
 
-
   public static ProductCommentDto from(ProductComment productComment) {
     return ProductCommentDto.builder()
         .id(productComment.getId())
         .username(productComment.getMember().getUsername())
         .email(productComment.getMember().getEmail())
-        .comment(productComment.getContent())
+        .comment(productComment.getContentApplyDeleted())
         .createdAt(productComment.getCreatedAt())
         .build();
   }
