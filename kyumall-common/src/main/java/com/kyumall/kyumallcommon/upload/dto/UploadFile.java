@@ -1,7 +1,5 @@
 package com.kyumall.kyumallcommon.upload.dto;
 
-import com.kyumall.kyumallcommon.upload.entity.Image;
-import com.kyumall.kyumallcommon.upload.entity.TempImage;
 import lombok.Getter;
 
 @Getter
@@ -16,12 +14,5 @@ public class UploadFile {
 
   public static UploadFile of(String originalFileName, String storedFileName) {
     return new UploadFile(originalFileName, storedFileName);
-  }
-
-  public TempImage toEntity() {
-    return TempImage.builder()
-        .storedFileName(storedFileName)
-        .originalFileName(originalFileName)
-        .build();
   }
 }

@@ -2,7 +2,6 @@ package com.kyumall.kyumalladmin.main.dto;
 
 import com.kyumall.kyumallcommon.main.entity.Banner;
 import com.kyumall.kyumallcommon.main.entity.BannerGroup;
-import com.kyumall.kyumallcommon.upload.entity.Image;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;

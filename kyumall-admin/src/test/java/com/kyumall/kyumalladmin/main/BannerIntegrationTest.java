@@ -10,15 +10,11 @@ import com.kyumall.kyumallcommon.main.entity.Banner;
 import com.kyumall.kyumallcommon.main.entity.BannerGroup;
 import com.kyumall.kyumallcommon.main.repository.BannerGroupRepository;
 import com.kyumall.kyumallcommon.main.repository.BannerRepository;
-import com.kyumall.kyumallcommon.upload.entity.Image;
-import com.kyumall.kyumallcommon.upload.entity.TempImage;
 import com.kyumall.kyumallcommon.upload.repository.ImageRepository;
-import com.kyumall.kyumallcommon.upload.repository.TempImageRepository;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
-import java.util.Optional;
 import javax.crypto.SecretKey;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.DisplayName;
@@ -33,8 +29,6 @@ class BannerIntegrationTest extends IntegrationTest {
   private BannerGroupRepository bannerGroupRepository;
   @Autowired
   private BannerRepository bannerRepository;
-  @Autowired
-  private TempImageRepository tempImageRepository;
   @Autowired
   private ImageRepository imageRepository;
   @Value("${encrypt.key}")
