@@ -40,6 +40,10 @@ public class StoreImageToObjectStorage extends AbstractStoreImage {
       throw new KyumallException(ErrorCode.FAIL_TO_IMAGE_UPLOAD);
     }
 
-    return UploadFile.of(multipartFile.getOriginalFilename(), storeFileName);
+    return UploadFile.builder()
+        .storedFileName(storeFileName)
+        .originalFileName(multipartFile.getOriginalFilename())
+        .size(multipartFile.getSize())
+        .build();
   }
 }
