@@ -7,6 +7,8 @@ import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import jakarta.servlet.http.HttpServletRequest;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Date;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -25,7 +27,7 @@ public class JwtProvider {
       @Value("${jwt.expire-time}") long expireTime) {
     this.SECRET_KEY = secretKey;
     this.PUBLIC_KEY = publicKey;
-    this.EXPIRE_TIME = expireTime;
+    this.EXPIRE_TIME = expireTime;    // 분단위
   }
 
   public String generateToken(String username) {
@@ -37,8 +39,8 @@ public class JwtProvider {
   }
 
   private Date getExpireDate() {
-    Date now = new Date();
-    return new Date(now.getTime() + EXPIRE_TIME);
+    LocalDateTime expireLocalDatetime = LocalDateTime.now().plusMinutes(EXPIRE_TIME);
+    return Date.from(expireLocalDatetime.atZone(ZoneId.systemDefault()).toInstant());
   }
 
   public String resolveToken(HttpServletRequest request) {
@@ -61,7 +63,7 @@ public class JwtProvider {
           .getPayload().getExpiration().after(new Date());
     }
     catch (Exception e) {
-      return false;
+      throw new KyumallException(ErrorCode.INVALID_TOKEN, e);
     }
   }
 

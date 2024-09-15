@@ -37,25 +37,37 @@ public class AuthenticateFilter extends OncePerRequestFilter {
       try {
         String token = jwtProvider.resolveToken(request);
         processToken(token);
+        doFilter(request, response, filterChain); // doFilter 는 이전 프로세스가 성공한 경우에만 호출되도록 해야함
       } catch (KyumallException e) {
         handleExceptionInFilter(response, e);
       }
-      doFilter(request, response, filterChain);
     } finally {
       UserContext.clear();
     }
   }
 
+  /**
+   * 필터에서 발생한 에러를 표준응답에 맞추어 반환합니다.
+   * 필터에서는 GlobalExceptionHandler 로 요청이 전달되지 않기에 추가하였습니다.
+   * @param response
+   * @param e
+   */
   private void handleExceptionInFilter(HttpServletResponse response, KyumallException e) {
+    log.error("handleExceptionInFilter ", e);
     ErrorCode errorCode = e.getErrorCode();
     response.setStatus(errorCode.getHttpStatus());
     response.setContentType("application/json");
     response.setCharacterEncoding("UTF-8");
 
-    try(PrintWriter writer = response.getWriter()) {
-      writer.write(objectMapper.writeValueAsString(new ResponseWrapper<>(errorCode.getCode(), errorCode.getMessage(), null) ));
-    } catch (IOException ioException) {
-      throw new RuntimeException(ioException);
+    ResponseWrapper<Object> errorResponse = new ResponseWrapper<>(errorCode.getCode(),
+        errorCode.getMessage(), null);
+
+    try {
+      String jsonResponse = objectMapper.writeValueAsString(errorResponse);
+      response.getWriter().write(jsonResponse);
+      response.getWriter().flush();
+    } catch (IOException ex) {
+      log.error("응답 반환중 에러 발생", ex);
     }
   }
 
@@ -68,8 +80,6 @@ public class AuthenticateFilter extends OncePerRequestFilter {
             .orElseThrow(() -> new KyumallException(ErrorCode.MEMBER_NOT_EXISTS));
 
         UserContext.setUser(AuthenticatedUser.from(member));
-      } else {
-        throw new KyumallException(ErrorCode.INVALID_TOKEN);
       }
     }
   }
