@@ -12,6 +12,9 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -25,20 +28,25 @@ public class Product extends BaseTimeEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
+
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "category_id")
   private Category category;
+
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "seller_id")
   private Member seller;
+
   private String name;
   private Integer price;
-//  @JoinColumn
-//  @ManyToOne(fetch = FetchType.LAZY)
-//  private Image image;
+
   @Enumerated(EnumType.STRING)
   private ProductStatus productStatus;
-  private String image;
+
+  @Builder.Default
+  @OneToMany(mappedBy = "product")
+  private List<ProductImage> images = new ArrayList<>();
+
   private String detail;
 
   public boolean isDeleted() {

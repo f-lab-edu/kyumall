@@ -12,19 +12,25 @@ import com.kyumall.kyumallcommon.product.category.Category;
 import com.kyumall.kyumallcommon.product.category.CategoryRepository;
 import com.kyumall.kyumallcommon.product.category.CategoryMapService;
 import com.kyumall.kyumallcommon.product.product.entity.Product;
+import com.kyumall.kyumallcommon.product.product.entity.ProductImage;
 import com.kyumall.kyumallcommon.product.product.entity.ProductStatus;
+import com.kyumall.kyumallcommon.product.product.repository.ProductImageRepository;
 import com.kyumall.kyumallcommon.product.product.repository.ProductRepository;
+import com.kyumall.kyumallcommon.upload.ImageUploadService;
+import com.kyumall.kyumallcommon.upload.entity.Image;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 @RequiredArgsConstructor
 @Service
@@ -33,15 +39,19 @@ public class ProductService {
   private final CategoryRepository categoryRepository;
   private final ProductRepository productRepository;
   private final MemberRepository memberRepository;
+  private final ProductImageRepository productImageRepository;
+  private final ImageUploadService imageUploadService;
 
   /**
    * 상품을 생성합니다.
    *
    * @param request
+   * @param multipartImages
    * @param loginUserId
    * @return
    */
-  public Long createProduct(ProductForm request, Long loginUserId) {
+  @Transactional
+  public Long createProduct(ProductForm request, List<MultipartFile> multipartImages, Long loginUserId) {
     Category category = categoryRepository.findById(request.getCategoryId())
         .orElseThrow(() -> new KyumallException(ErrorCode.CATEGORY_NOT_EXISTS));
 
@@ -56,6 +66,16 @@ public class ProductService {
         .detail(request.getDetail())
         .productStatus(ProductStatus.INUSE)
         .build());
+
+    // 이미지 업로드
+    if (multipartImages != null) {
+      IntStream.range(0, multipartImages.size()).forEach(idx -> {
+        MultipartFile multipartImage = multipartImages.get(idx);
+        Image image = imageUploadService.uploadImage(multipartImage);
+        productImageRepository.save(new ProductImage(product, image, idx));
+      });
+    }
+
     return product.getId();
   }
 

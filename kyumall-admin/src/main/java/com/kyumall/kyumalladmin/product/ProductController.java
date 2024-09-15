@@ -7,7 +7,9 @@ import com.kyumall.kyumallcommon.product.product.ProductService;
 import com.kyumall.kyumallcommon.product.product.StockService;
 import com.kyumall.kyumallcommon.product.product.dto.ProductForm;
 import com.kyumall.kyumallcommon.response.ResponseWrapper;
+import jakarta.annotation.Nullable;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,7 +17,9 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @RequestMapping("/products")
 @RequiredArgsConstructor
@@ -25,14 +29,18 @@ public class ProductController {
   private final StockService stockService;
 
   /**
-   * 상품 생성
-   * @param request
+   * 신규 상품 추가
+   * @param productForm 상품 정보
+   * @param images 상품 이미지
+   * @param loginUser
    * @return
    */
   @PostMapping
-  public ResponseWrapper<CreatedIdDto> createProduct(@RequestBody @Valid ProductForm request,
+  public ResponseWrapper<CreatedIdDto> createProduct(
+      @RequestPart("productForm") @Valid ProductForm productForm,
+      @RequestPart("images") @Nullable List<MultipartFile> images,
       @LoginUser AuthenticatedUser loginUser) {
-    Long productId = productService.createProduct(request, loginUser.getMemberId());
+    Long productId = productService.createProduct(productForm, images, loginUser.getMemberId());
     return ResponseWrapper.ok(new CreatedIdDto(productId));
   }
 

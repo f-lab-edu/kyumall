@@ -22,7 +22,7 @@ public class ProductDetailDto {
         .sellerUsername(product.getSeller().getUsername())
         .productName(product.getName())
         .price(product.getPrice())
-        .image(product.getImage())
+        //.image(product.())
         .detail(product.getDetail())
         .build();
   }
