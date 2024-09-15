@@ -21,7 +21,7 @@ public class ImageUploadController {
   private String encryptKey;
   private final ImageUploadService imageUploadService;
 
-  @PostMapping("/image")
+  @PostMapping("/images")
   public ResponseWrapper<UploadImageResponse> uploadImage(@RequestParam("image") MultipartFile multipartFile) {
     Image image = imageUploadService.uploadImage(multipartFile);
 

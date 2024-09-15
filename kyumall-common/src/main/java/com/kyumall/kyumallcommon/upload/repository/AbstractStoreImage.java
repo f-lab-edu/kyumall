@@ -1,11 +1,12 @@
 package com.kyumall.kyumallcommon.upload.repository;
 
+import com.fasterxml.uuid.Generators;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
 public abstract class AbstractStoreImage implements StoreImage {
-  private static final DateTimeFormatter simpleDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+  private static final DateTimeFormatter simpleDateFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
 
   /**
    * 저장할 파일 이름을 생성합니다.
@@ -19,13 +20,12 @@ public abstract class AbstractStoreImage implements StoreImage {
   public String createStoreFileName(String originalFilename) {
     // 날짜
     LocalDateTime now = LocalDateTime.now();
-    int year = now.getYear();
     String todayDate = now.format(simpleDateFormatter);
     // 확장자
     String ext = extractExt(originalFilename);
-    String uuid = UUID.randomUUID().toString();
+    String uuidV7 = Generators.timeBasedEpochGenerator().generate().toString();
     // 조합
-    return year + "/" + todayDate + "/" + uuid + "." + ext;
+    return todayDate + "/" + uuidV7 + "." + ext;
   }
 
   /**

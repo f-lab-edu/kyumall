@@ -40,4 +40,6 @@ dependencies {
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
     // mail
     implementation 'org.springframework.boot:spring-boot-starter-mail'
+    // uuid (v7 사용 목적)
+    implementation 'com.fasterxml.uuid:java-uuid-generator:5.0.0'
 }
