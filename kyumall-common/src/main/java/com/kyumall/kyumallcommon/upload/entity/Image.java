@@ -1,6 +1,7 @@
 package com.kyumall.kyumallcommon.upload.entity;
 
 import com.kyumall.kyumallcommon.BaseTimeEntity;
+import com.kyumall.kyumallcommon.upload.dto.UploadFile;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -19,7 +20,10 @@ public class Image extends BaseTimeEntity {
   private String originalFileName;
   private String storedFileName;
 
-  public String getImageUrl() {
-    return storedFileName;
+  public static Image from(UploadFile uploadFile) {
+    return Image.builder()
+        .originalFileName(uploadFile.getOriginalFileName())
+        .storedFileName(uploadFile.getStoredFileName())
+        .build();
   }
 }

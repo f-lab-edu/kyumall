@@ -23,6 +23,11 @@ public class StoreImageToObjectStorage extends AbstractStoreImage {
   private String bucketName;
   private final AmazonS3 s3Client;
 
+  /**
+   * naver cloud s3 스토리지에 파일을 업로드 합니다.
+   * @param multipartFile
+   * @return
+   */
   @Override
   public UploadFile store(MultipartFile multipartFile) {
     String storeFileName = createStoreFileName(multipartFile.getOriginalFilename());
