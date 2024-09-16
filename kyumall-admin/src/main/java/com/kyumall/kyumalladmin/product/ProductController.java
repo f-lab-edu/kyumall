@@ -6,6 +6,7 @@ import com.kyumall.kyumallcommon.dto.CreatedIdDto;
 import com.kyumall.kyumallcommon.product.product.ProductService;
 import com.kyumall.kyumallcommon.product.product.StockService;
 import com.kyumall.kyumallcommon.product.product.dto.ProductForm;
+import com.kyumall.kyumallcommon.product.product.dto.UpdateProductImageInfo;
 import com.kyumall.kyumallcommon.response.ResponseWrapper;
 import jakarta.annotation.Nullable;
 import jakarta.validation.Valid;
@@ -14,7 +15,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -45,15 +45,20 @@ public class ProductController {
   }
 
   /**
-   * 상품 정보 변경
-   * @param id
-   * @param request
+   * 상품 정보를 수정합니다.
+   * @param id 상품 ID
+   * @param productForm 상품 정보
+   * @param imageInfos 이미지 정보 리스트 (기존이미지ID와 신규이미지의 파일명을 가지는 객체)
+   * @param newImages  신규 이미지 multipart 형식의 입력값
    * @param loginUser
    */
   @PutMapping("/{id}")
-  public void updateProduct(@PathVariable Long id, @RequestBody @Valid ProductForm request,
+  public void updateProduct(@PathVariable Long id,
+      @RequestPart("productForm") @Valid ProductForm productForm,
+      @RequestPart("imageInfo") List<UpdateProductImageInfo> imageInfos,
+      @RequestPart("newImages") List<MultipartFile> newImages,
       @LoginUser AuthenticatedUser loginUser) {
-    productService.updateProduct(id, request, loginUser.getMemberId());
+    productService.updateProduct(id, productForm, imageInfos, newImages, loginUser.getMemberId());
   }
 
   /**

@@ -6,9 +6,11 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+@EqualsAndHashCode(of = "id")
 @Getter
 @Builder @AllArgsConstructor @NoArgsConstructor
 @Entity
@@ -26,6 +28,10 @@ public class Image extends BaseTimeEntity {
         .storedFileName(uploadFile.getStoredFileName())
         .size(convertByteToKB(uploadFile.getSize()))
         .build();
+  }
+
+  public static Image from(String id) {
+    return Image.builder().id(id).build();
   }
 
   private static Double convertByteToKB(long byteSize) {

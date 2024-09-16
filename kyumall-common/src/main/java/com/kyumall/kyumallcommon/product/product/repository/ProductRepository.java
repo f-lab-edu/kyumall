@@ -24,4 +24,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
   Optional<Product> findWithFetchById(Long id);
 
   List<Product> findByIdIn(List<Long> productIds);
+
+  @Query("select distinct p from Product p join fetch p.productImages")
+  Optional<Product> findWithImagesById(Long id);
 }

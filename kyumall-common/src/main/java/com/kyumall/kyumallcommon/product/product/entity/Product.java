@@ -45,7 +45,7 @@ public class Product extends BaseTimeEntity {
 
   @Builder.Default
   @OneToMany(mappedBy = "product")
-  private List<ProductImage> images = new ArrayList<>();
+  private List<ProductImage> productImages = new ArrayList<>();
 
   private String detail;
 

@@ -11,6 +11,7 @@ import com.kyumall.kyumallcommon.member.repository.MemberRepository;
 import com.kyumall.kyumallcommon.product.category.Category;
 import com.kyumall.kyumallcommon.product.category.CategoryRepository;
 import com.kyumall.kyumallcommon.product.category.CategoryMapService;
+import com.kyumall.kyumallcommon.product.product.dto.UpdateProductImageInfo;
 import com.kyumall.kyumallcommon.product.product.entity.Product;
 import com.kyumall.kyumallcommon.product.product.entity.ProductImage;
 import com.kyumall.kyumallcommon.product.product.entity.ProductStatus;
@@ -21,8 +22,10 @@ import com.kyumall.kyumallcommon.upload.entity.Image;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import lombok.RequiredArgsConstructor;
@@ -44,7 +47,6 @@ public class ProductService {
 
   /**
    * 상품을 생성합니다.
-   *
    * @param request
    * @param multipartImages
    * @param loginUserId
@@ -69,7 +71,7 @@ public class ProductService {
 
     // 이미지 업로드
     if (multipartImages != null) {
-      IntStream.range(0, multipartImages.size()).forEach(idx -> {
+      IntStream.range(0, multipartImages.size()).forEachOrdered(idx -> {
         MultipartFile multipartImage = multipartImages.get(idx);
         Image image = imageUploadService.uploadImage(multipartImage);
         productImageRepository.save(new ProductImage(product, image, idx));
@@ -83,25 +85,73 @@ public class ProductService {
    * 상품 정보를 수정합니다.
    * 상품을 등록한 관리자만 수정할 수 있습니다.
    * @param id
-   * @param request
+   * @param productForm 상품 정보
+   * @param imageInfos  이미지정보 리스트, List 인덱스가 이미지의 순서(sequence)가 됩니다.
+   * @param newMultipartImages 신규 이미지 MultipartFile 리스트
    * @param loginUserId
    */
   @Transactional
-  public void updateProduct(Long id, @Valid ProductForm request, Long loginUserId) {
-    Product product = productRepository.findById(id)
+  public void updateProduct(Long id, @Valid ProductForm productForm, List<UpdateProductImageInfo> imageInfos,
+      List<MultipartFile> newMultipartImages, Long loginUserId) {
+    Product product = productRepository.findWithImagesById(id)
         .orElseThrow(() -> new KyumallException(ErrorCode.PRODUCT_NOT_EXISTS));
 
     if (!product.isSeller(loginUserId)) {
       throw new KyumallException(ErrorCode.PRODUCT_UPDATE_FORBIDDEN);
     }
-
-    if (product.isCategoryChanged(request.getCategoryId())) {
-      Category category = categoryRepository.findById(request.getCategoryId())
+    // 카테고리 수정
+    if (product.isCategoryChanged(productForm.getCategoryId())) {
+      Category category = categoryRepository.findById(productForm.getCategoryId())
           .orElseThrow(() -> new KyumallException(ErrorCode.CATEGORY_NOT_EXISTS));
       product.changeCategory(category);
     }
 
-    product.changeInfo(request.getProductName(), request.getPrice(), request.getDetail());
+    // 상품 정보 수정
+    product.changeInfo(productForm.getProductName(), productForm.getPrice(), productForm.getDetail());
+
+    // 제거된 이미지 삭제 처리
+    deleteRemovedImage(imageInfos, product);
+
+    // 신규 이미지 업로드
+    Map<String, Image> newImageMap = new HashMap<>();   // 기존이미지명 : 이미지객체
+    for (MultipartFile newMultipartImage: newMultipartImages) {
+      Image newImage = imageUploadService.uploadImage(newMultipartImage);
+      newImageMap.put(newImage.getOriginalFileName(), newImage);
+    }
+
+    // 이미지 리스트 저장 (기존 이미지는 순서 변경, 신규 이미지는 insert)
+    saveProductImageList(imageInfos, newImageMap, product);
+  }
+
+  private void saveProductImageList(List<UpdateProductImageInfo> imageInfos, Map<String, Image> newImageMap, Product product) {
+    IntStream.range(0, imageInfos.size()).forEachOrdered(idx -> {
+      UpdateProductImageInfo imageInfo = imageInfos.get(idx);
+      if (imageInfo.isNew()) {    // 신규 이미지 이면 newImageMap 에서 찾아서 save (insert)
+        Image newImage = newImageMap.get(imageInfo.getNewImageFileName());
+        if (newImage == null) {
+          throw new KyumallException(ErrorCode.IMAGE_NAME_NOT_EXISTS);
+        }
+        productImageRepository.save(new ProductImage(product, newImage, idx));
+      } else {
+        // 기존이미지면 순서만 변경해서 save (update)
+        productImageRepository.save(new ProductImage(product, Image.from(imageInfo.getImageId()), idx));
+      }
+    });
+  }
+
+  private void deleteRemovedImage(List<UpdateProductImageInfo> imageInfos, Product product) {
+    Set<String> existingImageIds = imageInfos.stream()
+        .filter(imageInfo -> imageInfo.getImageId() != null)
+        .map(UpdateProductImageInfo::getImageId)
+        .collect(Collectors.toSet());
+
+    product.getProductImages().stream()
+        .filter(productImage -> !existingImageIds.contains(productImage.getImage().getId()))
+        .forEach(this::deleteProductImage);
+  }
+
+  private void deleteProductImage(ProductImage productImage) {
+    productImageRepository.delete(productImage);
   }
 
   /**
