@@ -3,7 +3,10 @@ package com.kyumall.kyumallcommon.upload.repository;
 import com.kyumall.kyumallcommon.upload.dto.UploadFile;
 import org.springframework.web.multipart.MultipartFile;
 
-public interface StoreImage {
+/**
+ * 파일관리자 인터페이스
+ */
+public interface FileManager {
 
   /**
    * 파일 하나를 업로드합니다.

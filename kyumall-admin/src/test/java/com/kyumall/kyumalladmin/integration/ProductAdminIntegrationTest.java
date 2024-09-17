@@ -16,17 +16,14 @@ import com.kyumall.kyumallcommon.product.category.CategoryRepository;
 import com.kyumall.kyumallcommon.product.product.dto.ProductForm;
 import com.kyumall.kyumallcommon.product.product.entity.Product;
 import com.kyumall.kyumallcommon.product.product.repository.ProductRepository;
-import com.kyumall.kyumallcommon.upload.dto.UploadFile;
-import com.kyumall.kyumallcommon.upload.repository.StoreImage;
+import com.kyumall.kyumallcommon.upload.repository.FileManager;
 import io.restassured.RestAssured;
 import io.restassured.builder.MultiPartSpecBuilder;
 import io.restassured.http.ContentType;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
-import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -35,7 +32,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -49,7 +45,7 @@ public class ProductAdminIntegrationTest extends IntegrationTest {
   @Autowired
   private CategoryRepository categoryRepository;
   @SpyBean
-  private StoreImage storeImage;
+  private FileManager fileManager;
 
 
   Member adminMike;
@@ -100,7 +96,7 @@ public class ProductAdminIntegrationTest extends IntegrationTest {
     // 테스트 이미지
     String imagePath = "src/test/resources/images/test-image1.jpeg";
     // 이미지 업로드 모킹
-    willDoNothing().given(storeImage).storeFileWithFileName(any(MultipartFile.class), anyString());
+    willDoNothing().given(fileManager).storeFileWithFileName(any(MultipartFile.class), anyString());
 
     // when
     ExtractableResponse<Response> response = requestCreateProduct(spec, request, imagePath);
@@ -115,7 +111,7 @@ public class ProductAdminIntegrationTest extends IntegrationTest {
     assertThat(savedProduct.getPrice()).isEqualTo(request.getPrice());
     assertThat(savedProduct.getDetail()).isEqualTo(request.getDetail());
     // 이미지 업로드 호출 검증
-    then(storeImage).should().storeFileWithFileName(any(MultipartFile.class), anyString());
+    then(fileManager).should().storeFileWithFileName(any(MultipartFile.class), anyString());
     Product productWithImages = productRepository.findWithImagesById(createdId.longValue()).orElseThrow();
     assertThat(productWithImages.getProductImages().get(0).getImage().getId()).isNotEmpty();
     System.out.println("imageId: " + productWithImages.getProductImages().get(0).getImage().getId());

@@ -14,10 +14,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
+/**
+ * 네이버 Cloud ObjectStorage 파일관리자
+ */
 @Slf4j
 @RequiredArgsConstructor
 @Component
-public class StoreImageToObjectStorage extends AbstractStoreImage {
+public class ObjectStorageFileManager extends AbstractFileManager {
 
   @Value("${cloud.naver.object-storage.bucket.name}")
   private String bucketName;

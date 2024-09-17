@@ -3,7 +3,7 @@ package com.kyumall.kyumallcommon.upload;
 import com.kyumall.kyumallcommon.upload.dto.UploadFile;
 import com.kyumall.kyumallcommon.upload.entity.Image;
 import com.kyumall.kyumallcommon.upload.repository.ImageRepository;
-import com.kyumall.kyumallcommon.upload.repository.StoreImage;
+import com.kyumall.kyumallcommon.upload.repository.FileManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -14,7 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 @Service
 public class ImageUploadService {
-  private final StoreImage storeImage;
+  private final FileManager fileManager;
   private final ImageRepository imageRepository;
 
   /**
@@ -24,7 +24,7 @@ public class ImageUploadService {
    */
   @Transactional
   public Image uploadImage(MultipartFile multipartFile) {
-    UploadFile uploadFile = storeImage.upload(multipartFile);
+    UploadFile uploadFile = fileManager.upload(multipartFile);
     return imageRepository.save(Image.from(uploadFile));
   }
 }
