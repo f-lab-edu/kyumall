@@ -165,6 +165,20 @@ public class ProductAdminIntegrationTest extends IntegrationTest {
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_FORBIDDEN);
   }
 
+  @Test
+  @DisplayName("상품ID에 해당하는 재고를 변경합니다.")
+  void updateStock_success() {
+    // given
+    Product apple = productFactory.createProduct(ProductFixture.APPLE, adminMike);
+    Long quantity = 100L;
+    RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(adminMike.getUsername(), MemberFixture.password);
+    // when
+    ExtractableResponse<Response> response = requestChangeStock(apple.getId(), quantity, spec);
+
+    // then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
+  }
+
   private ExtractableResponse<Response> requestCreateProduct(RequestSpecification spec, ProductForm productForm, String... imagePaths) {
     RequestSpecification requestSpecification = RestAssured.given().log().all()
         .spec(spec)
@@ -210,5 +224,15 @@ public class ProductAdminIntegrationTest extends IntegrationTest {
   private Product findProductById(Long productId) {
     return productRepository.findWithFetchById(productId)
         .orElseThrow(() -> new RuntimeException());
+  }
+
+  private static ExtractableResponse<Response> requestChangeStock(Long productId, Long quantity ,RequestSpecification spec) {
+    return RestAssured.given().log().all()
+        .spec(spec)
+        .pathParam("id", productId)
+        .queryParam("quantity", quantity)
+        .when().put("/products/{id}/change-stock")
+        .then().log().all()
+        .extract();
   }
 }

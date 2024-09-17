@@ -19,6 +19,7 @@ import com.kyumall.kyumallcommon.order.entity.Orders;
 import com.kyumall.kyumallcommon.order.repository.OrdersRepository;
 import com.kyumall.kyumallcommon.order.entity.OrderItemStatus;
 import com.kyumall.kyumallcommon.product.product.entity.Product;
+import com.kyumall.kyumallcommon.product.stock.Stock;
 import com.kyumall.kyumallcommon.product.stock.StockRepository;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
@@ -93,8 +94,8 @@ class OrderIntegrationTest extends IntegrationTest {
     // 재고 추가
     Long appleStock = 20L;
     Long beefStock = 30L;
-    ProductIntegrationTest.requestChangeStock(apple.getId(), appleStock, spec);
-    ProductIntegrationTest.requestChangeStock(beef.getId(), beefStock, spec);
+    saveStock(apple, appleStock);
+    saveStock(beef, beefStock);
     // 주문 생성
     Integer appleOrderQuantity = 10;
     Integer beefOrderQuantity = 10;
@@ -140,8 +141,8 @@ class OrderIntegrationTest extends IntegrationTest {
     // 재고 추가
     Long appleStock = 10L;
     Long bananaStock = 10L;
-    ProductIntegrationTest.requestChangeStock(apple.getId(), appleStock, spec);
-    ProductIntegrationTest.requestChangeStock(beef.getId(), bananaStock, spec);
+    saveStock(apple, appleStock);
+    saveStock(beef, bananaStock);
     // 주문 생성
     Integer appleOrderQuantity = 11;
     Integer bananaOrderQuantity = 10;
@@ -169,7 +170,7 @@ class OrderIntegrationTest extends IntegrationTest {
     Product apple = productFactory.createProduct(ProductFixture.APPLE, seller);
     // 재고 추가
     Long appleStock = 100L;
-    ProductIntegrationTest.requestChangeStock(apple.getId(), appleStock, spec);
+    saveStock(apple, appleStock);
     // 주문 다건 생성
     int orderCount = 100;
     List<Orders> createOrders = new ArrayList<>();
@@ -202,6 +203,13 @@ class OrderIntegrationTest extends IntegrationTest {
 
     // then
     assertThat(stockRepository.findByProduct(apple).orElseThrow().getQuantity()).isEqualTo(0);
+  }
+
+  private void saveStock(Product product, Long quantity) {
+    stockRepository.saveAndFlush(Stock.builder()
+            .product(product)
+            .quantity(quantity)
+        .build());
   }
 
   private static ExtractableResponse<Response> requestCreateOrder(RequestSpecification spec,
