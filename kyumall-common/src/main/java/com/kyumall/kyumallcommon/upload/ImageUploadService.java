@@ -24,7 +24,7 @@ public class ImageUploadService {
    */
   @Transactional
   public Image uploadImage(MultipartFile multipartFile) {
-    UploadFile uploadFile = storeImage.store(multipartFile);
+    UploadFile uploadFile = storeImage.upload(multipartFile);
     return imageRepository.save(Image.from(uploadFile));
   }
 }

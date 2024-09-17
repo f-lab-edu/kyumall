@@ -3,8 +3,6 @@ package com.kyumall.kyumalladmin.integration;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.*;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kyumall.kyumalladmin.AuthTestUtil;
 import com.kyumall.kyumalladmin.IntegrationTest;
 import com.kyumall.kyumallcommon.factory.MemberFactory;
@@ -27,13 +25,19 @@ import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.BDDMockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.web.multipart.MultipartFile;
 
 public class ProductAdminIntegrationTest extends IntegrationTest {
   @Autowired
@@ -44,7 +48,7 @@ public class ProductAdminIntegrationTest extends IntegrationTest {
   private ProductRepository productRepository;
   @Autowired
   private CategoryRepository categoryRepository;
-  @MockBean
+  @SpyBean
   private StoreImage storeImage;
 
 
@@ -93,15 +97,13 @@ public class ProductAdminIntegrationTest extends IntegrationTest {
         .price(30000)
         .detail("사과입니다.").build();
     RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(adminMike.getUsername(), MemberFixture.password);
+    // 테스트 이미지
+    String imagePath = "src/test/resources/images/test-image1.jpeg";
     // 이미지 업로드 모킹
-    byte[] fakeFileBytes = "fakeImage".getBytes();
-    String storedFileName = "STORED_FILE_NAME";
-    String originalFileName = "test-image1.jpeg";
-    Long size = 100000L;
-    given(storeImage.store(any())).willReturn(new UploadFile(originalFileName, storedFileName, size));
+    willDoNothing().given(storeImage).storeFileWithFileName(any(MultipartFile.class), anyString());
 
     // when
-    ExtractableResponse<Response> response = requestCreateProduct(spec, request, new FakeImage(originalFileName, fakeFileBytes));
+    ExtractableResponse<Response> response = requestCreateProduct(spec, request, imagePath);
 
     // then
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
@@ -112,8 +114,11 @@ public class ProductAdminIntegrationTest extends IntegrationTest {
     assertThat(savedProduct.getSeller().getId()).isEqualTo(adminMike.getId());
     assertThat(savedProduct.getPrice()).isEqualTo(request.getPrice());
     assertThat(savedProduct.getDetail()).isEqualTo(request.getDetail());
+    // 이미지 업로드 호출 검증
+    then(storeImage).should().storeFileWithFileName(any(MultipartFile.class), anyString());
     Product productWithImages = productRepository.findWithImagesById(createdId.longValue()).orElseThrow();
-    assertThat(productWithImages.getProductImages().get(0).getImage().getId()).isEqualTo(storedFileName);
+    assertThat(productWithImages.getProductImages().get(0).getImage().getId()).isNotEmpty();
+    System.out.println("imageId: " + productWithImages.getProductImages().get(0).getImage().getId());
   }
 
   @Test
@@ -164,7 +169,7 @@ public class ProductAdminIntegrationTest extends IntegrationTest {
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_FORBIDDEN);
   }
 
-  private ExtractableResponse<Response> requestCreateProduct(RequestSpecification spec, ProductForm productForm, FakeImage... fakeImages) {
+  private ExtractableResponse<Response> requestCreateProduct(RequestSpecification spec, ProductForm productForm, String... imagePaths) {
     RequestSpecification requestSpecification = RestAssured.given().log().all()
         .spec(spec)
         .contentType(ContentType.MULTIPART)
@@ -175,14 +180,23 @@ public class ProductAdminIntegrationTest extends IntegrationTest {
             .build()
         );
     // 이미지 있는 경우 반복문 돌면서 추가
-    for (FakeImage fakeImage: fakeImages) {
-      requestSpecification.multiPart("images", fakeImage.fileName ,fakeImage.byteArray);
+    for (String imagePath: imagePaths) {
+      Path path = Paths.get(imagePath);
+      requestSpecification.multiPart("images", path.getFileName().toString(), readAllBytes(path));
     }
     ExtractableResponse<Response> response = requestSpecification.when().post("/products")
         .then().log().all()
         .extract();
 
     return response;
+  }
+
+  private static byte[] readAllBytes(Path path) {
+    try {
+      return Files.readAllBytes(path);
+    } catch (IOException ex) {
+      throw new RuntimeException("IO Exception", ex);
+    }
   }
 
   private static ExtractableResponse<Response> requestUpdateProduct(RequestSpecification spec, Long productId, ProductForm request) {
@@ -200,15 +214,5 @@ public class ProductAdminIntegrationTest extends IntegrationTest {
   private Product findProductById(Long productId) {
     return productRepository.findWithFetchById(productId)
         .orElseThrow(() -> new RuntimeException());
-  }
-
-  class FakeImage {
-    public String fileName;
-    public byte[] byteArray;
-
-    public FakeImage(String fileName, byte[] byteArray) {
-      this.fileName = fileName;
-      this.byteArray = byteArray;
-    }
   }
 }

@@ -24,26 +24,38 @@ public class StoreImageToObjectStorage extends AbstractStoreImage {
   private final AmazonS3 s3Client;
 
   /**
-   * naver cloud s3 스토리지에 파일을 업로드 합니다.
+   * naver cloud 에 파일을 업로드 합니다.
    * @param multipartFile
    * @return
    */
   @Override
-  public UploadFile store(MultipartFile multipartFile) {
+  public UploadFile upload(MultipartFile multipartFile) {
     String storeFileName = createStoreFileName(multipartFile.getOriginalFilename());
-    ObjectMetadata objectMetadata = new ObjectMetadata();
-    objectMetadata.setContentType(multipartFile.getContentType());
 
-    try (InputStream inputStream = multipartFile.getInputStream()) {
-      s3Client.putObject(new PutObjectRequest(bucketName, storeFileName, inputStream, objectMetadata));
-    } catch (IOException e) {
-      throw new KyumallException(ErrorCode.FAIL_TO_IMAGE_UPLOAD);
-    }
+    storeFileWithFileName(multipartFile, storeFileName);
 
     return UploadFile.builder()
         .storedFileName(storeFileName)
         .originalFileName(multipartFile.getOriginalFilename())
         .size(multipartFile.getSize())
         .build();
+  }
+
+  /**
+   * 주어진 파일이름으로 이미지를 naver cloud objectStorage 에 업로드합니다.
+   * @param multipartFile
+   * @param storeFileName
+   */
+  @Override
+  public void storeFileWithFileName(MultipartFile multipartFile, String storeFileName) {
+    ObjectMetadata objectMetadata = new ObjectMetadata();
+    objectMetadata.setContentType(multipartFile.getContentType());
+
+    try (InputStream inputStream = multipartFile.getInputStream()) {
+      s3Client.putObject(new PutObjectRequest(bucketName, storeFileName, inputStream,
+          objectMetadata));
+    } catch (IOException e) {
+      throw new KyumallException(ErrorCode.FAIL_TO_IMAGE_UPLOAD);
+    }
   }
 }
