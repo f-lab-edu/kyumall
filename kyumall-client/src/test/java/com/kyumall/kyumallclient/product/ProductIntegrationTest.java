@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.*;
 import com.kyumall.kyumallclient.AuthTestUtil;
 import com.kyumall.kyumallclient.IntegrationTest;
 import com.kyumall.kyumallclient.product.category.dto.HierarchyCategoryDto;
+import com.kyumall.kyumallcommon.fixture.common.ImageFixture;
 import com.kyumall.kyumallcommon.product.product.dto.ProductDetailDto;
 import com.kyumall.kyumallcommon.product.product.dto.ProductSimpleDto;
 import com.kyumall.kyumallclient.product.category.dto.SubCategoryDto;
@@ -18,6 +19,10 @@ import com.kyumall.kyumallcommon.product.category.Category;
 import com.kyumall.kyumallcommon.product.product.entity.Product;
 import com.kyumall.kyumallcommon.product.category.CategoryRepository;
 import com.kyumall.kyumallcommon.product.category.CategoryStatus;
+import com.kyumall.kyumallcommon.product.product.repository.ProductImageRepository;
+import com.kyumall.kyumallcommon.product.product.repository.ProductRepository;
+import com.kyumall.kyumallcommon.upload.entity.Image;
+import com.kyumall.kyumallcommon.upload.repository.ImageRepository;
 import io.restassured.RestAssured;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
@@ -39,14 +44,20 @@ public class ProductIntegrationTest extends IntegrationTest {
   private ProductFactory productFactory;
   @Autowired
   private CategoryRepository categoryRepository;
+  @Autowired
+  private ImageRepository imageRepository;
 
   Member seller;
+  Image image1;
+  Image image2;
 
   String[] comparedProductSimpleDtoFieldNames = new String[] {"name", "price", "image"};
 
   @BeforeEach
   void initData() { // 현재 테스트에 밀접한 연관이 없고, 공유되어도 문제될 것 없는 데이터만 BeforeEach 에서 생성
     seller = memberFactory.createMember(MemberFixture.LEE);
+    image1 = imageRepository.saveAndFlush(ImageFixture.PIZZA_IMAGE.toEntity());
+    image2 = imageRepository.saveAndFlush(ImageFixture.CHICKEN_IMAGE.toEntity());
   }
 
   private Category saveCategory(String name, Category parent) {
@@ -58,12 +69,14 @@ public class ProductIntegrationTest extends IntegrationTest {
   }
 
   @Test
-  @DisplayName("상품리스트 조회에 성공합니다.")
+  @DisplayName("상품리스트 조회에 성공합니다.(대표이미지포함)")
   void getAllProducts_success() {
     //given
     List<Product> products = new ArrayList<>();
+    productFactory.createProduct(ProductFixture.APPLE, seller);
     products.add(productFactory.createProduct(ProductFixture.APPLE, seller));
     products.add(productFactory.createProduct(ProductFixture.BEEF, seller));
+
     //when
     ExtractableResponse<Response> response = RestAssured.given().log().all()
         .when().get("/products")
@@ -129,11 +142,6 @@ public class ProductIntegrationTest extends IntegrationTest {
     Category toiletPaper = saveCategory("화장지", houseItem);
     Category wetWipe = saveCategory("물티슈", toiletPaper);
     Category paperTowel = saveCategory("키친타올", toiletPaper);
-
-    ExtractableResponse<Response> extract = RestAssured.given().log().all()
-        .when().get("/categories/hierarchy")
-        .then().log().all()
-        .extract();
 
     ExtractableResponse<Response> response = RestAssured.given().log().all()
         .when().get("/categories/hierarchy")
@@ -222,10 +230,10 @@ public class ProductIntegrationTest extends IntegrationTest {
   @DisplayName("상품 상세 조회에 성공합니다.")
   void getProduct_success() {
     // given
-    Product apple = productFactory.createProduct(ProductFixture.APPLE, seller);
+    Product product = productFactory.createProduct(ProductFixture.BEEF, seller);
     // when
     ExtractableResponse<Response> response = RestAssured.given().log().all()
-        .pathParam("id", ProductFixture.APPLE.getId())
+        .pathParam("id", product.getId())
         .when().get("/products/{id}")
         .then().log().all()
         .extract();
@@ -233,15 +241,15 @@ public class ProductIntegrationTest extends IntegrationTest {
     // then
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
     ProductDetailDto productDetailDto= response.body().jsonPath().getObject("result", ProductDetailDto.class);
-    assertThat(productDetailDto.getId()).isEqualTo(apple.getId());
+    assertThat(productDetailDto.getId()).isEqualTo(product.getId());
     assertThat(productDetailDto.getSellerUsername()).isEqualTo(seller.getUsername());
-    assertThat(productDetailDto.getProductName()).isEqualTo(apple.getName());
-    assertThat(productDetailDto.getPrice()).isEqualTo(apple.getPrice());
-    assertThat(productDetailDto.getImage()).satisfiesAnyOf(
-        dto -> assertThat(dto).isNull(),
-        dto -> assertThat(dto).endsWith(apple.getImage())
+    assertThat(productDetailDto.getProductName()).isEqualTo(product.getName());
+    assertThat(productDetailDto.getPrice()).isEqualTo(product.getPrice());
+    assertThat(productDetailDto.getImages()).satisfiesAnyOf(
+        images -> assertThat(images).isNull(),
+        images -> assertThat(images).hasSize(product.getProductImages().size())
     );
-    assertThat(productDetailDto.getDetail()).endsWith(apple.getDetail());
+    assertThat(productDetailDto.getDetail()).endsWith(product.getDetail());
   }
 
   @Test
@@ -258,29 +266,5 @@ public class ProductIntegrationTest extends IntegrationTest {
 
     // then
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_BAD_REQUEST);
-  }
-
-  @Test
-  @DisplayName("상품ID에 해당하는 재고를 변경합니다.")
-  void updateStock_success() {
-    // given
-    Product apple = productFactory.createProduct(ProductFixture.APPLE, seller);
-    Long quantity = 100L;
-    RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(seller.getUsername(), MemberFixture.password);
-    // when
-    ExtractableResponse<Response> response = requestChangeStock(apple.getId(), quantity, spec);
-
-    // then
-    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
-  }
-
-  public static ExtractableResponse<Response> requestChangeStock(Long productId, Long quantity ,RequestSpecification spec) {
-    return RestAssured.given().log().all()
-        .spec(spec)
-        .pathParam("id", productId)
-        .queryParam("quantity", quantity)
-        .when().put("/products/{id}/change-stock")
-        .then().log().all()
-        .extract();
   }
 }

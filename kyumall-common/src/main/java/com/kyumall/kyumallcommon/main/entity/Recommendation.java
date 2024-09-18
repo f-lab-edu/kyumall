@@ -28,4 +28,8 @@ public class Recommendation extends BaseTimeEntity {
   @Builder.Default
   @OneToMany(mappedBy = "recommendation")
   private List<RecommendationItem> recommendationItems = new ArrayList<>();
+
+  public void setRecommendationItems(List<RecommendationItem> recommendationItems) {
+    this.recommendationItems = recommendationItems;
+  }
 }

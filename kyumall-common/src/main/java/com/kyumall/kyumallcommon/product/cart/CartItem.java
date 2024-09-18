@@ -34,4 +34,8 @@ public class CartItem extends BaseTimeEntity {
   public void updateCount(int count) {
     this.count = count;
   }
+
+  public Long getProductId() {
+    return product.getId();
+  }
 }

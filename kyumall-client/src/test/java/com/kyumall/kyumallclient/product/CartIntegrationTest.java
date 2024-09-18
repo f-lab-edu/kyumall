@@ -47,7 +47,7 @@ class CartIntegrationTest extends IntegrationTest {
 
   @BeforeEach
   void dataInit() {
-    // 회원
+    seller = memberFactory.createMember(MemberFixture.BILLY);
     testMember1 = memberFactory.createMember(MemberFixture.KIM);
   }
 
@@ -103,9 +103,6 @@ class CartIntegrationTest extends IntegrationTest {
 
     ExtractableResponse<Response> response = requestGetCartItems(testMember1.getUsername());
 
-    RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(testMember1.getUsername(),
-        password);
-
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
     List<CartItemsDto> items = response.body().jsonPath().getList("result", CartItemsDto.class);
     assertThat(items).hasSize(2);
@@ -140,7 +137,7 @@ class CartIntegrationTest extends IntegrationTest {
   private void assertCartItemsDto(List<CartItemsDto> items, int index, Product product, int count) {
     assertThat(items.get(index).getProductId()).isEqualTo(product.getId());
     assertThat(items.get(index).getProductName()).isEqualTo(product.getName());
-    assertThat(items.get(index).getImage()).isEqualTo(product.getImage());
+    assertThat(items.get(index).getImage()).isEqualTo(product.getRepresentativeImage());
     assertThat(items.get(index).getPrice()).isEqualTo(product.getPrice());
     assertThat(items.get(index).getCount()).isEqualTo(count);
   }

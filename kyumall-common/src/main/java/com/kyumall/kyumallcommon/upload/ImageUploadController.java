@@ -5,6 +5,7 @@ import com.kyumall.kyumallcommon.exception.ErrorCode;
 import com.kyumall.kyumallcommon.exception.KyumallException;
 import com.kyumall.kyumallcommon.response.ResponseWrapper;
 import com.kyumall.kyumallcommon.upload.dto.UploadImageResponse;
+import com.kyumall.kyumallcommon.upload.entity.Image;
 import javax.crypto.SecretKey;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,13 +20,14 @@ public class ImageUploadController {
   @Value("${encrypt.key}")
   private String encryptKey;
   private final ImageUploadService imageUploadService;
-  @PostMapping("/image")
+
+  @PostMapping("/images")
   public ResponseWrapper<UploadImageResponse> uploadImage(@RequestParam("image") MultipartFile multipartFile) {
-    String storedImageName = imageUploadService.uploadImage(multipartFile);
+    Image image = imageUploadService.uploadImage(multipartFile);
 
     SecretKey secretKey = EncryptUtil.decodeStringToKey(encryptKey, EncryptUtil.ENCRYPT_ALGORITHM);
     try {
-      String encryptImageName = EncryptUtil.encrypt(EncryptUtil.ENCRYPT_ALGORITHM, storedImageName,
+      String encryptImageName = EncryptUtil.encrypt(EncryptUtil.ENCRYPT_ALGORITHM, image.getStoredFileName(),
           secretKey);
       return ResponseWrapper.ok(new UploadImageResponse(encryptImageName));
     } catch (Exception e) {

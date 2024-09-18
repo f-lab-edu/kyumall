@@ -7,11 +7,11 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface RecommendationRepository extends JpaRepository<Recommendation, Long> {
 
-  @Query("select distinct r "
-      + "from Recommendation r "
-      + "join fetch r.recommendationItems ri "
-      + "join fetch ri.product "
-      + "where r.inUse = true "
-      + "order by r.sortOrder")
+  @Query("""
+  select r 
+  from Recommendation r
+  where r.inUse = true
+  order by r.sortOrder
+""")
   List<Recommendation> findAllInUse();
 }

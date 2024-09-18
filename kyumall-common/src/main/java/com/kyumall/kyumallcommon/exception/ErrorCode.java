@@ -23,6 +23,7 @@ public enum ErrorCode {
   INVALID_TOKEN("1012", "유효하지 않은 토크입니다.", HttpStatus.SC_FORBIDDEN),
   EMAIL_SEND_FAIL("1013", "이메일 발송에 실패했습니다.", HttpStatus.SC_INTERNAL_SERVER_ERROR),
   EMAIL_TEMPLATE_NOT_FOUND("1014", "이메일 템플릿을 찾을 수 없습니다.", HttpStatus.SC_INTERNAL_SERVER_ERROR),
+  IMAGE_NAME_NOT_EXISTS("1015", "이미지명에 해당하는 이미지가 존재하지 않습니다.", HttpStatus.SC_BAD_REQUEST),
 
   // 회원파트 에러 2000 ~ 2999
   VERIFICATION_MAIL_CAN_SEND_IN_TERM("2000", "본인인증 메일은 3분 간격으로 전송 가능합니다.", HttpStatus.SC_BAD_REQUEST),

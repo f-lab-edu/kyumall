@@ -8,7 +8,6 @@ import com.kyumall.kyumallcommon.main.entity.BannerGroup;
 import com.kyumall.kyumallcommon.main.repository.BannerGroupRepository;
 import com.kyumall.kyumallcommon.main.repository.BannerRepository;
 import com.kyumall.kyumallcommon.upload.ImageUploadService;
-import com.kyumall.kyumallcommon.upload.entity.Image;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
