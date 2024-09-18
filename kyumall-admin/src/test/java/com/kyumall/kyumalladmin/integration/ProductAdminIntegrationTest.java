@@ -122,7 +122,7 @@ public class ProductAdminIntegrationTest extends IntegrationTest {
   void updateProduct_success() {
     Category category1 = categoryRepository.saveAndFlush(CategoryFixture.FOOD.toEntity());
     Category category2 = categoryRepository.saveAndFlush(CategoryFixture.FASHION.toEntity());
-    Product product = productRepository.saveAndFlush(ProductFixture.APPLE.toEntity(adminMike, category1));
+    Product product = productFactory.saveProduct(ProductFixture.APPLE.toEntity(adminMike, category1));
     ProductForm productForm = ProductForm.builder()
         .productName("updated name")
         .price(7777)
@@ -209,11 +209,16 @@ public class ProductAdminIntegrationTest extends IntegrationTest {
     }
   }
 
-  private static ExtractableResponse<Response> requestUpdateProduct(RequestSpecification spec, Long productId, ProductForm request) {
+  private static ExtractableResponse<Response> requestUpdateProduct(RequestSpecification spec, Long productId, ProductForm productForm) {
     ExtractableResponse<Response> response = RestAssured.given().log().all()
         .contentType(ContentType.JSON)
         .spec(spec)
-        .body(request)
+        .contentType(ContentType.MULTIPART)
+        .multiPart(new MultiPartSpecBuilder(productForm)
+            .controlName("productForm")
+            .mimeType("application/json")
+            .charset("UTF-8")
+            .build())
         .pathParam("id", productId)
         .when().put("/products/{id}")
         .then().log().all()

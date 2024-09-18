@@ -10,6 +10,7 @@ import com.kyumall.kyumallcommon.product.product.dto.UpdateProductImageInfo;
 import com.kyumall.kyumallcommon.response.ResponseWrapper;
 import jakarta.annotation.Nullable;
 import jakarta.validation.Valid;
+import java.util.Collections;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -55,9 +56,12 @@ public class ProductController {
   @PutMapping("/{id}")
   public void updateProduct(@PathVariable Long id,
       @RequestPart("productForm") @Valid ProductForm productForm,
-      @RequestPart("imageInfo") List<UpdateProductImageInfo> imageInfos,
-      @RequestPart("newImages") List<MultipartFile> newImages,
+      @RequestPart(value = "imageInfo", required = false) List<UpdateProductImageInfo> imageInfos,
+      @RequestPart(value = "newImages", required = false) List<MultipartFile> newImages,
       @LoginUser AuthenticatedUser loginUser) {
+    // null 일 경우, 빈 리스트로 초기화
+    imageInfos = (imageInfos == null) ? Collections.emptyList() : imageInfos;
+    newImages = (newImages == null) ? Collections.emptyList() : newImages;
     productService.updateProduct(id, productForm, imageInfos, newImages, loginUser.getMemberId());
   }
 
