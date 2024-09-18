@@ -1,17 +1,10 @@
 package com.kyumall.kyumalladmin;
 
 import com.kyumall.kyumallcommon.auth.authentication.passwword.PasswordService;
-import com.kyumall.kyumallcommon.mail.repository.EmailTemplateRepository;
 import com.kyumall.kyumallcommon.member.entity.Member;
-import com.kyumall.kyumallcommon.member.entity.Term;
-import com.kyumall.kyumallcommon.member.entity.TermDetail;
 import com.kyumall.kyumallcommon.member.repository.MemberRepository;
-import com.kyumall.kyumallcommon.member.repository.TermDetailRepository;
-import com.kyumall.kyumallcommon.member.repository.TermRepository;
 import com.kyumall.kyumallcommon.member.vo.MemberStatus;
 import com.kyumall.kyumallcommon.member.vo.MemberType;
-import com.kyumall.kyumallcommon.member.vo.TermStatus;
-import com.kyumall.kyumallcommon.member.vo.TermType;
 import com.kyumall.kyumallcommon.product.category.Category;
 import com.kyumall.kyumallcommon.product.category.CategoryRepository;
 import com.kyumall.kyumallcommon.product.category.CategoryStatus;
@@ -20,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Profile;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
 
 /**
@@ -70,11 +62,7 @@ public class AppInitialRunner implements CommandLineRunner {
   }
 
   private void saveCategories() {
-    Category food = saveCategory("식품", null);
-    Category meet = saveCategory("육류", food);
-    Category fruit = saveCategory("과일", food);
-    Category apple = saveCategory("사과", fruit);
-    Category banana = saveCategory("바나나", fruit);
+    saveCategory("식품", null);
   }
 
   private Category saveCategory(String name, Category parent) {
