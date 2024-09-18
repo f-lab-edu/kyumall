@@ -22,7 +22,7 @@ public class CartItemsDto {
         .productId(cartItem.getProduct().getId())
         .productName(cartItem.getProduct().getName())
         .price(cartItem.getProduct().getPrice())
-//        .image(cartItem.getProduct().getImage())
+        .image(cartItem.getProduct().getRepresentativeImage())
         .count(cartItem.getProduct().isDeleted() ? 0 : cartItem.getCount())
         .isDeleted(cartItem.getProduct().isDeleted())
         .build();

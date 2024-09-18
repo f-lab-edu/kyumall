@@ -10,11 +10,13 @@ import org.springframework.data.jpa.repository.Query;
 public interface CartRepository extends JpaRepository<Cart, Long> {
   @Query("""
     select distinct c from Cart c
-      left join fetch c.member m
+      join fetch c.member m
       left join fetch c.cartItems ci
-      left join fetch ci.product p
+      join fetch ci.product p
     where c.member = :member
     order by ci.createdAt
   """)
   Optional<Cart> findWithItemsByMember(Member member);
+
+  Optional<Cart> findByMember(Member member);
 }

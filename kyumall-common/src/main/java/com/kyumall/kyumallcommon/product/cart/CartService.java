@@ -30,15 +30,20 @@ public class CartService {
   @Transactional
   public void addCartItem(Long memberId, AddCartItemRequest request) {
     Member member = findMemberById(memberId);
-    Cart cart = findCartOrSaveByMember(member);
+    Cart cart = findCartWithCarItemsByMemberOrSaveIfNull(member);
     Product product = productRepository.findById(request.getProductId())
         .orElseThrow(() -> new KyumallException(ErrorCode.PRODUCT_NOT_EXISTS));
 
     cart.addCartItem(product, request.getCount());
   }
 
-  private Cart findCartOrSaveByMember(Member member) {
+  private Cart findCartWithCarItemsByMemberOrSaveIfNull(Member member) {
     return cartRepository.findWithItemsByMember(member)
+        .orElseGet(() -> cartRepository.save(new Cart(member)));
+  }
+
+  private Cart findCartByMemberOrSaveIfNull(Member member) {
+    return cartRepository.findByMember(member)
         .orElseGet(() -> cartRepository.save(new Cart(member)));
   }
 
@@ -55,21 +60,24 @@ public class CartService {
   @Transactional
   public void deleteCartItem(Long memberId, List<Long> cartItemIds) {
     Member member = findMemberById(memberId);
-    Cart cart = findCartOrSaveByMember(member);
+    Cart cart = findCartWithCarItemsByMemberOrSaveIfNull(member);
 
     cart.deleteCartItems(cartItemIds);
   }
 
   /**
    * 카트에 담긴 상품 목록을 조회합니다.
+   * OneToMany 관계가 두개 이므로(Cart - CartItems, Product - ProductImages), 두번의 쿼리로 따로 조회합니다.
    * @param memberId
    * @return
    */
   public List<CartItemsDto> getCartItems(Long memberId) {
     Member member = findMemberById(memberId);
-    Cart cart = findCartOrSaveByMember(member);
-    return cart.getCartItems()
-        .stream().map(CartItemsDto::from).collect(Collectors.toList());
+
+    Cart cart = findCartByMemberOrSaveIfNull(member);
+    List<CartItem> cartItemsWithImage = cartItemRepository.findWithProductImageByCart(cart);
+    return cartItemsWithImage.stream()
+            .map(CartItemsDto::from).collect(Collectors.toList());
   }
 
   /**
@@ -84,7 +92,7 @@ public class CartService {
       throw new KyumallException(ErrorCode.ITEM_COUNT_MUST_BIGGER_THAN_ZERO);
     }
     Member member = findMemberById(memberId);
-    Cart cart = findCartOrSaveByMember(member);
+    Cart cart = findCartWithCarItemsByMemberOrSaveIfNull(member);
 
     cart.updateCartItemCount(cartItemId, count);
   }
