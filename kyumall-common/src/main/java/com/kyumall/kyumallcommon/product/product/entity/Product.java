@@ -13,7 +13,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import java.util.ArrayList;
+import jakarta.persistence.OrderBy;
 import java.util.List;
 import java.util.Objects;
 import lombok.AllArgsConstructor;
@@ -43,9 +43,9 @@ public class Product extends BaseTimeEntity {
   @Enumerated(EnumType.STRING)
   private ProductStatus productStatus;
 
-  @Builder.Default
+  @OrderBy("sequence asc")
   @OneToMany(mappedBy = "product")
-  private List<ProductImage> productImages = new ArrayList<>();
+  private List<ProductImage> productImages;
 
   private String detail;
 
@@ -74,5 +74,18 @@ public class Product extends BaseTimeEntity {
     this.name = productName;
     this.price = price;
     this.detail = detail;
+  }
+
+  /**
+   * 대표 이미지 조회
+   * 이미지 sequence 가 가장 빠른 이미지를 대표이미지로 삼는다.
+   * 이미지가 없는 경우, null을 반환한다.
+   * @return
+   */
+  public String getRepresentativeImage() {
+    if (this.productImages.isEmpty()) {
+      return null;
+    }
+    return this.productImages.get(0).getImageId();
   }
 }

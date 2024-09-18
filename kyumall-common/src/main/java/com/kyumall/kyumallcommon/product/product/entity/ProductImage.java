@@ -29,4 +29,8 @@ public class ProductImage {
   private Image image;
 
   private Integer sequence;  // 이미지 정렬 순서, 순서가 가장 빠른 이미지가 대표 이미지 입니다.
+
+  public String getImageId() {
+    return this.image.getId();
+  }
 }

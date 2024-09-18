@@ -160,7 +160,7 @@ public class ProductService {
    * @return
    */
   public Page<ProductSimpleDto> getAllProducts(Pageable pageable) {
-    return productRepository.findAllByOrderByName(pageable).map(ProductSimpleDto::from);
+    return productRepository.findAllWithImagesByCreatedAtDesc(pageable).map(ProductSimpleDto::from);
   }
 
   /**
