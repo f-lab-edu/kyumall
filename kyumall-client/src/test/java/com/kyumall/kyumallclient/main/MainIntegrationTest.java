@@ -7,6 +7,7 @@ import com.kyumall.kyumallclient.main.dto.BannerDto;
 import com.kyumall.kyumallclient.main.dto.RecommendationDto;
 import com.kyumall.kyumallcommon.factory.MemberFactory;
 import com.kyumall.kyumallcommon.factory.ProductFactory;
+import com.kyumall.kyumallcommon.fixture.common.ImageFixture;
 import com.kyumall.kyumallcommon.fixture.member.MemberFixture;
 import com.kyumall.kyumallcommon.fixture.product.ProductFixture;
 import com.kyumall.kyumallcommon.main.entity.Banner;
@@ -66,9 +67,7 @@ class MainIntegrationTest extends IntegrationTest {
   @BeforeEach
   void initData() {
     seller = memberFactory.createMember(MemberFixture.LEE);
-    Image testImage1 = imageRepository.save(Image.builder()
-        .originalFileName("test image1.png")
-        .storedFileName("aaa-bbb-ccc").build());
+    Image testImage1 = imageRepository.save(ImageFixture.CHICKEN_IMAGE.toEntity());
 
     // 배너 데이터 준비
     BannerGroup mainBannerGroup = bannerGroupRepository.save(BannerGroup.builder()
