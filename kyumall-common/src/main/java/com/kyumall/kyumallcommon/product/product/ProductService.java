@@ -5,12 +5,14 @@ import com.kyumall.kyumallcommon.product.product.dto.ProductDetailDto;
 import com.kyumall.kyumallcommon.exception.ErrorCode;
 import com.kyumall.kyumallcommon.exception.KyumallException;
 import com.kyumall.kyumallcommon.product.product.dto.ProductForm;
+import com.kyumall.kyumallcommon.product.product.dto.ProductSearchDto;
 import com.kyumall.kyumallcommon.product.product.dto.ProductSimpleDto;
 import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.member.repository.MemberRepository;
 import com.kyumall.kyumallcommon.product.category.Category;
 import com.kyumall.kyumallcommon.product.category.CategoryRepository;
 import com.kyumall.kyumallcommon.product.category.CategoryMapService;
+import com.kyumall.kyumallcommon.product.product.dto.SearchProductCondition;
 import com.kyumall.kyumallcommon.product.product.dto.UpdateProductImageInfo;
 import com.kyumall.kyumallcommon.product.product.entity.Product;
 import com.kyumall.kyumallcommon.product.product.entity.ProductImage;
@@ -175,6 +177,15 @@ public class ProductService {
     List<String> subCategoryIds = findAllSubCategories(categoryId);
     List<Long> longIdList = subCategoryIds.stream().map(Long::parseLong).collect(Collectors.toList());
     return productRepository.findByCategoryIds(longIdList, pageable).map(ProductSimpleDto::from);
+  }
+
+  /**
+   * 상품을 여러 조건으로 검색합니다.
+   * @param condition
+   * @return
+   */
+  public List<ProductSearchDto> searchProduct(SearchProductCondition condition) {
+    return productRepository.search(condition);
   }
 
   /**

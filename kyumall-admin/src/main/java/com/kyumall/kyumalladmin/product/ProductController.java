@@ -6,6 +6,8 @@ import com.kyumall.kyumallcommon.dto.CreatedIdDto;
 import com.kyumall.kyumallcommon.product.product.ProductService;
 import com.kyumall.kyumallcommon.product.product.StockService;
 import com.kyumall.kyumallcommon.product.product.dto.ProductForm;
+import com.kyumall.kyumallcommon.product.product.dto.ProductSearchDto;
+import com.kyumall.kyumallcommon.product.product.dto.SearchProductCondition;
 import com.kyumall.kyumallcommon.product.product.dto.UpdateProductImageInfo;
 import com.kyumall.kyumallcommon.response.ResponseWrapper;
 import jakarta.annotation.Nullable;
@@ -13,9 +15,11 @@ import jakarta.validation.Valid;
 import java.util.Collections;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -43,6 +47,17 @@ public class ProductController {
       @LoginUser AuthenticatedUser loginUser) {
     Long productId = productService.createProduct(productForm, images, loginUser.getMemberId());
     return ResponseWrapper.ok(new CreatedIdDto(productId));
+  }
+
+  /**
+   * 상품을 여러 조건으로 검색합니다.
+   * 등록일 순으로 내림차순 됩니다.
+   * @param condition
+   * @return
+   */
+  @GetMapping("/search")
+  public ResponseWrapper<List<ProductSearchDto>> searchProduct(@RequestBody SearchProductCondition condition) {
+    return ResponseWrapper.ok(productService.searchProduct(condition));
   }
 
   /**
