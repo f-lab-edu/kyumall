@@ -14,6 +14,9 @@ import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.product.category.Category;
 import com.kyumall.kyumallcommon.product.category.CategoryRepository;
 import com.kyumall.kyumallcommon.product.product.dto.ProductForm;
+import com.kyumall.kyumallcommon.product.product.dto.ProductSearchDto;
+import com.kyumall.kyumallcommon.product.product.dto.ProductSimpleDto;
+import com.kyumall.kyumallcommon.product.product.dto.SearchProductCondition;
 import com.kyumall.kyumallcommon.product.product.entity.Product;
 import com.kyumall.kyumallcommon.product.product.repository.ProductRepository;
 import com.kyumall.kyumallcommon.upload.repository.FileManager;
@@ -27,6 +30,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -179,6 +184,26 @@ public class ProductAdminIntegrationTest extends IntegrationTest {
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
   }
 
+  @Test
+  @DisplayName("아무 조건없이 상품을 검색하여 모든 조건의 상품을 검색합니다.")
+  void searchProduct_no_conditions_success() {
+    // given
+    List<Product> products = new ArrayList<>();
+    products.add(productFactory.createProduct(ProductFixture.APPLE, adminMike));
+    products.add(productFactory.createProduct(ProductFixture.BEEF, adminMike));
+    products.add(productFactory.createProduct(ProductFixture.SWEATER, adminMike));
+    // 아무조건 없이
+    SearchProductCondition condition = SearchProductCondition.builder().build();
+    RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(adminMike.getUsername(), MemberFixture.password);
+    // when
+    ExtractableResponse<Response> response = requestSearchProduct(condition, spec);
+    //then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
+    List<ProductSearchDto> result = response.body().jsonPath().getList("result.content", ProductSearchDto.class);
+    assertThat(result).hasSize(3);
+    assertThat(result).usingRecursiveComparison().comparingOnlyFields("id").isEqualTo(products);
+  }
+
   private ExtractableResponse<Response> requestCreateProduct(RequestSpecification spec, ProductForm productForm, String... imagePaths) {
     RequestSpecification requestSpecification = RestAssured.given().log().all()
         .spec(spec)
@@ -237,6 +262,16 @@ public class ProductAdminIntegrationTest extends IntegrationTest {
         .pathParam("id", productId)
         .queryParam("quantity", quantity)
         .when().put("/products/{id}/change-stock")
+        .then().log().all()
+        .extract();
+  }
+
+  private static ExtractableResponse<Response> requestSearchProduct(SearchProductCondition condition, RequestSpecification spec) {
+    return RestAssured.given().log().all()
+        .spec(spec)
+        .contentType(ContentType.JSON)
+        .body(condition)
+        .when().get("/products/search")
         .then().log().all()
         .extract();
   }

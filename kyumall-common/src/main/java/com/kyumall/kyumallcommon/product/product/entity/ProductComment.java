@@ -38,8 +38,9 @@ public class ProductComment extends BaseTimeEntity {
   @ManyToOne
   @JoinColumn(name = "parent_id")
   private ProductComment parentComment;
-
+  @Builder.Default
   private boolean deleted = false;    // 삭제 여부
+  @Builder.Default
   private boolean deletedByAdmin = false; // 관리자에 의해 삭제 여부
 
   public void updateComment(String newComment) {
