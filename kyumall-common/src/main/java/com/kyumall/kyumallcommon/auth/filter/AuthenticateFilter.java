@@ -42,9 +42,12 @@ public class AuthenticateFilter extends OncePerRequestFilter {
 
     try {
       try {
-        if (shouldTokenCheck(request)) {    // 토큰 체크해야하는 경로인지 확인
+        if (!shouldSkipAuthenticate(request)) {    // 인증을 건너뛰어야하는지 확인
           String token = jwtProvider.resolveToken(request);
-          processToken(token);
+          boolean isValid = processToken(token);
+          if (!isValid && !shouldPermitAnonymous(request)) {  // 익명유저 permit 체크
+            throw new KyumallException(ErrorCode.INVALID_TOKEN);
+          }
         }
         doFilter(request, response, filterChain); // doFilter 는 이전 프로세스가 성공한 경우에만 호출되도록 해야함
       } catch (KyumallException e) {
@@ -55,9 +58,14 @@ public class AuthenticateFilter extends OncePerRequestFilter {
     }
   }
 
-  private boolean shouldTokenCheck(HttpServletRequest request) {
+  private boolean shouldPermitAnonymous(HttpServletRequest request) {
     String uri = request.getRequestURI();
-    return !securityIgnorePaths.shouldIgnore(uri);
+    return securityIgnorePaths.shouldPermitAnonymous(uri);
+  }
+
+  private boolean shouldSkipAuthenticate(HttpServletRequest request) {
+    String uri = request.getRequestURI();
+    return securityIgnorePaths.shouldSkipAuthenticate(uri);
   }
 
   /**
@@ -85,18 +93,20 @@ public class AuthenticateFilter extends OncePerRequestFilter {
     }
   }
 
-  private void processToken(String token) {
+  private boolean processToken(String token) {
     if (token == null) {
-      throw new KyumallException(ErrorCode.INVALID_TOKEN);
+      return false;
     }
     JwtParser jwtParser = jwtProvider.getJwtParser(token);
     if (!jwtProvider.validateClaim(jwtParser, token)) {
-      throw new KyumallException(ErrorCode.INVALID_TOKEN);    // 미인증 에러 반환
+      return false;
     }
       String username = jwtProvider.getUsername(jwtParser, token);
+    //TODO: 매번 사용자를 체크하는데 맞을까? JWT 토큰의 장점이 없다
       Member member = memberRepository.findByUsername(username)
           .orElseThrow(() -> new KyumallException(ErrorCode.MEMBER_NOT_EXISTS));
 
       UserContext.setUser(AuthenticatedUser.from(member));
+      return true;
   }
 }
