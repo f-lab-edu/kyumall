@@ -26,7 +26,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 
-@DisplayName("상품 댓글 통합테스트")
+@DisplayName("상품 댓글 admin 통합테스트")
 public class ProductCommentAdminIntegrationTest extends IntegrationTest {
   @Autowired
   private MemberFactory memberFactory;

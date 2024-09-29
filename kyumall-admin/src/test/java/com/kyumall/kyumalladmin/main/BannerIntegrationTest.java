@@ -2,29 +2,36 @@ package com.kyumall.kyumalladmin.main;
 
 import static org.assertj.core.api.Assertions.*;
 
+import com.kyumall.kyumalladmin.AuthTestUtil;
 import com.kyumall.kyumalladmin.IntegrationTest;
 import com.kyumall.kyumalladmin.main.dto.CreateBannerGroupRequest;
 import com.kyumall.kyumalladmin.main.dto.CreateBannerRequest;
 import com.kyumall.kyumallcommon.Util.EncryptUtil;
+import com.kyumall.kyumallcommon.factory.MemberFactory;
+import com.kyumall.kyumallcommon.fixture.member.MemberFixture;
 import com.kyumall.kyumallcommon.main.entity.Banner;
 import com.kyumall.kyumallcommon.main.entity.BannerGroup;
 import com.kyumall.kyumallcommon.main.repository.BannerGroupRepository;
 import com.kyumall.kyumallcommon.main.repository.BannerRepository;
+import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.upload.repository.ImageRepository;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
+import io.restassured.specification.RequestSpecification;
 import javax.crypto.SecretKey;
 import org.apache.http.HttpStatus;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
-@DisplayName("어드민 배너 통합테스트")
+@DisplayName("배너 admin 통합테스트")
 class BannerIntegrationTest extends IntegrationTest {
-
+  @Autowired
+  private MemberFactory memberFactory;
   @Autowired
   private BannerGroupRepository bannerGroupRepository;
   @Autowired
@@ -34,8 +41,14 @@ class BannerIntegrationTest extends IntegrationTest {
   @Value("${encrypt.key}")
   private String encryptKey;
 
+  Member adminMike;
   String[] comparedBannerGroupFieldNames = new String[] {"name", "description"};
   String[] comparedBannerFieldNames = new String[] {"name", "description"};
+
+  @BeforeEach
+  void initData() { // 현재 테스트에 밀접한 연관이 없고, 공유되어도 문제될 것 없는 데이터만 BeforeEach 에서 생성
+    adminMike = memberFactory.createMember(MemberFixture.MIKE);
+  }
 
   @Test
   @DisplayName("배너 그룹을 등록합니다.")
@@ -44,8 +57,9 @@ class BannerIntegrationTest extends IntegrationTest {
         .name("메인페이지 배너 그룹")
         .description("메인 페이지에 표시될 배너 그룹입니다.")
         .build();
+    RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(adminMike.getUsername(), MemberFixture.password);
 
-    ExtractableResponse<Response> response = requestCreateBannerGroup(request);
+    ExtractableResponse<Response> response = requestCreateBannerGroup(request, spec);
 
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
     BannerGroup bannerGroup = bannerGroupRepository.findById(
@@ -77,9 +91,10 @@ class BannerIntegrationTest extends IntegrationTest {
         .name("배너1")
         .url("/test")
         .encryptedImageName(encryptedFileName).build();
+    RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(adminMike.getUsername(), MemberFixture.password);
 
     // when
-    ExtractableResponse<Response> response = requestCreateBanner(request);
+    ExtractableResponse<Response> response = requestCreateBanner(request, spec);
 
     // then
     assertThat(response.statusCode()).isEqualTo(HttpStatus.SC_OK);
@@ -110,14 +125,16 @@ class BannerIntegrationTest extends IntegrationTest {
     CreateBannerGroupRequest request = CreateBannerGroupRequest.builder()
         .name(name)
         .description("test").build();
-    ExtractableResponse<Response> response = requestCreateBannerGroup(request);
+    RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(adminMike.getUsername(), MemberFixture.password);
+    ExtractableResponse<Response> response = requestCreateBannerGroup(request, spec);
     return bannerGroupRepository.findById(
         response.body().jsonPath().getLong("result.id")).orElseThrow(() -> new RuntimeException(""));
   }
 
   private static ExtractableResponse<Response> requestCreateBannerGroup(
-      CreateBannerGroupRequest request) {
+      CreateBannerGroupRequest request, RequestSpecification spec) {
     return RestAssured.given().log().all()
+        .spec(spec)
         .contentType(ContentType.JSON)
         .body(request)
         .when().post("/banner-groups")
@@ -126,8 +143,9 @@ class BannerIntegrationTest extends IntegrationTest {
   }
 
   private static ExtractableResponse<Response> requestCreateBanner(
-      CreateBannerRequest request) {
+      CreateBannerRequest request, RequestSpecification spec) {
     return RestAssured.given().log().all()
+        .spec(spec)
         .contentType(ContentType.JSON)
         .body(request)
         .when().post("/banners")
