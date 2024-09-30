@@ -50,6 +50,7 @@ public class CategoryController {
   /**
    * 카테고리 ID의 한단계 아래 서브 카테고리 목록을를 조회합니다.
    * 한단계 아래의 서브 카테고리만 조회합니다.
+   * 최상위 카테고리를 검색하는 경우, ID에 0을 넣습니다.
    * @return
    */
   @GetMapping("/{id}/subCategories")
