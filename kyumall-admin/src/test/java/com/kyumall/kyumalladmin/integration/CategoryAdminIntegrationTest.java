@@ -2,9 +2,13 @@ package com.kyumall.kyumalladmin.integration;
 
 import static org.assertj.core.api.Assertions.*;
 
+import com.kyumall.kyumalladmin.AuthTestUtil;
 import com.kyumall.kyumalladmin.IntegrationTest;
+import com.kyumall.kyumallcommon.factory.MemberFactory;
 import com.kyumall.kyumallcommon.factory.ProductFactory;
+import com.kyumall.kyumallcommon.fixture.member.MemberFixture;
 import com.kyumall.kyumallcommon.fixture.product.CategoryFixture;
+import com.kyumall.kyumallcommon.member.entity.Member;
 import com.kyumall.kyumallcommon.product.category.Category;
 import com.kyumall.kyumallcommon.product.category.CategoryMapService;
 import com.kyumall.kyumallcommon.product.category.CategoryRepository;
@@ -15,8 +19,10 @@ import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
+import io.restassured.specification.RequestSpecification;
 import java.util.List;
 import java.util.Map;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,11 +33,20 @@ import org.springframework.stereotype.Component;
 @DisplayName("카테고리 ADMIN 기능 통합테스트")
 class CategoryAdminIntegrationTest extends IntegrationTest {
   @Autowired
+  private MemberFactory memberFactory;
+  @Autowired
   private CategoryRepository categoryRepository;
   @Autowired
   private ProductFactory productFactory;
   @Autowired
   private CategoryMapService categoryMapService;
+
+  Member adminMike;
+
+  @BeforeEach
+  void initData() { // 현재 테스트에 밀접한 연관이 없고, 공유되어도 문제될 것 없는 데이터만 BeforeEach 에서 생성
+    adminMike = memberFactory.createMember(MemberFixture.MIKE);
+  }
 
   @Test
   @DisplayName("최상위 카테고리 생성에 성공합니다.")
@@ -40,8 +55,9 @@ class CategoryAdminIntegrationTest extends IntegrationTest {
         .name(CategoryFixture.FOOD.getName())
         .parentId(0L)
         .build();
+    RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(adminMike.getUsername(), MemberFixture.password);
 
-    ExtractableResponse<Response> response = requestCreateCategory(request);
+    ExtractableResponse<Response> response = requestCreateCategory(request, spec);
 
     assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
     Long createdId = response.body().jsonPath().getLong("result.id");
@@ -50,8 +66,10 @@ class CategoryAdminIntegrationTest extends IntegrationTest {
     assertThat(newCategory.getParent()).isNull();
   }
 
-  private static ExtractableResponse<Response> requestCreateCategory(CreateCategoryRequest request) {
+  private static ExtractableResponse<Response> requestCreateCategory(CreateCategoryRequest request,
+      RequestSpecification spec) {
     return RestAssured.given().log().all()
+        .spec(spec)
         .contentType(ContentType.JSON)
         .body(request)
         .when().post("/categories")
@@ -59,8 +77,10 @@ class CategoryAdminIntegrationTest extends IntegrationTest {
         .extract();
   }
 
-  private static ExtractableResponse<Response> requestUpdateCategory(Long id, UpdateCategoryRequest request) {
+  private static ExtractableResponse<Response> requestUpdateCategory(Long id, UpdateCategoryRequest request,
+      RequestSpecification spec) {
     return RestAssured.given().log().all()
+        .spec(spec)
         .contentType(ContentType.JSON)
         .body(request)
         .pathParam("id", id)
@@ -69,8 +89,10 @@ class CategoryAdminIntegrationTest extends IntegrationTest {
         .extract();
   }
 
-  private static ExtractableResponse<Response> requestApplyCategoryToClientApp() {
+  private static ExtractableResponse<Response> requestApplyCategoryToClientApp(
+      RequestSpecification spec) {
     return RestAssured.given().log().all()
+        .spec(spec)
         .when().post("/categories/apply-to-client-app")
         .then().log().all()
         .extract();
@@ -86,8 +108,9 @@ class CategoryAdminIntegrationTest extends IntegrationTest {
         .name(CategoryFixture.APPLE_PEAR.getName())
         .parentId(parentCategory.getId())
         .build();
+    RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(adminMike.getUsername(), MemberFixture.password);
 
-    ExtractableResponse<Response> response = requestCreateCategory(request);
+    ExtractableResponse<Response> response = requestCreateCategory(request, spec);
 
     assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
     Long createdId = response.body().jsonPath().getLong("result.id");
@@ -109,7 +132,9 @@ class CategoryAdminIntegrationTest extends IntegrationTest {
         .name(CategoryFixture.APPLE_PEAR.getName())
         .parentId(parentCategory.getId())
         .build();
-    ExtractableResponse<Response> response = requestCreateCategory(request);
+    RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(adminMike.getUsername(), MemberFixture.password);
+
+    ExtractableResponse<Response> response = requestCreateCategory(request, spec);
 
     // then
     // 새 데이터 캐시
@@ -130,8 +155,9 @@ class CategoryAdminIntegrationTest extends IntegrationTest {
         .newName(fruit.getName())
         .newParentId(meet.getParentId())
         .build();
+    RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(adminMike.getUsername(), MemberFixture.password);
 
-    ExtractableResponse<Response> response = requestUpdateCategory(fruit.getId(), request);
+    ExtractableResponse<Response> response = requestUpdateCategory(fruit.getId(), request, spec);
 
     assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
     Category newCategory = categoryRepository.findById(fruit.getId()).orElseThrow();
@@ -148,10 +174,11 @@ class CategoryAdminIntegrationTest extends IntegrationTest {
     // 캐시 추가
     Category fashion = productFactory.createCategory(CategoryFixture.FASHION);
     List<CategoryDto> categoryMapAfterAdd = categoryMapService.findCategoryGroupingByParent().get("0");
+    RequestSpecification spec = AuthTestUtil.requestLoginAndGetSpec(adminMike.getUsername(), MemberFixture.password);
 
     // when
     // 캐시 만료
-    requestApplyCategoryToClientApp();
+    requestApplyCategoryToClientApp(spec);
 
     // then
     // 캐시된 카테고리 조회

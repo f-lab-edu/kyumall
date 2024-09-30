@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kyumall-client
+  labels:
+    app: kyumall-client
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: kyumall-client
+  template:
+    metadata:
+      labels:
+        app: kyumall-client
+    spec:
+      containers:
+        - name: kyumall-client
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: dev
+          #            - name: JAVA_TOOL_OPTIONS
+          #              value: "-Xmx300m -Xms300m"
+          #            - name: SPRING_APPLICATION_JSON
+          #              value: '{"logging.level.root": "debug"}'
+          image: gyureal/kyumall-client:latest
+          imagePullPolicy: Always
+          resources:
+            requests:
+              memory: "1Gi"
+            limits:
+              memory: "1Gi"
+          ports:
+            - name: app
+              containerPort: 8080
+            - name: actuator
+              containerPort: 8181

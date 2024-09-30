@@ -44,14 +44,14 @@ public class JwtProvider {
   }
 
   public String resolveToken(HttpServletRequest request) {
-    String bearerToken = request.getHeader("Authorization");
-    if (bearerToken == null) {
+    String token = request.getHeader("Authorization");
+    if (token == null) {
       return null;
     }
-    if (!bearerToken.startsWith("Bearer ")) {
-      throw new KyumallException(ErrorCode.INVALID_TOKEN_FORMAT);
+    if (!token.startsWith("Bearer ")) {
+      return null;
     }
-    return bearerToken.trim().substring(7);
+    return token.trim().substring(7);
   }
 
   public boolean validateClaim(JwtParser jwtParser, String token) {
