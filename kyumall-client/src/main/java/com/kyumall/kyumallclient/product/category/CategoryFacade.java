@@ -1,11 +1,10 @@
 package com.kyumall.kyumallclient.product.category;
 
 import com.kyumall.kyumallclient.product.category.dto.HierarchyCategoryDto;
-import com.kyumall.kyumallclient.product.category.dto.SubCategoryDto;
-import com.kyumall.kyumallcommon.product.category.dto.CategoryDto;
-import com.kyumall.kyumallcommon.product.category.dto.CreateCategoryRequest;
-import com.kyumall.kyumallcommon.product.category.CategoryMapService;
 import com.kyumall.kyumallcommon.product.category.CategoryService;
+import com.kyumall.kyumallcommon.product.category.dto.SubCategoryDto;
+import com.kyumall.kyumallcommon.product.category.dto.CategoryDto;
+import com.kyumall.kyumallcommon.product.category.CategoryMapService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +18,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class CategoryFacade {
   private final CategoryMapService categoryMapService;
+  private final CategoryService categoryService;
 
   /**
    * 전체 카테고리를 계층형 리스트 형태로 조회
@@ -81,14 +81,7 @@ public class CategoryFacade {
    * @param id
    * @return
    */
-  public List<SubCategoryDto> getOneStepSubCategories(String id) {
-    Map<String, List<CategoryDto>> categoryMap = categoryMapService.findCategoryGroupingByParent();
-    if (!categoryMap.containsKey(id)) {
-      return new ArrayList<>();
-    }
-    return categoryMap.get(id)
-        .stream()
-        .map(category -> SubCategoryDto.from(category, categoryMap.containsKey(category.getId())))
-        .toList();
+  public List<SubCategoryDto> getOneStepSubCategoriesByQuery(Long id) {
+    return categoryService.getOneStepSubCategories(id);
   }
 }

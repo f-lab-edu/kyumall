@@ -1,11 +1,9 @@
 package com.kyumall.kyumallclient.product.category;
 
+import com.kyumall.kyumallcommon.product.category.dto.SubCategoryDto;
 import com.kyumall.kyumallcommon.product.product.ProductService;
 import com.kyumall.kyumallclient.product.category.dto.HierarchyCategoryDto;
 import com.kyumall.kyumallcommon.product.product.dto.ProductSimpleDto;
-import com.kyumall.kyumallclient.product.category.dto.SubCategoryDto;
-import com.kyumall.kyumallcommon.dto.CreatedIdDto;
-import com.kyumall.kyumallcommon.product.category.dto.CreateCategoryRequest;
 import com.kyumall.kyumallcommon.response.ResponseWrapper;
 import io.micrometer.core.annotation.Timed;
 import java.util.List;
@@ -16,8 +14,6 @@ import org.springframework.data.domain.Slice;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -55,7 +51,7 @@ public class CategoryController {
    */
   @GetMapping("/{id}/subCategories")
   public ResponseWrapper<List<SubCategoryDto>> getOneStepSubCategories(@PathVariable Long id) {
-    return ResponseWrapper.ok(categoryFacade.getOneStepSubCategories(id.toString()));
+    return ResponseWrapper.ok(categoryFacade.getOneStepSubCategoriesByQuery(id));
   }
 
   /**

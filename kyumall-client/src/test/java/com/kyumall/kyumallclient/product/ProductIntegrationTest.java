@@ -8,7 +8,7 @@ import com.kyumall.kyumallclient.product.category.dto.HierarchyCategoryDto;
 import com.kyumall.kyumallcommon.fixture.common.ImageFixture;
 import com.kyumall.kyumallcommon.product.product.dto.ProductDetailDto;
 import com.kyumall.kyumallcommon.product.product.dto.ProductSimpleDto;
-import com.kyumall.kyumallclient.product.category.dto.SubCategoryDto;
+import com.kyumall.kyumallcommon.product.category.dto.SubCategoryDto;
 import com.kyumall.kyumallcommon.factory.MemberFactory;
 import com.kyumall.kyumallcommon.factory.ProductFactory;
 import com.kyumall.kyumallcommon.fixture.member.MemberFixture;

@@ -4,6 +4,7 @@ import com.kyumall.kyumallcommon.exception.ErrorCode;
 import com.kyumall.kyumallcommon.exception.KyumallException;
 import com.kyumall.kyumallcommon.product.category.dto.CategoryDto;
 import com.kyumall.kyumallcommon.product.category.dto.CreateCategoryRequest;
+import com.kyumall.kyumallcommon.product.category.dto.SubCategoryDto;
 import com.kyumall.kyumallcommon.product.category.dto.UpdateCategoryRequest;
 import jakarta.transaction.Transactional;
 import java.util.List;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class CategoryService {
   private final CategoryRepository categoryRepository;
+  private final TopCategoryService topCategoryService;
 
   /**
    * 카테고리를 생성합니다.
@@ -49,6 +51,20 @@ public class CategoryService {
           .orElseThrow(() -> new KyumallException(ErrorCode.CATEGORY_NOT_EXISTS));
       category.changeParent(newParentCategory);
     }
+  }
+
+  /**
+   * 한단계 아래 서브 카테고리를 조회합니다.
+   * 최상위 카테고리는 캐시에서 반환합니다.
+   * @param id
+   * @return
+   */
+  public List<SubCategoryDto> getOneStepSubCategories(Long id) {
+    if (id == 0) {   // 최상위 카테고리
+      return topCategoryService.findTopCategory();  // 캐시
+//      return categoryRepository.findTopSubCategoriesUsingJoin();  // 캐시 사용 안함
+    }
+    return categoryRepository.findSubCategoriesUsingSubquery(id);
   }
 
   /**

@@ -37,7 +37,7 @@ import org.springframework.stereotype.Component;
  * 어플리케이션 초기 기동시 동작하는 코드
  */
 @Slf4j
-@Profile({"dev", "local"})
+@Profile({"local", "dev"})
 @Component
 @RequiredArgsConstructor
 public class AppInitialRunner implements CommandLineRunner {
@@ -55,10 +55,11 @@ public class AppInitialRunner implements CommandLineRunner {
 
   @Override
   public void run(String... args) throws Exception {
-    saveMember();
-    saveTerms();
-    saveCategories();
-    saveEmailTemplate();
+//    saveMember();
+//    saveTerms();
+    //saveCategories();
+//    saveCategoriesAutomatically(null, 0);
+//    saveEmailTemplate();
     logJVMSettings();
     log.info("mail Password: {}", mailPassword);
     log.info("cacheManager is {}", this.cacheManager.getClass().getName());
@@ -88,7 +89,21 @@ public class AppInitialRunner implements CommandLineRunner {
         .build());
   }
 
+  // 쿠팡과 동일한 갯수로 카테고리 데이터를 생성
+  private void saveCategoriesAutomatically(Category parent, int depth) {
+    if (depth == 3) { // 3 뎁스 까지
+      return;
+    }
+    int rep = (depth == 2) ? 10 : 15; // 1뎁스 15개, 2뎁스 15개, 3뎁스 10개
+    for (int i = 0; i < rep; i++) {
+      long parentId = parent == null ? 0 : parent.getId();
+      Category newCategory = saveCategory("category " + parentId + " " + depth + " " + i, parent);
+      saveCategoriesAutomatically(newCategory, depth+1);
+    }
+  }
+
   private void saveCategories() {
+
     Category food = saveCategory("식품", null);
     Category meet = saveCategory("육류", food);
     Category fruit = saveCategory("과일", food);
