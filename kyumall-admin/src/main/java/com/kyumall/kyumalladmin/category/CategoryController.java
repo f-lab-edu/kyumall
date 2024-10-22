@@ -4,6 +4,7 @@ import com.kyumall.kyumallcommon.dto.CreatedIdDto;
 import com.kyumall.kyumallcommon.product.category.Category;
 import com.kyumall.kyumallcommon.product.category.CategoryMapService;
 import com.kyumall.kyumallcommon.product.category.CategoryService;
+import com.kyumall.kyumallcommon.product.category.TopCategoryService;
 import com.kyumall.kyumallcommon.product.category.dto.CategoryDto;
 import com.kyumall.kyumallcommon.product.category.dto.CreateCategoryRequest;
 import com.kyumall.kyumallcommon.product.category.dto.UpdateCategoryRequest;
@@ -29,6 +30,7 @@ public class CategoryController {
 
   private final CategoryService categoryService;
   private final CategoryMapService categoryMapService;
+  private final TopCategoryService topCategoryService;
 
   /**
    * 새 카테고리를 생성합니다.
@@ -74,5 +76,7 @@ public class CategoryController {
   public void applyCategoryToClientApp() {
     categoryMapService.evictCategoryMapCache();          // 캐시 만료
     categoryMapService.findCategoryGroupingByParent();   // 캐시 warmup
+    topCategoryService.evictTopCategory();
+    topCategoryService.findTopCategory();
   }
 }
