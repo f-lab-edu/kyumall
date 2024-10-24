@@ -61,8 +61,7 @@ public class CategoryService {
    */
   public List<SubCategoryDto> getOneStepSubCategories(Long id) {
     if (id == 0) {   // 최상위 카테고리
-      return topCategoryService.findTopCategory();  // 캐시
-//      return categoryRepository.findTopSubCategoriesUsingJoin();  // 캐시 사용 안함
+      return topCategoryService.findTopCategory();  // 캐시에서 반환
     }
     return categoryRepository.findSubCategoriesUsingSubquery(id);
   }

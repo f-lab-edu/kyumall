@@ -14,12 +14,6 @@ public class SubCategoryDto {
   private String name;
   private Boolean subCategoryExists;  // 하위 카테고리가 존재하는지 (true 시, 열림 버튼 활성화)
 
-  public SubCategoryDto(Long id, String name, Long subCategoryCount) {
-    this.id = id;
-    this.name = name;
-    this.subCategoryExists = subCategoryCount > 0;
-  }
-
   public static SubCategoryDto from(CategoryDto categoryDto, boolean isSubCategoryExists) {
     return SubCategoryDto.builder()
         .id(Long.parseLong(categoryDto.getId()))

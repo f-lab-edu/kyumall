@@ -22,13 +22,14 @@ FROM Category c WHERE c.parent.id is null
   @Query("""
 SELECT new com.kyumall.kyumallcommon.product.category.dto.SubCategoryDto(
  c.id, c.name, (SELECT COUNT(sc) > 0 FROM Category sc WHERE sc.parent.id = c.id))
-FROM Category c WHERE c.parent.id = :parentId
+FROM Category c 
+WHERE c.parent.id = :parentId
 """)
   List<SubCategoryDto> findSubCategoriesUsingSubquery(@Param("parentId") Long parentId);
 
   @Query("""
 SELECT new com.kyumall.kyumallcommon.product.category.dto.SubCategoryDto(
- c.id, c.name, COUNT(1))
+ c.id, c.name, (COUNT(1) > 0))
 FROM Category c 
   LEFT JOIN Category sc ON sc.parent.id = c.id
 WHERE c.parent.id = :parentId
